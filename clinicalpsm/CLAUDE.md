@@ -20,12 +20,12 @@ ve yayına hazır istatistiksel tablolar/görseller almasını sağlayan bir web
 
 | Katman | Teknoloji | Neden |
 |---|---|---|
-| Framework | Next.js 14 (App Router) + TypeScript | SEO, server components, built-in API routes |
-| Styling | Tailwind CSS + shadcn/ui | Hızlı geliştirme, profesyonel görünüm |
+| Framework | Next.js 16 (App Router) + TypeScript | SEO, server components, built-in API routes |
+| Styling | Tailwind CSS v4 + shadcn/ui | Hızlı geliştirme, profesyonel görünüm |
 | Auth + DB | Supabase | Auth, PostgreSQL, file storage hepsi bir arada |
 | PSM Engine | TypeScript (MVP) → Python microservice (v2) | MVP'de sıfır maliyet |
 | Deployment | Vercel (frontend) + Railway (Python, v2'de) | Free tier yeterli |
-| Payments | Stripe | Freemium → ücretli geçiş |
+| Payments | Polar.sh | Freemium → ücretli geçiş, basit entegrasyon |
 
 ---
 
@@ -41,7 +41,7 @@ clinicalpsm/
 │   │   │   └── new/            # Yeni analiz wizard'ı
 │   │   ├── api/                # API route'ları
 │   │   │   ├── analyses/       # PSM analiz endpoint'leri
-│   │   │   └── webhooks/       # Stripe webhook'ları
+│   │   │   └── webhooks/       # Polar.sh webhook'ları
 │   │   └── page.tsx            # Landing page
 │   ├── components/
 │   │   ├── ui/                 # shadcn/ui bileşenleri (dokunma)
@@ -54,7 +54,7 @@ clinicalpsm/
 │   │   │   ├── matching.ts     # Nearest neighbor matching
 │   │   │   └── balance.ts      # SMD ve balance tabloları
 │   │   ├── export/             # PDF ve CSV export fonksiyonları
-│   │   └── stripe/             # Stripe helper'ları
+│   │   └── polar/              # Polar.sh helper'ları
 │   ├── hooks/                  # Custom React hook'ları
 │   └── types/                  # TypeScript tip tanımları
 ├── docs/
@@ -74,7 +74,7 @@ clinicalpsm/
 - Her zaman **TypeScript** kullan, `any` tipinden kaçın.
 - Bileşenler **server component** olarak başlar; sadece gerektiğinde `"use client"` ekle.
 - API route'larında **her zaman** Supabase auth kontrolü yap.
-- Hassas iş mantığı (PSM hesaplama, Stripe) asla client tarafına gitmez.
+- Hassas iş mantığı (PSM hesaplama, Polar.sh) asla client tarafına gitmez.
 
 ### Naming
 - Dosyalar: `kebab-case.ts`
@@ -98,7 +98,8 @@ clinicalpsm/
 
 ```sql
 -- Kullanıcı analiz kotası ve abonelik durumu
-profiles (id, user_id, plan, analyses_used, analyses_limit, stripe_customer_id)
+-- plan: 'free' (limit=3) | 'plus' (limit=25, $5/ay) | 'pro' (limit=999999, $20/ay)
+profiles (id, user_id, plan, analyses_used, analyses_limit, polar_customer_id, polar_subscription_id)
 
 -- Her PSM analizi
 analyses (id, user_id, name, status, config, result_summary, created_at)
@@ -112,12 +113,14 @@ uploads (id, analysis_id, file_path, row_count, column_names, created_at)
 ## Environment Variables
 
 ```
+NEXT_PUBLIC_SITE_URL=
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+POLAR_ACCESS_TOKEN=
+POLAR_WEBHOOK_SECRET=
+NEXT_PUBLIC_POLAR_PLUS_PRODUCT_ID=
+NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID=
 ```
 
 ---
@@ -135,7 +138,7 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 - [ ] Freemium limit (3 analiz ücretsiz)
 
 **Dahil Değil (v0.1):**
-- Stripe ödeme entegrasyonu (önce validasyon)
+- Polar.sh ödeme entegrasyonu (önce validasyon)
 - PDF export
 - Çoklu eşleştirme algoritması (sadece nearest neighbor)
 - Team/collaboration özellikleri

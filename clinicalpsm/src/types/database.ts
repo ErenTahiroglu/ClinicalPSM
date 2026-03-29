@@ -6,9 +6,9 @@ export interface Profile {
   plan: 'free' | 'plus' | 'pro'
   analyses_used: number
   analyses_limit: number
-  stripe_customer_id: string | null
+  polar_customer_id: string | null
   plan_interval: string | null
-  stripe_subscription_id: string | null
+  polar_subscription_id: string | null
   plan_reset_at: string | null
   created_at: string
 }

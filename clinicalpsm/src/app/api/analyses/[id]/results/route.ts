@@ -19,16 +19,23 @@ export async function POST(
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Verify ownership
+    // Verify ownership and check status
     const { data: analysis } = await supabase
       .from('analyses')
-      .select('id, user_id')
+      .select('id, user_id, status')
       .eq('id', analysisId)
       .eq('user_id', user.id)
       .single()
 
     if (!analysis) {
       return Response.json({ error: 'Analysis not found' }, { status: 404 })
+    }
+
+    if (analysis.status === 'completed') {
+      return Response.json(
+        { error: 'Analysis is already completed.' },
+        { status: 409 }
+      )
     }
 
     const body = await request.json()

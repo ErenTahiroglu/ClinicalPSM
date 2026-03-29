@@ -34,6 +34,21 @@ export async function POST(
     const file = formData.get('file') as File | null
     const rowCount = parseInt(String(formData.get('rowCount') ?? '0'), 10)
     const columnNamesRaw = formData.get('columnNames')
+
+    // Server-side row limit for free plan
+    const FREE_ROW_LIMIT = 500
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('plan')
+      .eq('user_id', user.id)
+      .single()
+
+    if (profile?.plan === 'free' && rowCount > FREE_ROW_LIMIT) {
+      return Response.json(
+        { error: `Free plan allows up to ${FREE_ROW_LIMIT} rows per analysis. Your file has ${rowCount} rows.` },
+        { status: 403 }
+      )
+    }
     const columnNames: string[] = columnNamesRaw
       ? JSON.parse(String(columnNamesRaw))
       : []

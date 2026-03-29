@@ -21,7 +21,7 @@ PSM hesaplaması MVP'de TypeScript ile tarayıcıda çalışır; v2'de Python mi
 │  ┌─────────────┐    ┌──────────────────────┐    │
 │  │ React UI    │    │  API Routes          │    │
 │  │ (App Router)│    │  /api/analyses       │    │
-│  │             │    │  /api/webhooks/stripe│    │
+│  │             │    │  /api/webhooks/polar │    │
 │  └──────┬──────┘    └──────────┬───────────┘    │
 │         │                      │                 │
 │  ┌──────▼──────────────────────▼───────────┐    │
@@ -33,7 +33,7 @@ PSM hesaplaması MVP'de TypeScript ile tarayıcıda çalışır; v2'de Python mi
        ┌───────────┼───────────┐
        │           │           │
 ┌──────▼───┐ ┌────▼─────┐ ┌──▼──────┐
-│ Supabase │ │ Supabase │ │ Stripe  │
+│ Supabase │ │ Supabase │ │Polar.sh │
 │   Auth   │ │  DB +    │ │Payments │
 │          │ │ Storage  │ │         │
 └──────────┘ └──────────┘ └─────────┘
@@ -124,10 +124,13 @@ Uyarı: |SMD| > 0.1 (kötü balance, kullanıcıya göster)
 CREATE TABLE profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
-  plan TEXT DEFAULT 'free' CHECK (plan IN ('free', 'pro', 'team')),
+  plan TEXT DEFAULT 'free' CHECK (plan IN ('free', 'plus', 'pro')),
   analyses_used INTEGER DEFAULT 0,
-  analyses_limit INTEGER DEFAULT 3,  -- free plan
-  stripe_customer_id TEXT,
+  analyses_limit INTEGER DEFAULT 3,  -- free: 3 | plus: 25 | pro: 999999
+  polar_customer_id TEXT,
+  polar_subscription_id TEXT,
+  plan_interval TEXT DEFAULT 'monthly',
+  plan_reset_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -176,19 +179,22 @@ CREATE POLICY "users own their uploads" ON uploads
 
 ```
 Free Plan:
-  - 3 analiz toplam
+  - 3 analiz toplam (analyses_limit = 3)
   - Maks. 500 satır CSV
   - Sadece nearest neighbor matching
   - CSV export
 
-Pro Plan ($9/ay):
-  - Sınırsız analiz
-  - Maks. 50,000 satır
-  - Tüm matching algoritmaları
-  - PDF export + publication-ready tables
+Plus Plan ($5/ay):
+  - 25 analiz/ay (analyses_limit = 25, plan_reset_at ile sıfırlanır)
+  - Maks. 500 satır CSV
+  - CSV export
+  - Email destek
 
-Team Plan ($29/ay):
-  - Pro + takım paylaşımı (v2)
+Pro Plan ($20/ay):
+  - Sınırsız analiz (analyses_limit = 999999)
+  - Maks. 500 satır CSV
+  - CSV export
+  - Öncelikli destek
 ```
 
 ---
@@ -197,9 +203,11 @@ Team Plan ($29/ay):
 
 - Supabase Auth: JWT tabanlı session yönetimi
 - Row Level Security: Her kullanıcı sadece kendi verisini görür
-- API route'larında `getServerSession()` kontrolü
+- API route'larında `auth.getUser()` kontrolü (her route'da zorunlu)
 - CSV dosyaları Supabase Storage'da private bucket'ta saklanır
-- Stripe webhook imzası doğrulanır
+- Polar.sh webhook imzası doğrulanır
+- Server-side row limit: free plan için 500 satır kontrolü
+- Duplicate completion guard: tamamlanmış analizlere tekrar sonuç yazılamaz (409)
 
 ---
 
@@ -207,8 +215,10 @@ Team Plan ($29/ay):
 
 ```
 v0.2 — Para Testi
-  + Stripe ödeme entegrasyonu
-  + Pro plan aktif
+  + Polar.sh ödeme entegrasyonu
+  + Plus ve Pro plan aktif
+  + Polar webhook: checkout.order.created → plan aktif et
+  + Polar webhook: subscription.revoked → free'ye düşür
 
 v0.3 — Python Engine
   + FastAPI microservice (Railway üzerinde)
@@ -231,8 +241,9 @@ v0.5 — Büyüme
 
 | Karar | Seçilen | Reddedilen | Neden |
 |---|---|---|---|
-| Framework | Next.js 14 | Vite+React | SEO kritik (araştırmacılar Google'da arar), API routes built-in |
+| Framework | Next.js 16 | Vite+React | SEO kritik (araştırmacılar Google'da arar), API routes built-in |
 | DB | Supabase | Firebase | PostgreSQL (JSONB, RLS), daha ucuz, SQL bilgisi |
 | PSM (MVP) | TypeScript | Python/WASM | Sıfır altyapı maliyeti, browser'da çalışır |
 | UI | shadcn/ui | MUI, Chakra | Tailwind uyumu, copy-paste, vendor lock yok |
 | Hosting | Vercel | Netlify, Railway | Next.js native, free tier yeterli |
+| Payments | Polar.sh | Stripe | Daha basit entegrasyon, açık kaynak dostu |
