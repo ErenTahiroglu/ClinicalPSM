@@ -4,11 +4,11 @@ import { useRef, useState } from 'react'
 import Papa from 'papaparse'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { DataRow } from '@/lib/psm/types'
+import type { RawRow } from '@/lib/psm/encoding'
 
 interface Props {
   onComplete: (data: {
-    rawData: DataRow[]
+    rawData: RawRow[]
     columns: string[]
     rowCount: number
     fileName: string
@@ -23,10 +23,10 @@ export function WizardStep1Upload({ onComplete }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<{
-    rows: DataRow[]
+    rows: RawRow[]
     columns: string[]
     fileName: string
-    rawData: DataRow[]
+    rawData: RawRow[]
   } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -41,7 +41,7 @@ export function WizardStep1Upload({ onComplete }: Props) {
       return
     }
 
-    Papa.parse<DataRow>(file, {
+    Papa.parse<RawRow>(file, {
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true,

@@ -1,3 +1,4 @@
+---
 description: Supabase bağlantısı, veritabanı sorguları (SQL/ORM), Auth işlemleri veya RLS politikaları yazılırken bu kuralları uygula.
 ---
 - API route'larında işlem yapmadan önce HER ZAMAN `auth.getUser()` ile kullanıcı oturumunu doğrula.

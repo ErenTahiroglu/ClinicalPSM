@@ -61,3 +61,27 @@ export async function signOut(): Promise<never> {
   await supabase.auth.signOut()
   redirect('/login')
 }
+
+export async function requestPasswordReset(
+  _prevState: { error: string } | { message: string } | null,
+  formData: FormData
+): Promise<{ error: string } | { message: string }> {
+  const email = formData.get('email') as string
+  const supabase = await createClient()
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/reset-password`,
+  })
+  if (error) return { error: error.message }
+  return { message: 'Check your email for a password reset link.' }
+}
+
+export async function updatePassword(
+  _prevState: { error: string } | { message: string } | null,
+  formData: FormData
+): Promise<{ error: string } | { message: string }> {
+  const password = formData.get('password') as string
+  const supabase = await createClient()
+  const { error } = await supabase.auth.updateUser({ password })
+  if (error) return { error: error.message }
+  redirect('/analyses')
+}

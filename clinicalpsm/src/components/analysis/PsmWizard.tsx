@@ -5,14 +5,17 @@ import { WizardStep1Upload } from './WizardStep1Upload'
 import { WizardStep2Variables } from './WizardStep2Variables'
 import { WizardStep3Settings } from './WizardStep3Settings'
 import { WizardStep4Results } from './WizardStep4Results'
-import type { DataRow, PsmConfig } from '@/lib/psm/types'
+import type { PsmConfig } from '@/lib/psm/types'
+import type { RawRow } from '@/lib/psm/encoding'
+import type { ImputationStrategy } from '@/lib/psm/imputation'
+import { imputeData } from '@/lib/psm/imputation'
 
 type WizardStep = 1 | 2 | 3 | 4
 
 interface WizardState {
   step: WizardStep
   // Step 1
-  rawData: DataRow[]
+  rawData: RawRow[]
   columns: string[]
   rowCount: number
   fileName: string
@@ -21,6 +24,7 @@ interface WizardState {
   // Step 2
   treatmentColumn: string
   covariates: string[]
+  imputationStrategy: ImputationStrategy
   // Step 3
   ratio: PsmConfig['ratio']
   caliper: number | null
@@ -36,6 +40,7 @@ const INITIAL_STATE: WizardState = {
   uploadId: '',
   treatmentColumn: '',
   covariates: [],
+  imputationStrategy: 'mean',
   ratio: 1,
   caliper: null,
 }
@@ -128,7 +133,7 @@ export function PsmWizard() {
 
         {state.step === 4 && (
           <WizardStep4Results
-            rawData={state.rawData}
+            rawData={imputeData(state.rawData, state.covariates, state.imputationStrategy)}
             columns={state.columns}
             config={psmConfig}
             analysisId={state.analysisId}

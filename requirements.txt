@@ -1,0 +1,10 @@
+# Python dependencies for the v0.3 FastAPI PSM microservice.
+# The current MVP runs entirely in the browser (TypeScript Web Worker).
+# This file documents the planned Python engine dependencies.
+
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+scikit-learn>=1.4.0
+pandas>=2.2.0
+numpy>=1.26.0
+python-multipart>=0.0.9

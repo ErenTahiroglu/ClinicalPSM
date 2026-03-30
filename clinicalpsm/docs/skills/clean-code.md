@@ -1,3 +1,4 @@
+---
 description: Kod yazarken, refactor ederken veya review yaparken bu kuralları kesinlikle uygula.
 ---
 - Kesinlikle TypeScript kullan. `any` tipi kullanmak yasaktır. Gerekirse `unknown` kullanıp tip kontrolü yap.

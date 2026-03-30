@@ -1,19 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LovePlot } from './LovePlot'
-import { computePropensityScores } from '@/lib/psm/logistic'
-import { matchNearest } from '@/lib/psm/matching'
-import { runPsm } from '@/lib/psm/balance'
+import { PropensityHistogram } from './PropensityHistogram'
+import { runPsmInWorker } from '@/lib/psm/runPsmInWorker'
 import { buildMatchedCsv, downloadCsv } from '@/lib/export/csv'
+import { downloadBalanceTable } from '@/lib/export/balance-table'
+import { downloadSvgAsPng } from '@/lib/export/svg-to-png'
 import { PsmError } from '@/lib/psm/types'
-import type { DataRow, PsmConfig, PsmResult } from '@/lib/psm/types'
+import type { PsmConfig, PsmResult } from '@/lib/psm/types'
+import type { RawRow } from '@/lib/psm/encoding'
 
 interface Props {
-  rawData: DataRow[]
+  rawData: RawRow[]
   columns: string[]
   config: PsmConfig
   analysisId: string
@@ -46,19 +48,15 @@ export function WizardStep4Results({
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const lovePlotRef = useRef<SVGSVGElement>(null)
 
   async function handleRun() {
     setIsRunning(true)
     setError(null)
     setResult(null)
 
-    // Yield to the event loop so the spinner renders before synchronous computation
-    await new Promise(resolve => setTimeout(resolve, 50))
-
     try {
-      const propensityResult = computePropensityScores(rawData, config)
-      const pairs = matchNearest(propensityResult.scores, rawData, config)
-      const psmResult = runPsm(rawData, propensityResult.scores, pairs, config, propensityResult)
+      const psmResult = await runPsmInWorker(rawData, config)
 
       setResult(psmResult)
       setIsRunning(false)
@@ -92,6 +90,16 @@ export function WizardStep4Results({
     if (!result) return
     const csv = buildMatchedCsv(rawData, result.matchedPairs, columns)
     downloadCsv(csv, `matched_dataset_${analysisId.slice(0, 8)}.csv`)
+  }
+
+  function handleDownloadBalanceTable() {
+    if (!result) return
+    downloadBalanceTable(result.balanceTable, analysisId)
+  }
+
+  function handleDownloadLovePlot() {
+    if (!lovePlotRef.current) return
+    downloadSvgAsPng(lovePlotRef.current, `love_plot_${analysisId.slice(0, 8)}.png`)
   }
 
   return (
@@ -204,16 +212,32 @@ export function WizardStep4Results({
             </p>
           </div>
 
+          {/* Propensity score distribution */}
+          <div>
+            <h3 className="mb-2 font-medium">Propensity Score Distribution</h3>
+            <PropensityHistogram
+              scores={result.propensityScores}
+              treatment={rawData.map(r => r[config.treatmentColumn] as number)}
+              matchedPairs={result.matchedPairs}
+            />
+          </div>
+
           {/* Love plot */}
           <div>
             <h3 className="mb-2 font-medium">Love Plot</h3>
-            <LovePlot balanceTable={result.balanceTable} />
+            <LovePlot ref={lovePlotRef} balanceTable={result.balanceTable} />
           </div>
 
           {/* Actions */}
           <div className="flex flex-wrap items-center gap-3">
             <Button onClick={handleDownload} variant="outline">
               Download Matched CSV
+            </Button>
+            <Button onClick={handleDownloadBalanceTable} variant="outline">
+              Download Balance Table
+            </Button>
+            <Button onClick={handleDownloadLovePlot} variant="outline">
+              Download Love Plot (PNG)
             </Button>
             {isSaving && (
               <span className="flex items-center gap-1.5 text-sm text-muted-foreground">

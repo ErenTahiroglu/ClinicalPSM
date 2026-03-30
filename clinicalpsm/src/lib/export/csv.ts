@@ -1,7 +1,8 @@
-import type { DataRow, MatchedPair } from '@/lib/psm/types'
+import type { MatchedPair } from '@/lib/psm/types'
+import type { RawRow } from '@/lib/psm/encoding'
 
 export function buildMatchedCsv(
-  data: DataRow[],
+  data: RawRow[],
   pairs: MatchedPair[],
   columns: string[]
 ): string {

@@ -12,10 +12,30 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://clinicalpsm.com'
+
 export const metadata: Metadata = {
-  title: 'ClinicalPSM — Propensity Score Matching for Researchers',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'ClinicalPSM — Propensity Score Matching for Researchers',
+    template: '%s | ClinicalPSM',
+  },
   description:
     'Run propensity score matching analysis without code. Upload your CSV, select variables, and get publication-ready balance tables and visualizations.',
+  openGraph: {
+    type: 'website',
+    siteName: 'ClinicalPSM',
+    title: 'ClinicalPSM — Propensity Score Matching for Researchers',
+    description:
+      'Run PSM analysis without R or Stata. Upload a CSV, configure your analysis, and download publication-ready results in minutes.',
+    url: siteUrl,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ClinicalPSM — Propensity Score Matching for Researchers',
+    description:
+      'Run PSM analysis without R or Stata. Upload a CSV, configure your analysis, and download publication-ready results in minutes.',
+  },
 };
 
 export default function RootLayout({

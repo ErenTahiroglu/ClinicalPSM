@@ -1,5 +1,6 @@
 'use client'
 
+import { forwardRef } from 'react'
 import type { BalanceRow } from '@/lib/psm/types'
 
 interface LovePlotProps {
@@ -10,7 +11,7 @@ const MARGIN = { left: 140, right: 30, top: 40, bottom: 40 }
 const ROW_HEIGHT = 28
 const AXIS_TICKS = [-0.5, -0.2, -0.1, 0, 0.1, 0.2, 0.5]
 
-export function LovePlot({ balanceTable }: LovePlotProps) {
+export const LovePlot = forwardRef<SVGSVGElement, LovePlotProps>(function LovePlot({ balanceTable }, ref) {
   const maxAbsSmd = Math.max(
     0.5,
     ...balanceTable.flatMap(r => [Math.abs(r.smdBefore), Math.abs(r.smdAfter)])
@@ -33,6 +34,7 @@ export function LovePlot({ balanceTable }: LovePlotProps) {
   return (
     <div className="overflow-x-auto">
       <svg
+        ref={ref}
         width={svgWidth}
         height={svgHeight}
         aria-label="Love plot: SMD before and after matching"
@@ -160,4 +162,4 @@ export function LovePlot({ balanceTable }: LovePlotProps) {
       </svg>
     </div>
   )
-}
+})

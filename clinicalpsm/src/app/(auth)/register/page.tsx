@@ -3,7 +3,7 @@
 import { useActionState, useState } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff, Mail } from 'lucide-react'
-import { register, resendConfirmation } from '@/app/actions/auth'
+import { register, resendConfirmation } from '@/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'

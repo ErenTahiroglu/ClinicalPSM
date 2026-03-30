@@ -3,16 +3,19 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import type { DataRow } from '@/lib/psm/types'
+import { isCategoricalColumn } from '@/lib/psm/encoding'
+import type { RawRow } from '@/lib/psm/encoding'
+import { detectMissingValues } from '@/lib/psm/imputation'
+import type { ImputationStrategy } from '@/lib/psm/imputation'
 
 interface Props {
   columns: string[]
-  rawData: DataRow[]
-  onComplete: (result: { treatmentColumn: string; covariates: string[] }) => void
+  rawData: RawRow[]
+  onComplete: (result: { treatmentColumn: string; covariates: string[]; imputationStrategy: ImputationStrategy }) => void
   onBack: () => void
 }
 
-function isBinaryColumn(data: DataRow[], col: string): boolean {
+function isBinaryColumn(data: RawRow[], col: string): boolean {
   const values = new Set(data.map(r => r[col]))
   return (
     values.size <= 2 &&
@@ -20,9 +23,30 @@ function isBinaryColumn(data: DataRow[], col: string): boolean {
   )
 }
 
+interface ColStats {
+  n: number
+  missing: number
+  mean: number | null
+  sd: number | null
+}
+
+function getColStats(data: RawRow[], col: string): ColStats {
+  const all = data.map(r => r[col])
+  const numeric = all.filter(v => v !== null && v !== undefined && !isNaN(Number(v))).map(Number)
+  const missing = all.length - numeric.length
+  if (numeric.length === 0) return { n: all.length, missing, mean: null, sd: null }
+  const mean = numeric.reduce((a, b) => a + b, 0) / numeric.length
+  const variance =
+    numeric.length > 1
+      ? numeric.reduce((a, b) => a + (b - mean) ** 2, 0) / (numeric.length - 1)
+      : 0
+  return { n: all.length, missing, mean, sd: Math.sqrt(variance) }
+}
+
 export function WizardStep2Variables({ columns, rawData, onComplete, onBack }: Props) {
   const [treatmentColumn, setTreatmentColumn] = useState('')
   const [covariates, setCovariates] = useState<string[]>([])
+  const [imputationStrategy, setImputationStrategy] = useState<ImputationStrategy>('mean')
   const [error, setError] = useState<string | null>(null)
 
   const availableColumns = treatmentColumn
@@ -51,7 +75,7 @@ export function WizardStep2Variables({ columns, rawData, onComplete, onBack }: P
       setError('Please select at least one covariate.')
       return
     }
-    onComplete({ treatmentColumn, covariates })
+    onComplete({ treatmentColumn, covariates, imputationStrategy })
   }
 
   return (
@@ -117,25 +141,102 @@ export function WizardStep2Variables({ columns, rawData, onComplete, onBack }: P
             </button>
           </div>
         </div>
-        <div className="max-h-56 overflow-y-auto rounded-md border p-3">
-          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-            {availableColumns.map(col => (
-              <label key={col} className="flex cursor-pointer items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={covariates.includes(col)}
-                  onChange={() => toggleCovariate(col)}
-                  className="h-3.5 w-3.5 accent-primary"
-                />
-                <span className="truncate">{col}</span>
-              </label>
-            ))}
-          </div>
+        <div className="max-h-72 overflow-y-auto rounded-md border">
+          <table className="min-w-full text-xs">
+            <thead className="sticky top-0 bg-muted/70">
+              <tr>
+                <th className="px-3 py-2 text-left font-medium text-muted-foreground">Column</th>
+                <th className="px-3 py-2 text-right font-medium text-muted-foreground">Mean</th>
+                <th className="px-3 py-2 text-right font-medium text-muted-foreground">SD</th>
+                <th className="px-3 py-2 text-right font-medium text-muted-foreground">Missing</th>
+              </tr>
+            </thead>
+            <tbody>
+              {availableColumns.map(col => {
+                const stats = getColStats(rawData, col)
+                return (
+                  <tr
+                    key={col}
+                    onClick={() => toggleCovariate(col)}
+                    className={`cursor-pointer border-t transition-colors ${
+                      covariates.includes(col)
+                        ? 'bg-primary/5'
+                        : 'hover:bg-muted/40'
+                    }`}
+                  >
+                    <td className="px-3 py-1.5">
+                      <span className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={covariates.includes(col)}
+                          onChange={() => toggleCovariate(col)}
+                          onClick={e => e.stopPropagation()}
+                          className="h-3.5 w-3.5 accent-primary"
+                        />
+                        <span className="font-medium">{col}</span>
+                        {isCategoricalColumn(rawData, col) && (
+                          <span className="rounded bg-violet-100 px-1 py-0.5 text-[10px] font-medium text-violet-700">
+                            categorical
+                          </span>
+                        )}
+                      </span>
+                    </td>
+                    <td className="px-3 py-1.5 text-right text-muted-foreground">
+                      {stats.mean !== null ? stats.mean.toFixed(2) : '—'}
+                    </td>
+                    <td className="px-3 py-1.5 text-right text-muted-foreground">
+                      {stats.sd !== null ? stats.sd.toFixed(2) : '—'}
+                    </td>
+                    <td className="px-3 py-1.5 text-right">
+                      {stats.missing > 0 ? (
+                        <span className="text-amber-600">{stats.missing}</span>
+                      ) : (
+                        <span className="text-muted-foreground">0</span>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
         <p className="text-xs text-muted-foreground">
           {covariates.length} covariate{covariates.length !== 1 ? 's' : ''} selected
         </p>
       </div>
+
+      {/* Missing value strategy */}
+      {covariates.length > 0 && (() => {
+        const missing = detectMissingValues(rawData, covariates)
+        if (missing.length === 0) return null
+        return (
+          <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+            <p className="mb-2 text-sm font-medium text-amber-800">
+              Missing values detected in {missing.length} covariate{missing.length > 1 ? 's' : ''}:
+            </p>
+            <ul className="mb-3 space-y-0.5 text-xs text-amber-700">
+              {missing.map(m => (
+                <li key={m.column}>
+                  <strong>{m.column}</strong>: {m.missingCount} / {m.totalCount} rows
+                </li>
+              ))}
+            </ul>
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium text-amber-800">Strategy:</label>
+              <select
+                value={imputationStrategy}
+                onChange={e => setImputationStrategy(e.target.value as ImputationStrategy)}
+                className="rounded border border-amber-300 bg-white px-2 py-1 text-xs"
+              >
+                <option value="mean">Impute with column mean</option>
+                <option value="median">Impute with column median</option>
+                <option value="mode">Impute with column mode</option>
+                <option value="drop">Drop rows with missing values</option>
+              </select>
+            </div>
+          </div>
+        )
+      })()}
 
       {error && (
         <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">

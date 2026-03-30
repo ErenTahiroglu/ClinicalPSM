@@ -1,3 +1,4 @@
+---
 description: src/lib/psm/ altındaki istatistiksel algoritmalar ve hesaplama fonksiyonları üzerinde çalışırken bu kuralları uygula.
 ---
 - Bu dizindeki tüm fonksiyonlar "Pure Function" olmak zorundadır. Dışarıdan bir state değiştiremezler (No side-effects).

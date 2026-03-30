@@ -1,7 +1,13 @@
 import type { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit, rateLimitKey } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown'
+  if (!checkRateLimit(rateLimitKey(ip, 'create-analysis'), 10)) {
+    return Response.json({ error: 'Too many requests. Please wait a minute.' }, { status: 429 })
+  }
+
   try {
     const supabase = await createClient()
     const {

@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { ButtonLink } from '@/components/ui/button-link'
 import { Badge } from '@/components/ui/badge'
@@ -10,6 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { AnalysisResultDetail } from '@/components/analysis/AnalysisResultDetail'
+import { DeleteAnalysisButton } from '@/components/analysis/DeleteAnalysisButton'
 import type { Analysis, Profile } from '@/types/database'
 
 const statusColors: Record<Analysis['status'], string> = {
@@ -113,12 +115,20 @@ export default async function AnalysesPage() {
             <Card key={analysis.id} className="overflow-hidden">
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-base">{analysis.name}</CardTitle>
-                  <span
-                    className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[analysis.status]}`}
-                  >
-                    {analysis.status}
-                  </span>
+                  <Link href={`/analyses/${analysis.id}`} className="hover:underline">
+                    <CardTitle className="text-base">{analysis.name}</CardTitle>
+                  </Link>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[analysis.status]}`}
+                    >
+                      {analysis.status}
+                    </span>
+                    <DeleteAnalysisButton
+                      analysisId={analysis.id}
+                      analysisName={analysis.name}
+                    />
+                  </div>
                 </div>
                 <CardDescription>
                   {new Date(analysis.created_at).toLocaleDateString('en-US', {
