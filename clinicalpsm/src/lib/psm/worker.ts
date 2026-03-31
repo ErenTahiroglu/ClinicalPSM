@@ -2,7 +2,7 @@ import { computePropensityScores } from './logistic'
 import { matchNearest } from './matching'
 import { runPsm } from './balance'
 import { encodeData } from './encoding'
-import type { DataRow, PsmConfig } from './types'
+import type { PsmConfig } from './types'
 import { PsmError } from './types'
 import type { RawRow } from './encoding'
 

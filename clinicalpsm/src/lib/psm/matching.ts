@@ -36,6 +36,7 @@ export function matchNearest(
         }
       }
 
+      /* c8 ignore next — safety guard: unreachable when availableControls is non-empty */
       if (bestControl === -1) break
       if (caliper !== null && bestDistance > caliper) continue
 

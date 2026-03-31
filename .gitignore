@@ -1,9 +1,14 @@
 # macOS
 .DS_Store
+.DS_Store?
+._*
 
 # IDE
 .vscode/
 .idea/
+
+# Claude Code local settings
+.claude/
 
 # env files — never commit real credentials
 .env
@@ -12,3 +17,24 @@
 
 # Node
 node_modules/
+
+# Next.js build output
+clinicalpsm/.next/
+clinicalpsm/out/
+clinicalpsm/build/
+
+# Test coverage
+clinicalpsm/coverage/
+
+# TypeScript build info
+clinicalpsm/*.tsbuildinfo
+clinicalpsm/next-env.d.ts
+
+# Vercel
+.vercel
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*

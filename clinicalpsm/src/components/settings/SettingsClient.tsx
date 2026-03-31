@@ -87,8 +87,8 @@ export function SettingsClient({ email, profile }: Props) {
               id="password"
               name="password"
               type="password"
-              minLength={8}
-              placeholder="Minimum 8 characters"
+              minLength={10}
+              placeholder="Min. 10 chars, uppercase, lowercase, special"
               required
             />
           </div>

@@ -118,7 +118,7 @@ export default function RegisterPage() {
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   placeholder="••••••••"
-                  minLength={6}
+                  minLength={10}
                   required
                   className="pr-9"
                 />
@@ -136,7 +136,7 @@ export default function RegisterPage() {
                   )}
                 </button>
               </div>
-              <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
+              <p className="text-xs text-muted-foreground">At least 10 characters with one uppercase, one lowercase, and one special character.</p>
             </div>
           </CardContent>
 

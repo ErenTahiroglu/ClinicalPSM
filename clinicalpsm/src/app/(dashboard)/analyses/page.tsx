@@ -2,7 +2,9 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { ButtonLink } from '@/components/ui/button-link'
+import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import {
   Card,
   CardContent,
@@ -74,13 +76,18 @@ export default async function AnalysesPage() {
           )}
         </div>
 
-        <ButtonLink
-          href="/new"
-          size="sm"
-          {...(atLimit ? { 'aria-disabled': true, tabIndex: -1 } : {})}
-        >
-          New Analysis
-        </ButtonLink>
+        {atLimit ? (
+          <span
+            aria-disabled="true"
+            className={cn(buttonVariants({ size: 'sm' }), 'cursor-not-allowed opacity-50 pointer-events-none')}
+          >
+            New Analysis
+          </span>
+        ) : (
+          <ButtonLink href="/new" size="sm">
+            New Analysis
+          </ButtonLink>
+        )}
       </div>
 
       {/* Analyses list */}

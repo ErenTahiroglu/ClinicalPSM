@@ -3,6 +3,14 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
+function validatePassword(password: string): string | null {
+  if (password.length < 10) return 'Password must be at least 10 characters.'
+  if (!/[A-Z]/.test(password)) return 'Password must contain at least one uppercase letter.'
+  if (!/[a-z]/.test(password)) return 'Password must contain at least one lowercase letter.'
+  if (!/[^a-zA-Z0-9]/.test(password)) return 'Password must contain at least one special character (e.g. !@#$%).'
+  return null
+}
+
 export async function login(
   _prevState: { error: string } | null,
   formData: FormData
@@ -24,6 +32,9 @@ export async function register(
 ): Promise<{ error: string } | { message: string } | null> {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+
+  const passwordError = validatePassword(password)
+  if (passwordError) return { error: passwordError }
 
   const supabase = await createClient()
   const { error } = await supabase.auth.signUp({
@@ -80,6 +91,10 @@ export async function updatePassword(
   formData: FormData
 ): Promise<{ error: string } | { message: string }> {
   const password = formData.get('password') as string
+
+  const passwordError = validatePassword(password)
+  if (passwordError) return { error: passwordError }
+
   const supabase = await createClient()
   const { error } = await supabase.auth.updateUser({ password })
   if (error) return { error: error.message }

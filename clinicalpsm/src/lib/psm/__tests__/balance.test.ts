@@ -66,6 +66,32 @@ describe('computeBalance', () => {
     const ageTreatedMean = (60 + 55 + 65) / 3
     expect(table[0].meanTreated).toBeCloseTo(ageTreatedMean, 5)
   })
+
+  it('empty pairs: smdAfter and varianceRatioAfter are 0 (colStats n=0 branch)', () => {
+    // pairs=[] → matchedTreatedIdx=[], matchedControlIdx=[]
+    // colStats([]) → n=0 → {mean:0, variance:0}
+    // computeSmd([], []) → sdPooled=0 → smd=0; c.variance=0 → varianceRatio=0
+    const { data, scores, config } = makeBalanceData()
+    const table = computeBalance(data, scores, [], config)
+    for (const row of table) {
+      expect(row.smdAfter).toBe(0)
+      expect(row.varianceRatioAfter).toBe(0)
+    }
+  })
+
+  it('single matched pair: variance=0 for n=1 group (colStats n=1 branch)', () => {
+    // Single pair → afterT=[value], afterC=[value] each have length 1
+    // colStats([v]) → n=1 → variance=0 → sdPooled=0 → smd=0; varianceRatio=0
+    const { data, scores, config } = makeBalanceData()
+    const singlePair: MatchedPair[] = [
+      { treatedIndex: 0, controlIndex: 3, propensityTreated: 0.8, propensityControl: 0.2, distance: 0.6 },
+    ]
+    const table = computeBalance(data, scores, singlePair, config)
+    for (const row of table) {
+      expect(row.smdAfter).toBe(0)      // sdPooled=0 → smd=0
+      expect(row.varianceRatioAfter).toBe(0) // c.variance=0 → ratio=0
+    }
+  })
 })
 
 describe('runPsm', () => {

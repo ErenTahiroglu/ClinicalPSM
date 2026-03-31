@@ -19,9 +19,16 @@ export function buildMatchedCsv(
     rows.push([pairId, 'control', ...columns.map(col => String(controlRow[col] ?? ''))])
   })
 
-  return rows.map(row => row.join(',')).join('\n')
+  const escapeCell = (cell: string) => {
+    if (cell.includes(',') || cell.includes('"') || cell.includes('\n') || cell.includes('\r')) {
+      return `"${cell.replace(/"/g, '""')}"`
+    }
+    return cell
+  }
+  return rows.map(row => row.map(escapeCell).join(',')).join('\n')
 }
 
+/* c8 ignore next 9 — browser-only: requires DOM Blob, URL.createObjectURL, anchor click */
 export function downloadCsv(csvString: string, filename: string): void {
   const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)

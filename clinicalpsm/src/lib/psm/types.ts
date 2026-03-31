@@ -5,6 +5,7 @@ export type PsmErrorCode =
   | 'MISSING_VALUES'
   | 'CONVERGENCE_FAILURE'
   | 'NO_MATCHES'
+  | 'TIMEOUT'
 
 export class PsmError extends Error {
   constructor(

@@ -80,4 +80,15 @@ describe('computePropensityScores', () => {
     const { converged } = computePropensityScores(data, baseConfig)
     expect(typeof converged).toBe('boolean')
   })
+
+  it('converged=true when treated/control have identical covariate distributions', () => {
+    // Each treated row has an exact control twin → optimal weights are all 0.
+    // Gradient stays at 0 after first update → loss stops changing → converges at iter 2.
+    const data: DataRow[] = Array.from({ length: 30 }, (_, i) => [
+      { treatment: 1, age: 40 + i, bmi: 20 + i * 0.3 },
+      { treatment: 0, age: 40 + i, bmi: 20 + i * 0.3 },
+    ]).flat()
+    const { converged } = computePropensityScores(data, baseConfig)
+    expect(converged).toBe(true)
+  })
 })

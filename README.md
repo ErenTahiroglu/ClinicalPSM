@@ -2,7 +2,7 @@
 
 Propensity Score Matching (PSM) for clinical researchers — no coding required.
 
-Upload a CSV, select your treatment and covariates, run the analysis, and download publication-ready results.
+Upload a CSV, select your treatment and covariates, run the analysis, and download publication-ready results (balance table, love plot, matched dataset, PDF report).
 
 ---
 
@@ -16,8 +16,22 @@ Upload a CSV, select your treatment and covariates, run the analysis, and downlo
 | PSM Engine | TypeScript (browser-side Web Worker) |
 | Payments | Polar.sh (planned — v0.2) |
 | Hosting | Vercel |
-| Testing | Vitest |
+| Testing | Vitest — 95 tests, 100% coverage |
 | CI | GitHub Actions |
+
+---
+
+## Features
+
+- **CSV upload** — up to 500 rows (free plan), automatic column detection
+- **Missing value imputation** — mean, median, mode, or drop strategies
+- **Categorical encoding** — automatic one-hot encoding (k-1 dummies)
+- **PSM engine** — logistic regression + nearest-neighbor matching (with optional caliper, 1:N ratio)
+- **Balance diagnostics** — SMD and variance ratio before/after matching
+- **Export** — matched dataset CSV, balance table CSV, love plot PNG, PDF report
+- **Password security** — minimum 10 characters, uppercase, lowercase, special character
+- **Rate limiting** — per-IP sliding window (upload: 5/min, analyses: 10/min)
+- **Quota system** — free: 3 analyses total, Plus: 25/month, Pro: unlimited
 
 ---
 
@@ -50,6 +64,8 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+After linking Supabase, manually create the `csv-uploads` storage bucket (set to private) and configure RLS policies on all tables.
+
 ---
 
 ## Project Structure
@@ -72,7 +88,7 @@ clinicalpsm/
 │   ├── lib/
 │   │   ├── psm/              # PSM engine + Web Worker + tests
 │   │   ├── export/           # CSV, balance-table, SVG→PNG + tests
-│   │   ├── rate-limit.ts     # In-memory rate limiter
+│   │   ├── rate-limit.ts     # In-memory sliding window rate limiter
 │   │   └── supabase/         # Client and server helpers
 │   └── types/                # TypeScript type definitions
 ├── supabase/
@@ -116,22 +132,23 @@ Copy `.env.local.example` to `.env.local` and fill in the values:
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
-NEXT_PUBLIC_SITE_URL=
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
-Polar.sh variables (`POLAR_ACCESS_TOKEN`, `POLAR_WEBHOOK_SECRET`, product IDs) are only needed when enabling paid plans.
+Polar.sh variables (`POLAR_ACCESS_TOKEN`, `POLAR_WEBHOOK_SECRET`, product IDs) are only needed when enabling paid plans (v0.2).
 
 ---
 
 ## Scripts
 
 ```bash
-npm run dev          # Start development server
-npm run build        # Production build
-npm run lint         # ESLint
-npm test             # Vitest (unit tests)
-npm run test:watch   # Vitest watch mode
-npm run test:coverage  # Coverage report
+npm run dev            # Start development server
+npm run build          # Production build
+npm run lint           # ESLint
+npx tsc --noEmit       # Type-check without building
+npm test               # Vitest unit tests (95 tests)
+npm run test:watch     # Vitest watch mode
+npm run test:coverage  # Coverage report (100% statements/branches/functions/lines)
 ```
 
 ---

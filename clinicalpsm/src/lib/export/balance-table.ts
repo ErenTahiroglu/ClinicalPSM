@@ -22,9 +22,16 @@ export function buildBalanceTableCsv(balanceTable: BalanceRow[]): string {
     row.varianceRatioBefore.toFixed(4),
     row.varianceRatioAfter.toFixed(4),
   ])
-  return [header, ...rows].map(r => r.join(',')).join('\n')
+  const escapeCell = (cell: string) => {
+    if (cell.includes(',') || cell.includes('"') || cell.includes('\n') || cell.includes('\r')) {
+      return `"${cell.replace(/"/g, '""')}"`
+    }
+    return cell
+  }
+  return [header, ...rows].map(r => r.map(escapeCell).join(',')).join('\n')
 }
 
+/* c8 ignore next 4 — browser-only: delegates to downloadCsv which requires DOM */
 export function downloadBalanceTable(balanceTable: BalanceRow[], analysisId: string): void {
   const csv = buildBalanceTableCsv(balanceTable)
   downloadCsv(csv, `balance_table_${analysisId.slice(0, 8)}.csv`)

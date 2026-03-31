@@ -73,11 +73,17 @@ export function imputeData(
 
   const fillValues = new Map<string, number | string>()
   for (const col of columns) {
-    const vals = numericValues(rows, col)
-    if (vals.length === 0) continue
-    if (strategy === 'mean') fillValues.set(col, mean(vals))
-    else if (strategy === 'median') fillValues.set(col, median(vals))
-    else if (strategy === 'mode') fillValues.set(col, mode(rows.map(r => r[col])))
+    if (strategy === 'mode') {
+      // mode works on any type (numeric or categorical) — skip the numeric-only guard
+      const rawVals = rows.map(r => r[col])
+      const nonNull = rawVals.filter(v => v !== null && v !== undefined && v !== '')
+      if (nonNull.length > 0) fillValues.set(col, mode(rawVals))
+    } else {
+      const vals = numericValues(rows, col)
+      if (vals.length === 0) continue
+      if (strategy === 'mean') fillValues.set(col, mean(vals))
+      else fillValues.set(col, median(vals)) // only 'median' reaches here
+    }
   }
 
   return rows.map(row => {
