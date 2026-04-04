@@ -7,9 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test": "vitest run --exclude 'src/lib/supabase/__tests__/**'",
+    "test:watch": "vitest --exclude 'src/lib/supabase/__tests__/**'",
+    "test:coverage": "vitest run --coverage --exclude 'src/lib/supabase/__tests__/**'",
+    "test:rls": "vitest run src/lib/supabase/__tests__/rls.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",

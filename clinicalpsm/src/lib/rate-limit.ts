@@ -1,15 +1,38 @@
 /**
- * Simple in-memory sliding-window rate limiter.
- * Works per-process (suitable for single-instance / serverless cold-starts).
- * For multi-instance production use, replace with Redis/Upstash.
+ * In-memory sliding-window rate limiter.
+ *
+ * ⚠️  PRODUCTION NOTE (B-1):
+ * This implementation stores counters per-process. In a multi-instance
+ * deployment (e.g. Vercel serverless), each instance maintains its own counter
+ * and rate limits are NOT shared across instances.
+ *
+ * To upgrade to a shared rate limiter:
+ *   1. Install:  npm install @upstash/ratelimit @upstash/redis
+ *   2. Set env:  UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
+ *   3. Replace checkRateLimit() with Ratelimit.slidingWindow() from @upstash/ratelimit
+ *
+ * The API surface (checkRateLimit / rateLimitKey) is designed to be a
+ * drop-in replacement — callers do not need changes.
  */
 
-interface Window {
+interface RateLimitWindow {
   count: number
   resetAt: number
 }
 
-const store = new Map<string, Window>()
+const store = new Map<string, RateLimitWindow>()
+
+// Warn once at startup if Upstash vars are set but the in-memory limiter is still used
+if (
+  typeof process !== 'undefined' &&
+  process.env.UPSTASH_REDIS_REST_URL &&
+  typeof window === 'undefined'
+) {
+  console.warn(
+    '[RateLimit] UPSTASH_REDIS_REST_URL is set but in-memory rate limiter is active. ' +
+      'Install @upstash/ratelimit and @upstash/redis to enable shared rate limiting.'
+  )
+}
 
 /** Returns true if the request is allowed, false if rate-limited. */
 export function checkRateLimit(key: string, limitPerMinute: number): boolean {
@@ -31,3 +54,4 @@ export function checkRateLimit(key: string, limitPerMinute: number): boolean {
 export function rateLimitKey(ip: string, route: string): string {
   return `${route}:${ip}`
 }
+

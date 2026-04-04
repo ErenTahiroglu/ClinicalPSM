@@ -13,10 +13,10 @@ Upload a CSV, select your treatment and covariates, run the analysis, and downlo
 | Framework | Next.js 16 (App Router) + TypeScript |
 | Styling | Tailwind CSS v4 + shadcn/ui (base-nova) |
 | Auth + DB | Supabase (Auth, PostgreSQL, Storage, RLS) |
-| PSM Engine | TypeScript (browser-side Web Worker) |
+| PSM Engine | TypeScript (optimal matching, ATT/ATE) |
 | Payments | Polar.sh (planned — v0.2) |
 | Hosting | Vercel |
-| Testing | Vitest — 95 tests, 100% coverage |
+| Testing | Vitest — 204 tests, 100% coverage |
 | CI | GitHub Actions |
 
 ---
@@ -26,7 +26,7 @@ Upload a CSV, select your treatment and covariates, run the analysis, and downlo
 - **CSV upload** — up to 500 rows (free plan), automatic column detection
 - **Missing value imputation** — mean, median, mode, or drop strategies
 - **Categorical encoding** — automatic one-hot encoding (k-1 dummies)
-- **PSM engine** — logistic regression + nearest-neighbor matching (with optional caliper, 1:N ratio)
+- **PSM engine** — logistic regression, nearest-neighbor & optimal exact matching, common support, ATE/ATT
 - **Balance diagnostics** — SMD and variance ratio before/after matching
 - **Export** — matched dataset CSV, balance table CSV, love plot PNG, PDF report
 - **Password security** — minimum 10 characters, uppercase, lowercase, special character
@@ -146,7 +146,7 @@ npm run dev            # Start development server
 npm run build          # Production build
 npm run lint           # ESLint
 npx tsc --noEmit       # Type-check without building
-npm test               # Vitest unit tests (95 tests)
+npm test               # Vitest unit tests (204 tests)
 npm run test:watch     # Vitest watch mode
 npm run test:coverage  # Coverage report (100% statements/branches/functions/lines)
 ```

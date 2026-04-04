@@ -90,8 +90,9 @@ export function WizardStep2Variables({ columns, rawData, onComplete, onBack }: P
 
       {/* Treatment column */}
       <div className="flex flex-col gap-2">
-        <Label>Treatment variable (binary: 0 = control, 1 = treated)</Label>
+        <Label htmlFor="treatment-col-select">Treatment variable (binary: 0 = control, 1 = treated)</Label>
         <select
+          id="treatment-col-select"
           className="rounded-md border border-input bg-background px-3 py-2 text-sm"
           value={treatmentColumn}
           onChange={e => {
@@ -141,14 +142,14 @@ export function WizardStep2Variables({ columns, rawData, onComplete, onBack }: P
             </button>
           </div>
         </div>
-        <div className="max-h-72 overflow-y-auto rounded-md border">
+        <div className="max-h-72 overflow-x-auto overflow-y-auto rounded-md border">
           <table className="min-w-full text-xs">
             <thead className="sticky top-0 bg-muted/70">
               <tr>
-                <th className="px-3 py-2 text-left font-medium text-muted-foreground">Column</th>
-                <th className="px-3 py-2 text-right font-medium text-muted-foreground">Mean</th>
-                <th className="px-3 py-2 text-right font-medium text-muted-foreground">SD</th>
-                <th className="px-3 py-2 text-right font-medium text-muted-foreground">Missing</th>
+                <th scope="col" className="px-3 py-2 text-left font-medium text-muted-foreground">Column</th>
+                <th scope="col" className="px-3 py-2 text-right font-medium text-muted-foreground">Mean</th>
+                <th scope="col" className="px-3 py-2 text-right font-medium text-muted-foreground">SD</th>
+                <th scope="col" className="px-3 py-2 text-right font-medium text-muted-foreground">Missing</th>
               </tr>
             </thead>
             <tbody>
@@ -158,6 +159,7 @@ export function WizardStep2Variables({ columns, rawData, onComplete, onBack }: P
                   <tr
                     key={col}
                     onClick={() => toggleCovariate(col)}
+                    aria-label={`${col} — click to ${covariates.includes(col) ? 'deselect' : 'select'} as covariate`}
                     className={`cursor-pointer border-t transition-colors ${
                       covariates.includes(col)
                         ? 'bg-primary/5'
@@ -172,6 +174,7 @@ export function WizardStep2Variables({ columns, rawData, onComplete, onBack }: P
                           onChange={() => toggleCovariate(col)}
                           onClick={e => e.stopPropagation()}
                           className="h-3.5 w-3.5 accent-primary"
+                          aria-label={`Select ${col} as covariate`}
                         />
                         <span className="font-medium">{col}</span>
                         {isCategoricalColumn(rawData, col) && (

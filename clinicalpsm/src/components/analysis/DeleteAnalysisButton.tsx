@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Trash2 } from 'lucide-react'
+import { useToast } from '@/components/shared/ToastProvider'
 
 interface Props {
   analysisId: string
@@ -11,6 +12,7 @@ interface Props {
 
 export function DeleteAnalysisButton({ analysisId, analysisName }: Props) {
   const router = useRouter()
+  const { toast } = useToast()
   const [isPending, setIsPending] = useState(false)
 
   async function handleDelete() {
@@ -21,10 +23,13 @@ export function DeleteAnalysisButton({ analysisId, analysisName }: Props) {
       const res = await fetch(`/api/analyses/${analysisId}`, { method: 'DELETE' })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
-        alert(body.error ?? 'Failed to delete analysis.')
+        toast(body.error ?? 'Failed to delete analysis.', 'error')
         return
       }
+      toast(`"${analysisName}" deleted successfully.`, 'success')
       router.refresh()
+    } catch {
+      toast('Network error. Please try again.', 'error')
     } finally {
       setIsPending(false)
     }
@@ -42,3 +47,4 @@ export function DeleteAnalysisButton({ analysisId, analysisName }: Props) {
     </button>
   )
 }
+

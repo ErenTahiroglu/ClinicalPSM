@@ -53,8 +53,10 @@ export function PropensityHistogram({ scores, treatment, matchedPairs }: Props) 
       <svg
         width={svgWidth}
         height={svgHeight}
-        aria-label="Propensity score distribution before and after matching"
+        role="img"
+        aria-labelledby="psm-histogram-title"
       >
+        <title id="psm-histogram-title">Propensity score distribution before and after matching — treated and control groups</title>
         {/* Title */}
         <text x={svgWidth / 2} y={14} textAnchor="middle" fontSize={11} fontWeight={500} fill="#374151">
           Propensity Score Distribution

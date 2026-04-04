@@ -37,8 +37,10 @@ export const LovePlot = forwardRef<SVGSVGElement, LovePlotProps>(function LovePl
         ref={ref}
         width={svgWidth}
         height={svgHeight}
-        aria-label="Love plot: SMD before and after matching"
+        role="img"
+        aria-labelledby="love-plot-title"
       >
+        <title id="love-plot-title">Love plot: Standardized Mean Differences before and after propensity score matching</title>
         {/* Title */}
         <text
           x={svgWidth / 2}

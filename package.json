@@ -5,6 +5,7 @@
     "dev": "npm run dev --prefix clinicalpsm",
     "build": "npm run build --prefix clinicalpsm",
     "start": "npm run start --prefix clinicalpsm",
-    "lint": "npm run lint --prefix clinicalpsm"
+    "lint": "npm run lint --prefix clinicalpsm",
+    "test": "npm test --prefix clinicalpsm"
   }
 }

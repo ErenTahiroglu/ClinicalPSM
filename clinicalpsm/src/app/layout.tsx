@@ -1,16 +1,23 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next'
+import { Geist, Geist_Mono } from 'next/font/google'
+import './globals.css'
+import { ToastProvider } from '@/components/shared/ToastProvider'
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
+// D-3: Vercel Analytics — activate by running:
+//   npm install @vercel/analytics @vercel/speed-insights
+// Then uncomment the two lines below and add <Analytics /> <SpeedInsights /> inside <body>:
+// import { Analytics } from '@vercel/analytics/next'
+// import { SpeedInsights } from '@vercel/speed-insights/next'
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+})
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+})
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://clinicalpsm.com'
 
@@ -36,19 +43,24 @@ export const metadata: Metadata = {
     description:
       'Run PSM analysis without R or Stata. Upload a CSV, configure your analysis, and download publication-ready results in minutes.',
   },
-};
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ErrorBoundary>
+          <ToastProvider>{children}</ToastProvider>
+        </ErrorBoundary>
+      </body>
     </html>
-  );
+  )
 }
+

@@ -1,12 +1,9 @@
-import type { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { withErrorHandling, UnauthorizedError, NotFoundError } from '@/lib/errors'
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id: analysisId } = await params
+export const DELETE = withErrorHandling(
+  async (_req: Request, ctx: unknown) => {
+    const { id: analysisId } = await (ctx as { params: Promise<{ id: string }> }).params
 
     const supabase = await createClient()
     const {
@@ -14,9 +11,7 @@ export async function DELETE(
       error: authError,
     } = await supabase.auth.getUser()
 
-    if (!user || authError) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    if (!user || authError) throw new UnauthorizedError()
 
     // Verify ownership and get upload paths for storage cleanup
     const { data: analysis } = await supabase
@@ -26,9 +21,7 @@ export async function DELETE(
       .eq('user_id', user.id)
       .single()
 
-    if (!analysis) {
-      return Response.json({ error: 'Analysis not found' }, { status: 404 })
-    }
+    if (!analysis) throw new NotFoundError('Analysis not found')
 
     // Fetch associated upload file paths
     const { data: uploads } = await supabase
@@ -48,12 +41,9 @@ export async function DELETE(
       .delete()
       .eq('id', analysisId)
 
-    if (deleteError) {
-      return Response.json({ error: deleteError.message }, { status: 500 })
-    }
+    if (deleteError) throw new Error(deleteError.message)
 
     return Response.json({ success: true })
-  } catch {
-    return Response.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+)
+

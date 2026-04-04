@@ -13,6 +13,7 @@ import { downloadSvgAsPng } from '@/lib/export/svg-to-png'
 import { PsmError } from '@/lib/psm/types'
 import type { PsmConfig, PsmResult } from '@/lib/psm/types'
 import type { RawRow } from '@/lib/psm/encoding'
+import { useToast } from '@/components/shared/ToastProvider'
 
 interface Props {
   rawData: RawRow[]
@@ -49,6 +50,7 @@ export function WizardStep4Results({
   const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const lovePlotRef = useRef<SVGSVGElement>(null)
+  const { toast } = useToast()
 
   async function handleRun() {
     setIsRunning(true)
@@ -90,16 +92,19 @@ export function WizardStep4Results({
     if (!result) return
     const csv = buildMatchedCsv(rawData, result.matchedPairs, columns)
     downloadCsv(csv, `matched_dataset_${analysisId.slice(0, 8)}.csv`)
+    toast('Matched CSV downloaded.', 'success')
   }
 
   function handleDownloadBalanceTable() {
     if (!result) return
     downloadBalanceTable(result.balanceTable, analysisId)
+    toast('Balance table downloaded.', 'success')
   }
 
   function handleDownloadLovePlot() {
     if (!lovePlotRef.current) return
     downloadSvgAsPng(lovePlotRef.current, `love_plot_${analysisId.slice(0, 8)}.png`)
+    toast('Love plot PNG downloaded.', 'success')
   }
 
   return (
