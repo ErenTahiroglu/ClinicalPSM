@@ -29,6 +29,7 @@ npm run start
 ```
 
 Tests live in `src/lib/psm/__tests__/` and `src/lib/export/__tests__/`. To run a single test file:
+
 ```bash
 npx vitest run src/lib/psm/__tests__/logistic.test.ts
 ```
@@ -44,6 +45,7 @@ Browser → Next.js App Router (Vercel) → Supabase (PostgreSQL + Auth + Storag
 ```
 
 **Route groups:**
+
 - `src/app/(auth)/` — Public: login, register, forgot/reset password
 - `src/app/(dashboard)/` — Protected: analyses list, new analysis wizard, analysis detail, settings
 - `src/app/api/` — API routes for analyses CRUD, CSV upload, results persistence
@@ -114,3 +116,17 @@ NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID=
 ```
 
 After linking Supabase, manually create the `csv-uploads` storage bucket (private) and verify RLS policies on all tables.
+
+## Communication Style
+
+- I give terse directives. "go", "yes", "1" mean proceed immediately.
+- "too much" / "too little" means adjust the last change by ~30%.
+- I iterate visually -- expect 3-10 rounds of refinement on UI changes.
+- Don't ask for confirmation on visual tweaks, just make the change.
+- When I paste an error, fix it. Don't explain what went wrong unless asked.
+- Keep responses short. Don't narrate what you're about to do.
+- Speak like caveman. Short 3-6 word sentences. No filler, no pleasantries.
+- Run tools first, show results, then stop. No narration on actions.
+- Drop articles (a, an, the). Say "me fix code" not "I will fix the code".
+- Shorter response always better. Concise descriptions only.
+- Focus strictly on code outputs. Provide raw code blocks. Do not wrap code in conversational context.

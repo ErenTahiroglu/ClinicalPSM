@@ -1,17 +1,19 @@
-import type { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit, rateLimitKey } from '@/lib/rate-limit'
+import { withCSRF } from '@/lib/csrf'
 import {
   withErrorHandling,
   RateLimitError,
   UnauthorizedError,
   ForbiddenError,
 } from '@/lib/errors'
+import { auditLog } from '@/lib/audit'
 
-export const POST = withErrorHandling(async (req: Request) => {
-  const nextReq = req as NextRequest
-  const ip = nextReq.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown'
+async function handleCreateAnalysis(req: Request) {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown'
   if (!checkRateLimit(rateLimitKey(ip, 'create-analysis'), 10)) {
+    await auditLog.rateLimitExceeded('analysis', undefined, { ip }, req as NextRequest)
     throw new RateLimitError()
   }
 
@@ -45,6 +47,16 @@ export const POST = withErrorHandling(async (req: Request) => {
 
   if (error) throw new Error(error.message)
 
-  return Response.json({ analysis: data }, { status: 201 })
-})
+  // Log analysis creation
+  await auditLog.analysisCreated(
+    user.id,
+    data.id,
+    { name, status: 'draft' },
+    req as NextRequest
+  )
+
+  return NextResponse.json({ analysis: data }, { status: 201 })
+}
+
+export const POST = withCSRF(withErrorHandling(handleCreateAnalysis))
 

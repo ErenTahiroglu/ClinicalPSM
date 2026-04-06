@@ -20,6 +20,9 @@ const ContentSecurityPolicy = `
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  turbopack: {
+    root: __dirname,
+  },
 
   async headers() {
     return [

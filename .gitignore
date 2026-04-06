@@ -38,3 +38,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+
+# Documentation files (keep local, don't commit)
+PADDLE_INTEGRATION_GUIDE.md
+IMPLEMENTATION_SUMMARY.md
+CLINICALPSM_TEST_REPORT.md

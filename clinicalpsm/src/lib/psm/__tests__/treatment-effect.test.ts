@@ -127,3 +127,68 @@ describe('estimateTreatmentEffect', () => {
     expect(result.nPairs).toBe(10)
   })
 })
+
+describe('treatment-effect edge cases', () => {
+  it('should handle single pair correctly (n=1 case)', () => {
+    const data: DataRow[] = [
+      { treatment: 1, outcome: 12 },
+      { treatment: 0, outcome: 10 },
+    ]
+    const pairs: MatchedPair[] = [
+      { treatedIndex: 0, controlIndex: 1, propensityTreated: 0.6, propensityControl: 0.4, distance: 0.2 },
+    ]
+    const result = estimateATT(data, pairs, 'treatment', 'outcome')
+    expect(result.att).toBe(2) // 12 - 10
+    expect(result.nPairs).toBe(1)
+    // With n=1, variance should be 0 (no degrees of freedom)
+    expect(result.attSE).toBe(0)
+  })
+
+  it('should handle zero denominator in ATE calculation', () => {
+    const data: DataRow[] = [
+      { treatment: 1, outcome: 10 },
+      { treatment: 0, outcome: 8 },
+    ]
+    // Edge case: propensity scores of 0 and 1 would cause division by zero
+    const scores = [1.0, 0.0] // These get clipped to avoid division by zero
+    const result = estimateATE(data, scores, 'treatment', 'outcome')
+    expect(isFinite(result.ate)).toBe(true)
+    expect(isFinite(result.ateCI95Lower)).toBe(true)
+    expect(isFinite(result.ateCI95Upper)).toBe(true)
+  })
+
+  it('should handle extreme propensity scores in ATE', () => {
+    const data: DataRow[] = [
+      { treatment: 1, outcome: 15 },
+      { treatment: 1, outcome: 12 },
+      { treatment: 0, outcome: 10 },
+      { treatment: 0, outcome: 8 },
+    ]
+    // Very extreme propensity scores that would create large weights
+    const scores = [0.001, 0.002, 0.998, 0.999]
+    const result = estimateATE(data, scores, 'treatment', 'outcome')
+    expect(isFinite(result.ate)).toBe(true)
+    expect(isFinite(result.ateCI95Lower)).toBe(true)
+    expect(isFinite(result.ateCI95Upper)).toBe(true)
+  })
+
+  it('should handle all treated or all control data', () => {
+    const allTreated: DataRow[] = [
+      { treatment: 1, outcome: 12 },
+      { treatment: 1, outcome: 15 },
+    ]
+    const allControl: DataRow[] = [
+      { treatment: 0, outcome: 8 },
+      { treatment: 0, outcome: 10 },
+    ]
+    const scores = [0.6, 0.7]
+    
+    const resultTreated = estimateATE(allTreated, scores, 'treatment', 'outcome')
+    // When all treated, implementation should handle this edge case gracefully
+    expect(isFinite(resultTreated.ate)).toBe(true)
+    
+    const resultControl = estimateATE(allControl, scores, 'treatment', 'outcome')
+    // When all control, implementation should handle this edge case gracefully
+    expect(isFinite(resultControl.ate)).toBe(true)
+  })
+})

@@ -1,19 +1,22 @@
-import type { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit, rateLimitKey } from '@/lib/rate-limit'
+import { withFileUploadLimit } from '@/lib/request-limits'
+import { auditLog } from '@/lib/audit'
 
-export async function POST(
+async function handleUpload(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id: analysisId } = await params
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown'
+  
   if (!checkRateLimit(rateLimitKey(ip, 'upload'), 5)) {
-    return Response.json({ error: 'Too many uploads. Please wait a minute.' }, { status: 429 })
+    await auditLog.rateLimitExceeded('upload', analysisId, { ip }, request)
+    return NextResponse.json({ error: 'Too many uploads. Please wait a minute.' }, { status: 429 })
   }
 
   try {
-    const { id: analysisId } = await params
-
     const supabase = await createClient()
     const {
       data: { user },
@@ -21,7 +24,7 @@ export async function POST(
     } = await supabase.auth.getUser()
 
     if (!user || authError) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Verify ownership
@@ -33,7 +36,7 @@ export async function POST(
       .single()
 
     if (!analysis) {
-      return Response.json({ error: 'Analysis not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Analysis not found' }, { status: 404 })
     }
 
     const formData = await request.formData()
@@ -50,7 +53,7 @@ export async function POST(
       .single()
 
     if (profile?.plan === 'free' && rowCount > FREE_ROW_LIMIT) {
-      return Response.json(
+      return NextResponse.json(
         { error: `Free plan allows up to ${FREE_ROW_LIMIT} rows per analysis. Your file has ${rowCount} rows.` },
         { status: 403 }
       )
@@ -60,7 +63,7 @@ export async function POST(
       : []
 
     if (!file) {
-      return Response.json({ error: 'No file provided' }, { status: 400 })
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
     const filePath = `csvs/${user.id}/${analysisId}/${file.name}`
@@ -74,7 +77,7 @@ export async function POST(
       })
 
     if (storageError) {
-      return Response.json({ error: storageError.message }, { status: 500 })
+      return NextResponse.json({ error: storageError.message }, { status: 500 })
     }
 
     const { data: upload, error: dbError } = await supabase
@@ -89,11 +92,34 @@ export async function POST(
       .single()
 
     if (dbError) {
-      return Response.json({ error: dbError.message }, { status: 500 })
+      return NextResponse.json({ error: dbError.message }, { status: 500 })
     }
 
-    return Response.json({ upload }, { status: 201 })
-  } catch {
-    return Response.json({ error: 'Internal server error' }, { status: 500 })
+    // Log successful upload
+    await auditLog.fileUploaded(
+      user.id,
+      upload.id,
+      { 
+        fileName: file.name,
+        fileSize: file.size,
+        rowCount,
+        analysisId 
+      },
+      request
+    )
+
+    return NextResponse.json({ upload }, { status: 201 })
+  } catch (error) {
+    await auditLog.errorOccurred(
+      error instanceof Error ? error : new Error('Unknown error in upload'),
+      { analysisId, action: 'file_upload' },
+      request
+    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const POST = withFileUploadLimit(handleUpload, {
+  maxFileSize: 5 * 1024 * 1024, // 5MB
+  maxRows: 500, // Free tier limit
+})

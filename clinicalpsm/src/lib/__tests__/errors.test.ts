@@ -198,7 +198,6 @@ describe('withErrorHandling', () => {
 
   it('converts non-Error throw to 500 INTERNAL_ERROR', async () => {
     const handler = withErrorHandling(async () => {
-      // eslint-disable-next-line @typescript-eslint/only-throw-error
       throw 'string error'
     })
     const res = await handler(makeRequest())
