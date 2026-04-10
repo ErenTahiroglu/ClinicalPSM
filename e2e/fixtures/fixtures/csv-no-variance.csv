@@ -1,0 +1,7 @@
+patient_id,treatment,outcome,age,gender
+1,0,0.5,65,Male
+2,0,0.8,72,Female
+3,0,0.3,58,Male
+4,0,0.9,69,Female
+5,0,0.4,61,Male
+6,0,0.7,75,Female

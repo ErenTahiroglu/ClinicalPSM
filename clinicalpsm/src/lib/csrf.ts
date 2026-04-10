@@ -154,13 +154,15 @@ export function withCSRFToken(
 
     // Add CSRF token to GET responses
     if (req.method === 'GET') {
-      const token = getCSRFToken(req)
-      if (!token) {
-        setCSRFToken(response)
+      const existingToken = getCSRFToken(req)
+      if (!existingToken) {
+        // Generate exactly one token and use it for both the cookie and the header
+        const newToken = setCSRFToken(response)
+        response.headers.set('X-CSRF-Token', newToken)
+      } else {
+        // Cookie already exists — just expose the existing token in the header
+        response.headers.set('X-CSRF-Token', existingToken)
       }
-      
-      // Also add token to response headers for easy access
-      response.headers.set('X-CSRF-Token', token || setCSRFToken(response))
     }
 
     return response

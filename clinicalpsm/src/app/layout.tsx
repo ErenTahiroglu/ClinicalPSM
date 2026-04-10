@@ -3,11 +3,6 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { ToastProvider } from '@/components/shared/ToastProvider'
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
-// D-3: Vercel Analytics — activate by running:
-//   npm install @vercel/analytics @vercel/speed-insights
-// Then uncomment the two lines below and add <Analytics /> <SpeedInsights /> inside <body>:
-// import { Analytics } from '@vercel/analytics/next'
-// import { SpeedInsights } from '@vercel/speed-insights/next'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -57,10 +52,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ErrorBoundary>
-          <ToastProvider>{children}</ToastProvider>
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </ErrorBoundary>
       </body>
     </html>
   )
 }
-

@@ -25,7 +25,7 @@ export class RequestSizeLimitError extends Error {
 /**
  * Middleware to enforce request size limits for Next.js routes
  */
-export function withRequestSizeLimit<T extends Record<string, any>>(
+export function withRequestSizeLimit<T extends Record<string, unknown>>(
   handler: (req: NextRequest, context: { params: Promise<T> }) => Promise<NextResponse>,
   options: RequestSizeLimitOptions = {}
 ) {
@@ -159,7 +159,7 @@ export function withRequestSizeLimit<T extends Record<string, any>>(
 /**
  * Specific middleware for file upload routes
  */
-export function withFileUploadLimit<T extends Record<string, any>>(
+export function withFileUploadLimit<T extends Record<string, unknown>>(
   handler: (req: NextRequest, context: { params: Promise<T> }) => Promise<NextResponse>,
   options: Pick<RequestSizeLimitOptions, 'maxFileSize' | 'maxRows'> = {}
 ) {
@@ -180,33 +180,4 @@ function formatBytes(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k))
   
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
-
-/**
- * Check if a request exceeds limits without processing it
- */
-export function checkRequestSize(
-  req: NextRequest,
-  options: RequestSizeLimitOptions = {}
-): { valid: boolean; error?: RequestSizeLimitError } {
-  const {
-    maxSize = MAX_REQUEST_SIZE,
-    maxFileSize = MAX_FILE_SIZE,
-  } = options
-
-  const contentLength = req.headers.get('content-length')
-  if (contentLength) {
-    const size = parseInt(contentLength, 10)
-    if (size > maxSize) {
-      return {
-        valid: false,
-        error: new RequestSizeLimitError(
-          `Request too large. Maximum size is ${formatBytes(maxSize)}`,
-          'REQUEST_TOO_LARGE'
-        ),
-      }
-    }
-  }
-
-  return { valid: true }
 }

@@ -70,4 +70,27 @@ describe('buildBalanceTableCsv', () => {
     const csv = buildBalanceTableCsv([makeRow({ covariate: 'var "X"' })])
     expect(csv).toContain('"var ""X"""')
   })
+
+  // Bug: if a BalanceRow contains NaN values, .toFixed(4) produces "NaN" string.
+  // Fix: replace NaN with "0.0000" in the CSV output.
+  it('outputs "0.0000" instead of "NaN" when a numeric value is NaN (bug fix)', () => {
+    const nanRow: BalanceRow = {
+      covariate: 'test_var',
+      meanTreated: NaN,
+      meanControl: NaN,
+      sdPooled: NaN,
+      smdBefore: NaN,
+      smdAfter: NaN,
+      varianceRatioBefore: NaN,
+      varianceRatioAfter: NaN,
+    }
+    const csv = buildBalanceTableCsv([nanRow])
+    expect(csv).not.toContain('NaN')
+    // All NaN values should become "0.0000"
+    const dataLine = csv.split('\n')[1]
+    const numericFields = dataLine.split(',').slice(1) // skip covariate name
+    for (const field of numericFields) {
+      expect(field).toMatch(/^-?\d+\.\d{4}$/)
+    }
+  })
 })

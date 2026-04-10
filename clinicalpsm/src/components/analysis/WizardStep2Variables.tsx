@@ -11,7 +11,12 @@ import type { ImputationStrategy } from '@/lib/psm/imputation'
 interface Props {
   columns: string[]
   rawData: RawRow[]
-  onComplete: (result: { treatmentColumn: string; covariates: string[]; imputationStrategy: ImputationStrategy }) => void
+  onComplete: (result: {
+    treatmentColumn: string
+    outcomeColumn: string
+    covariates: string[]
+    imputationStrategy: ImputationStrategy
+  }) => void
   onBack: () => void
 }
 
@@ -45,13 +50,15 @@ function getColStats(data: RawRow[], col: string): ColStats {
 
 export function WizardStep2Variables({ columns, rawData, onComplete, onBack }: Props) {
   const [treatmentColumn, setTreatmentColumn] = useState('')
+  const [outcomeColumn, setOutcomeColumn] = useState('')
   const [covariates, setCovariates] = useState<string[]>([])
   const [imputationStrategy, setImputationStrategy] = useState<ImputationStrategy>('mean')
   const [error, setError] = useState<string | null>(null)
 
-  const availableColumns = treatmentColumn
-    ? columns.filter(c => c !== treatmentColumn)
-    : columns
+  // Covariates exclude treatment and outcome columns
+  const availableColumns = columns.filter(
+    c => c !== treatmentColumn && c !== outcomeColumn
+  )
 
   function toggleCovariate(col: string) {
     setCovariates(prev =>
@@ -75,24 +82,28 @@ export function WizardStep2Variables({ columns, rawData, onComplete, onBack }: P
       setError('Please select at least one covariate.')
       return
     }
-    onComplete({ treatmentColumn, covariates, imputationStrategy })
+    onComplete({ treatmentColumn, outcomeColumn, covariates, imputationStrategy })
   }
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="text-lg font-semibold">Step 2: Select variables</h2>
+        <h2 className="text-lg font-semibold">Step 3: Select variables</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Choose your treatment indicator (must be 0/1) and the covariates to
-          include in the propensity score model.
+          Choose your treatment indicator (must be 0/1), outcome variable, and
+          the covariates to include in the propensity score model.
         </p>
       </div>
 
       {/* Treatment column */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="treatment-col-select">Treatment variable (binary: 0 = control, 1 = treated)</Label>
+        <Label htmlFor="treatment-select">
+          Treatment variable{' '}
+          <span className="font-normal text-muted-foreground">(binary: 0 = control, 1 = treated)</span>
+        </Label>
         <select
-          id="treatment-col-select"
+          id="treatment-select"
+          name="treatment"
           className="rounded-md border border-input bg-background px-3 py-2 text-sm"
           value={treatmentColumn}
           onChange={e => {
@@ -113,6 +124,33 @@ export function WizardStep2Variables({ columns, rawData, onComplete, onBack }: P
             Warning: this column does not appear to contain only 0 and 1 values.
           </p>
         )}
+      </div>
+
+      {/* Outcome column */}
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="outcome-select">
+          Outcome variable{' '}
+          <span className="font-normal text-muted-foreground">(optional — used for treatment effect estimation)</span>
+        </Label>
+        <select
+          id="outcome-select"
+          name="outcome"
+          className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+          value={outcomeColumn}
+          onChange={e => {
+            setOutcomeColumn(e.target.value)
+            setCovariates(prev => prev.filter(c => c !== e.target.value))
+          }}
+        >
+          <option value="">— select column (optional) —</option>
+          {columns
+            .filter(c => c !== treatmentColumn)
+            .map(col => (
+              <option key={col} value={col}>
+                {col}
+              </option>
+            ))}
+        </select>
       </div>
 
       {/* Covariates */}
@@ -158,6 +196,7 @@ export function WizardStep2Variables({ columns, rawData, onComplete, onBack }: P
                 return (
                   <tr
                     key={col}
+                    data-covariate={col}
                     onClick={() => toggleCovariate(col)}
                     aria-label={`${col} — click to ${covariates.includes(col) ? 'deselect' : 'select'} as covariate`}
                     className={`cursor-pointer border-t transition-colors ${
@@ -215,7 +254,7 @@ export function WizardStep2Variables({ columns, rawData, onComplete, onBack }: P
         return (
           <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
             <p className="mb-2 text-sm font-medium text-amber-800">
-              Missing values detected in {missing.length} covariate{missing.length > 1 ? 's' : ''}:
+              Missing Values detected in {missing.length} covariate{missing.length > 1 ? 's' : ''}:
             </p>
             <ul className="mb-3 space-y-0.5 text-xs text-amber-700">
               {missing.map(m => (
@@ -225,8 +264,9 @@ export function WizardStep2Variables({ columns, rawData, onComplete, onBack }: P
               ))}
             </ul>
             <div className="flex items-center gap-2">
-              <label className="text-xs font-medium text-amber-800">Strategy:</label>
+              <label className="text-xs font-medium text-amber-800">Imputation Strategy:</label>
               <select
+                name="imputation"
                 value={imputationStrategy}
                 onChange={e => setImputationStrategy(e.target.value as ImputationStrategy)}
                 className="rounded border border-amber-300 bg-white px-2 py-1 text-xs"

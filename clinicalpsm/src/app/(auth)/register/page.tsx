@@ -72,9 +72,40 @@ export default function RegisterPage() {
   const [state, action, isPending] = useActionState(register, null)
   const [showPassword, setShowPassword] = useState(false)
   const [emailValue, setEmailValue] = useState('')
+  const [clientError, setClientError] = useState<string | null>(null)
 
   if (state && 'message' in state) {
     return <ConfirmationScreen email={emailValue} />
+  }
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    setClientError(null)
+    const form = e.currentTarget
+    const email = (form.elements.namedItem('email') as HTMLInputElement).value
+    const password = (form.elements.namedItem('password') as HTMLInputElement).value
+    const confirm = (form.elements.namedItem('confirmPassword') as HTMLInputElement).value
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      e.preventDefault()
+      setClientError('Invalid email format')
+      return
+    }
+
+    // Password strength
+    if (password.length < 10) {
+      e.preventDefault()
+      setClientError('Password must be at least 10 characters')
+      return
+    }
+
+    // Confirm password
+    if (password !== confirm) {
+      e.preventDefault()
+      setClientError('Passwords do not match')
+      return
+    }
   }
 
   return (
@@ -82,16 +113,16 @@ export default function RegisterPage() {
       <CardHeader>
         <CardTitle>Create account</CardTitle>
         <CardDescription>
-          Start with 3 free analyses — no credit card required.
+          Start with 1 free analysis — no credit card required.
         </CardDescription>
       </CardHeader>
 
-      <form action={action}>
+      <form action={action} onSubmit={handleSubmit} noValidate>
         <fieldset disabled={isPending} className="contents">
           <CardContent className="flex flex-col gap-4">
-            {state && 'error' in state && (
+            {(clientError || (state && 'error' in state)) && (
               <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {state.error}
+                {clientError ?? (state as { error: string }).error}
               </p>
             )}
 
@@ -136,7 +167,22 @@ export default function RegisterPage() {
                   )}
                 </button>
               </div>
-              <p className="text-xs text-muted-foreground">At least 10 characters with one uppercase, one lowercase, and one special character.</p>
+              <p className="text-xs text-muted-foreground">
+                At least 10 characters with one uppercase, one lowercase, and one special character.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                placeholder="••••••••"
+                minLength={10}
+                required
+              />
             </div>
           </CardContent>
 

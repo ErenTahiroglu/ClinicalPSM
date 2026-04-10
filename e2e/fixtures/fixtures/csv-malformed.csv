@@ -1,0 +1,6 @@
+patient_id,treatment,outcome,age,gender
+1,0,0.5,65,Male
+2,1,0.8,72
+3,0,0.3,58,Male,ExtraColumn
+4,1,0.9,69,Female
+5,0,0.4,61,Male

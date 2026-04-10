@@ -38,12 +38,10 @@ function median(values: number[]): number {
   return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
 }
 
-function mode(values: (number | string | null)[]): number | string {
+function mode(values: (number | string)[]): number | string {
   const freq = new Map<number | string, number>()
   for (const v of values) {
-    if (v === null || v === undefined) continue
-    const key = v as number | string
-    freq.set(key, (freq.get(key) ?? 0) + 1)
+    freq.set(v, (freq.get(v) ?? 0) + 1)
   }
   let best: number | string = 0
   let bestCount = 0
@@ -66,7 +64,9 @@ export function imputeData(
     return rows.filter(row =>
       columns.every(col => {
         const v = row[col]
-        return v !== null && v !== undefined && v !== '' && !isNaN(Number(v))
+        if (v === null || v === undefined || v === '') return false
+        if (typeof v === 'number' && isNaN(v)) return false
+        return true
       })
     )
   }
@@ -76,8 +76,8 @@ export function imputeData(
     if (strategy === 'mode') {
       // mode works on any type (numeric or categorical) — skip the numeric-only guard
       const rawVals = rows.map(r => r[col])
-      const nonNull = rawVals.filter(v => v !== null && v !== undefined && v !== '')
-      if (nonNull.length > 0) fillValues.set(col, mode(rawVals))
+      const nonNull = rawVals.filter((v): v is string | number => v !== null && v !== undefined && v !== '')
+      if (nonNull.length > 0) fillValues.set(col, mode(nonNull))
     } else {
       const vals = numericValues(rows, col)
       if (vals.length === 0) continue

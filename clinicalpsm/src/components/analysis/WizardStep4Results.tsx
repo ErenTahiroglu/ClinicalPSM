@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LovePlot } from './LovePlot'
 import { PropensityHistogram } from './PropensityHistogram'
-import { runPsmInWorker } from '@/lib/psm/runPsmInWorker'
+import { runPsmInWorker } from '@/lib/psm/run-psm-in-worker'
 import { buildMatchedCsv, downloadCsv } from '@/lib/export/csv'
 import { downloadBalanceTable } from '@/lib/export/balance-table'
 import { downloadSvgAsPng } from '@/lib/export/svg-to-png'
@@ -14,12 +14,17 @@ import { PsmError } from '@/lib/psm/types'
 import type { PsmConfig, PsmResult } from '@/lib/psm/types'
 import type { RawRow } from '@/lib/psm/encoding'
 import { useToast } from '@/components/shared/ToastProvider'
+import { getCsrfTokenFromCookie } from '@/lib/csrf-client'
 
 interface Props {
   rawData: RawRow[]
   columns: string[]
   config: PsmConfig
   analysisId: string
+  treatmentColumn: string
+  outcomeColumn: string
+  covariates: string[]
+  method: 'nearest' | 'optimal'
   onBack: () => void
 }
 
@@ -35,6 +40,8 @@ const PSM_ERROR_MESSAGES: Record<string, string> = {
     'The logistic regression did not converge. Try standardizing your covariates or removing highly correlated variables.',
   NO_MATCHES:
     'No matched pairs could be formed. If you specified a caliper, try increasing it or removing it.',
+  TIMEOUT:
+    'The analysis timed out. Try reducing the dataset size or removing covariates.',
 }
 
 export function WizardStep4Results({
@@ -42,6 +49,10 @@ export function WizardStep4Results({
   columns,
   config,
   analysisId,
+  treatmentColumn,
+  outcomeColumn,
+  covariates,
+  method,
   onBack,
 }: Props) {
   const [result, setResult] = useState<PsmResult | null>(null)
@@ -67,7 +78,10 @@ export function WizardStep4Results({
       setIsSaving(true)
       const res = await fetch(`/api/analyses/${analysisId}/results`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': getCsrfTokenFromCookie() ?? ''
+        },
         body: JSON.stringify({ resultSummary: psmResult, config }),
       })
       if (res.ok) {
@@ -110,12 +124,45 @@ export function WizardStep4Results({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="text-lg font-semibold">Step 4: Results</h2>
+        <h2 className="text-lg font-semibold">Review &amp; Run Analysis</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Run the propensity score matching and review the balance table and Love
-          plot.
+          Review your configuration and run the propensity score matching.
         </p>
       </div>
+
+      {/* Configuration summary */}
+      {!result && (
+        <div className="rounded-lg border p-4 flex flex-col gap-3 text-sm">
+          <div className="flex gap-2">
+            <span className="font-medium w-32 shrink-0">Treatment:</span>
+            <span className="text-muted-foreground">{treatmentColumn}</span>
+          </div>
+          {outcomeColumn && (
+            <div className="flex gap-2">
+              <span className="font-medium w-32 shrink-0">Outcome:</span>
+              <span className="text-muted-foreground">{outcomeColumn}</span>
+            </div>
+          )}
+          <div className="flex gap-2">
+            <span className="font-medium w-32 shrink-0">Covariates:</span>
+            <span className="text-muted-foreground">{covariates.join(', ')}</span>
+          </div>
+          <div className="flex gap-2">
+            <span className="font-medium w-32 shrink-0">Method:</span>
+            <span className="text-muted-foreground">{method === 'nearest' ? 'Nearest neighbor' : 'Optimal'}</span>
+          </div>
+          <div className="flex gap-2">
+            <span className="font-medium w-32 shrink-0">Ratio:</span>
+            <span className="text-muted-foreground">1:{config.ratio}</span>
+          </div>
+          {config.caliper !== null && (
+            <div className="flex gap-2">
+              <span className="font-medium w-32 shrink-0">Caliper:</span>
+              <span className="text-muted-foreground">{config.caliper}</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {!result && !isRunning && (
         <Button onClick={handleRun} className="self-start">
@@ -138,6 +185,10 @@ export function WizardStep4Results({
 
       {result && (
         <div className="flex flex-col gap-8">
+          <p className="rounded-md bg-green-50 px-3 py-2 text-sm font-medium text-green-700">
+            Analysis completed — {result.nMatched} matched pairs formed.
+          </p>
+
           {/* Summary stats */}
           <div className="grid gap-3 sm:grid-cols-3">
             {[
@@ -164,9 +215,9 @@ export function WizardStep4Results({
             ))}
           </div>
 
-          {/* Balance table */}
+          {/* Balance Diagnostics */}
           <div>
-            <h3 className="mb-2 font-medium">Balance Table</h3>
+            <h3 className="mb-2 font-medium">Balance Diagnostics</h3>
             <div className="overflow-x-auto rounded-lg border">
               <table className="min-w-full text-xs">
                 <thead className="bg-muted/50">
@@ -227,37 +278,40 @@ export function WizardStep4Results({
             />
           </div>
 
-          {/* Love plot */}
+          {/* Love Plot */}
           <div>
             <h3 className="mb-2 font-medium">Love Plot</h3>
             <LovePlot ref={lovePlotRef} balanceTable={result.balanceTable} />
           </div>
 
-          {/* Actions */}
-          <div className="flex flex-wrap items-center gap-3">
-            <Button onClick={handleDownload} variant="outline">
-              Download Matched CSV
-            </Button>
-            <Button onClick={handleDownloadBalanceTable} variant="outline">
-              Download Balance Table
-            </Button>
-            <Button onClick={handleDownloadLovePlot} variant="outline">
-              Download Love Plot (PNG)
-            </Button>
-            {isSaving && (
-              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Saving…
-              </span>
-            )}
-            {saved && (
-              <span className="flex items-center gap-1.5 text-sm text-green-700">
-                ✓ Analysis saved —{' '}
-                <Link href="/analyses" className="underline hover:text-green-900">
-                  Go to Dashboard →
-                </Link>
-              </span>
-            )}
+          {/* Matched Dataset actions */}
+          <div>
+            <h3 className="mb-3 font-medium">Matched Dataset</h3>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button onClick={handleDownload} variant="outline">
+                Export CSV
+              </Button>
+              <Button onClick={handleDownloadBalanceTable} variant="outline">
+                Download Balance Table
+              </Button>
+              <Button onClick={handleDownloadLovePlot} variant="outline">
+                Download Love Plot (PNG)
+              </Button>
+              {isSaving && (
+                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Saving…
+                </span>
+              )}
+              {saved && (
+                <span className="flex items-center gap-1.5 text-sm text-green-700">
+                  ✓ Analysis saved —{' '}
+                  <Link href="/analyses" className="underline hover:text-green-900">
+                    Go to Dashboard →
+                  </Link>
+                </span>
+              )}
+            </div>
           </div>
         </div>
       )}

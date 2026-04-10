@@ -84,9 +84,39 @@ describe('rateLimitKey', () => {
 })
 
 describe('Upstash warning', () => {
-  it('logs warning when Upstash vars are set but using in-memory limiter', () => {
-    // This test would require module re-import which is complex in the test environment
-    // The warning functionality is tested implicitly through the implementation
-    expect(true).toBe(true) // Placeholder test
+  it('logs a console.warn when UPSTASH_REDIS_REST_URL is set but in-memory limiter is active', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    vi.resetModules()
+
+    const origUrl = process.env.UPSTASH_REDIS_REST_URL
+    process.env.UPSTASH_REDIS_REST_URL = 'https://fake-upstash-url'
+
+    try {
+      await import('../rate-limit')
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[RateLimit]')
+      )
+    } finally {
+      process.env.UPSTASH_REDIS_REST_URL = origUrl
+      warnSpy.mockRestore()
+    }
+  })
+
+  it('does NOT log a warning if process is undefined (browser simulation)', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    vi.resetModules()
+
+    // Mock global process as undefined
+    const originalProcess = global.process
+    // @ts-expect-error - global.process is being deleted for browser simulation
+    delete global.process
+
+    try {
+      await import('../rate-limit')
+      expect(warnSpy).not.toHaveBeenCalled()
+    } finally {
+      global.process = originalProcess
+      warnSpy.mockRestore()
+    }
   })
 })

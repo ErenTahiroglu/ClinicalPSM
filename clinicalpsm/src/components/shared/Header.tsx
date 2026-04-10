@@ -1,8 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { signOut } from '@/actions/auth'
-import { Button } from '@/components/ui/button'
 import { ButtonLink } from '@/components/ui/button-link'
+import { UserMenu } from './UserMenu'
 
 export default async function Header() {
   const supabase = await createClient()
@@ -32,22 +31,17 @@ export default async function Header() {
               >
                 Pricing
               </Link>
-              <Link
-                href="/settings"
-                className="text-sm text-muted-foreground hover:text-foreground"
-              >
-                Settings
-              </Link>
-              <form action={signOut}>
-                <Button variant="outline" size="sm" type="submit">
-                  Sign Out
-                </Button>
-              </form>
+              <UserMenu />
             </>
           ) : (
-            <ButtonLink href="/login" variant="outline" size="sm">
-              Sign In
-            </ButtonLink>
+            <>
+              <ButtonLink href="/login" variant="outline" size="sm">
+                Login
+              </ButtonLink>
+              <ButtonLink href="/register" size="sm">
+                Register
+              </ButtonLink>
+            </>
           )}
         </nav>
       </div>

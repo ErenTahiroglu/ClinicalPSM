@@ -22,6 +22,13 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   turbopack: {
     root: __dirname,
+    resolveAlias: {
+      'shadcn/dist/tailwind.css': 'shadcn/tailwind.css',
+    },
+  },
+  webpack: (config) => {
+    config.resolve.alias['shadcn/dist/tailwind.css'] = 'shadcn/tailwind.css';
+    return config;
   },
 
   async headers() {

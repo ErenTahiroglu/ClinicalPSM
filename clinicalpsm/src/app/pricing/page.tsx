@@ -18,9 +18,9 @@ const plans = [
     price: '$0',
     period: '',
     description: 'Get started with no commitment',
-    analyses: '3 analyses total',
+    analyses: '1 analysis total',
     features: [
-      '3 lifetime analyses',
+      '1 lifetime analysis',
       'CSV upload (5 MB max)',
       'Balance table + Love plot',
       'CSV export',

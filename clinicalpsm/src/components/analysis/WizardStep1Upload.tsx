@@ -5,8 +5,10 @@ import Papa from 'papaparse'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { RawRow } from '@/lib/psm/encoding'
+import { getCsrfTokenFromCookie } from '@/lib/csrf-client'
 
 interface Props {
+  name: string
   onComplete: (data: {
     rawData: RawRow[]
     columns: string[]
@@ -15,11 +17,12 @@ interface Props {
     analysisId: string
     uploadId: string
   }) => void
+  onBack: () => void
 }
 
 const MAX_FILE_SIZE_MB = 5
 
-export function WizardStep1Upload({ onComplete }: Props) {
+export function WizardStep1Upload({ name, onComplete, onBack }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<{
@@ -36,6 +39,11 @@ export function WizardStep1Upload({ onComplete }: Props) {
     setPreview(null)
     setSelectedFile(null)
 
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      setError('Please upload a CSV file. Only .csv files are supported.')
+      return
+    }
+
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
       setError(`File is too large. Maximum size is ${MAX_FILE_SIZE_MB} MB.`)
       return
@@ -49,6 +57,10 @@ export function WizardStep1Upload({ onComplete }: Props) {
         const columns = results.meta.fields ?? []
         if (columns.length === 0) {
           setError('Could not detect column headers. Make sure your CSV has a header row.')
+          return
+        }
+        if (results.data.length === 0) {
+          setError('The CSV file has no data rows. Please upload a file with at least one row.')
           return
         }
         setSelectedFile(file)
@@ -77,11 +89,14 @@ export function WizardStep1Upload({ onComplete }: Props) {
     setError(null)
 
     try {
-      // Create analysis record
+      // Create analysis record using the name from step 1
       const createRes = await fetch('/api/analyses', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: preview.fileName.replace(/\.csv$/i, '') }),
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': getCsrfTokenFromCookie() ?? ''
+        },
+        body: JSON.stringify({ name }),
       })
       if (!createRes.ok) {
         const body = await createRes.json()
@@ -89,7 +104,7 @@ export function WizardStep1Upload({ onComplete }: Props) {
       }
       const { analysis } = await createRes.json()
 
-      // Upload file — use stored File object (works for both click + drag-and-drop)
+      // Upload file
       const fileInput = selectedFile
       if (!fileInput) throw new Error('No file selected')
 
@@ -100,6 +115,9 @@ export function WizardStep1Upload({ onComplete }: Props) {
 
       const uploadRes = await fetch(`/api/analyses/${analysis.id}/upload`, {
         method: 'POST',
+        headers: {
+          'X-CSRF-Token': getCsrfTokenFromCookie() ?? ''
+        },
         body: formData,
       })
       if (!uploadRes.ok) {
@@ -126,7 +144,7 @@ export function WizardStep1Upload({ onComplete }: Props) {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="text-lg font-semibold">Step 1: Upload your dataset</h2>
+        <h2 className="text-lg font-semibold">Step 2: Upload your dataset</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Upload a CSV file. The first row must be column headers. Maximum{' '}
           {MAX_FILE_SIZE_MB} MB.
@@ -150,7 +168,7 @@ export function WizardStep1Upload({ onComplete }: Props) {
           ref={inputRef}
           type="file"
           accept=".csv,text/csv"
-          className="hidden"
+          className="sr-only"
           onChange={e => {
             const file = e.target.files?.[0]
             if (file) handleFile(file)
@@ -164,42 +182,52 @@ export function WizardStep1Upload({ onComplete }: Props) {
         </p>
       )}
 
-      {/* Preview table */}
+      {/* Success + Preview */}
       {preview && (
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="min-w-full text-xs">
-            <thead className="bg-muted/50">
-              <tr>
-                {preview.columns.map(col => (
-                  <th
-                    key={col}
-                    className="whitespace-nowrap px-3 py-2 text-left font-medium text-muted-foreground"
-                  >
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {preview.rows.map((row, i) => (
-                <tr key={i} className="border-t">
+        <>
+          <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
+            File uploaded successfully — {preview.rawData.length} rows,{' '}
+            {preview.columns.length} columns detected.
+          </p>
+
+          <div className="overflow-x-auto rounded-lg border">
+            <table className="min-w-full text-xs">
+              <thead className="bg-muted/50">
+                <tr>
                   {preview.columns.map(col => (
-                    <td key={col} className="whitespace-nowrap px-3 py-1.5">
-                      {String(row[col] ?? '')}
-                    </td>
+                    <th
+                      key={col}
+                      className="whitespace-nowrap px-3 py-2 text-left font-medium text-muted-foreground"
+                    >
+                      {col}
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="px-3 py-2 text-xs text-muted-foreground">
-            Showing first 5 of {preview.rawData.length} rows ·{' '}
-            {preview.columns.length} columns
-          </p>
-        </div>
+              </thead>
+              <tbody>
+                {preview.rows.map((row, i) => (
+                  <tr key={i} className="border-t">
+                    {preview.columns.map(col => (
+                      <td key={col} className="whitespace-nowrap px-3 py-1.5">
+                        {String(row[col] ?? '')}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="px-3 py-2 text-xs text-muted-foreground">
+              Showing first 5 of {preview.rawData.length} rows ·{' '}
+              {preview.columns.length} columns
+            </p>
+          </div>
+        </>
       )}
 
-      <div className="flex justify-end">
+      <div className="flex justify-between">
+        <Button variant="outline" onClick={onBack}>
+          ← Back
+        </Button>
         <Button onClick={handleNext} disabled={!preview || isSubmitting}>
           {isSubmitting ? (
             <span className="flex items-center gap-1.5">

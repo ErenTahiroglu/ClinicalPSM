@@ -12,15 +12,16 @@ export function buildBalanceTableCsv(balanceTable: BalanceRow[]): string {
     'Variance Ratio Before',
     'Variance Ratio After',
   ]
+  const fmt = (n: number) => (isNaN(n) ? '0.0000' : n.toFixed(4))
   const rows = balanceTable.map(row => [
     row.covariate,
-    row.meanTreated.toFixed(4),
-    row.meanControl.toFixed(4),
-    row.sdPooled.toFixed(4),
-    row.smdBefore.toFixed(4),
-    row.smdAfter.toFixed(4),
-    row.varianceRatioBefore.toFixed(4),
-    row.varianceRatioAfter.toFixed(4),
+    fmt(row.meanTreated),
+    fmt(row.meanControl),
+    fmt(row.sdPooled),
+    fmt(row.smdBefore),
+    fmt(row.smdAfter),
+    fmt(row.varianceRatioBefore),
+    fmt(row.varianceRatioAfter),
   ])
   const escapeCell = (cell: string) => {
     if (cell.includes(',') || cell.includes('"') || cell.includes('\n') || cell.includes('\r')) {

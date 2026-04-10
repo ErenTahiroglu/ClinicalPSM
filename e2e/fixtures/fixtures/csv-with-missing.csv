@@ -1,0 +1,11 @@
+patient_id,treatment,outcome,age,gender,blood_pressure,cholesterol
+1,0,0.5,65,Male,120,
+2,1,,72,Female,130,220
+3,0,0.3,,Male,115,180
+4,1,0.9,69,,135,230
+5,0,0.4,61,Male,,190
+6,1,0.7,75,Female,140,
+7,0,0.6,63,Male,122,195
+8,1,0.8,70,Female,128,210
+9,,0.5,67,Male,125,205
+10,1,0.9,73,Female,132,225

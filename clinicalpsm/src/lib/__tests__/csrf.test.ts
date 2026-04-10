@@ -195,12 +195,55 @@ describe('CSRF Protection', () => {
       expect(response.headers.get('X-CSRF-Token')).toBeTruthy()
       expect(response.headers.get('Set-Cookie')).toContain('csrf-token=')
     })
+
+    it('X-CSRF-Token header must equal the cookie token (regression: double-call bug)', async () => {
+      // Pre-fix: setCSRFToken was called twice — T1 set in cookie, T2 set in header.
+      // After fix: exactly one call, X-CSRF-Token === cookie value.
+      const mockHandler = vi.fn().mockResolvedValue(new Response('success'))
+      const wrappedHandler = withCSRF(mockHandler)
+
+      const request = new Request('http://example.com', { method: 'GET' })
+      const response = await wrappedHandler(request)
+
+      const headerToken = response.headers.get('X-CSRF-Token')
+      const setCookie = response.headers.get('Set-Cookie') ?? ''
+      // Extract "csrf-token=<value>" from the Set-Cookie string
+      const match = setCookie.match(/csrf-token=([^;]+)/)
+      const cookieToken = match?.[1] ?? null
+
+      expect(headerToken).toBeTruthy()
+      expect(cookieToken).toBeTruthy()
+      // The token in the header MUST match the token in the cookie
+      expect(headerToken).toBe(cookieToken)
+    })
+
+    it('should forward existing cookie token to X-CSRF-Token header without issuing a new cookie', async () => {
+      const existingToken = generateCSRFToken()
+      const mockHandler = vi.fn().mockResolvedValue(new Response('success'))
+      const wrappedHandler = withCSRF(mockHandler)
+
+      const request = new Request('http://example.com', {
+        method: 'GET',
+        headers: { Cookie: `csrf-token=${existingToken}` },
+      })
+      const response = await wrappedHandler(request)
+
+      // Header must equal the cookie that was already there
+      expect(response.headers.get('X-CSRF-Token')).toBe(existingToken)
+      // No new Set-Cookie should be issued (existing token reused)
+      expect(response.headers.get('Set-Cookie')).toBeNull()
+    })
   })
 
   describe('CSRF Security', () => {
     it('should use constant-time comparison to prevent timing attacks', async () => {
       const token = generateCSRFToken()
-      const similarToken = token.slice(0, -1) + '0' // Change last character
+      // Ensure the replacement char always differs from the token's last char.
+      // '+ "0"' is flaky: if token ends in '0', similarToken === token and
+      // validateCSRFToken correctly returns true, failing the test (~6.25% rate).
+      const lastChar = token[token.length - 1]
+      const differentChar = lastChar === '0' ? '1' : '0'
+      const similarToken = token.slice(0, -1) + differentChar // Change last character
       
       // These should both be false but take similar time
       const start1 = performance.now()

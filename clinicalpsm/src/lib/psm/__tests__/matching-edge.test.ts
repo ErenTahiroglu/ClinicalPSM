@@ -130,4 +130,26 @@ describe('matchNearest — additional edge cases', () => {
       expect(data[pair.controlIndex].treatment).toBe(0)
     }
   })
+
+  it('caliper=0 rejects non-zero distance → NO_MATCHES', () => {
+    const data: DataRow[] = [
+      { treatment: 1, x: 0 },
+      { treatment: 0, x: 0 },
+    ]
+    // scores differ slightly (0.5 vs 0.50001) → distance > 0 → caliper=0 rejects
+    expect(() =>
+      matchNearest([0.5, 0.50001], data, makeConfig({ caliper: 0 }))
+    ).toThrow(PsmError)
+  })
+
+  it('caliper=0 allows exact propensity score match (distance=0)', () => {
+    const data: DataRow[] = [
+      { treatment: 1, x: 0 },
+      { treatment: 0, x: 0 },
+    ]
+    // Exactly same score → distance = 0 → caliper=0 allows it
+    const pairs = matchNearest([0.5, 0.5], data, makeConfig({ caliper: 0 }))
+    expect(pairs).toHaveLength(1)
+    expect(pairs[0].distance).toBe(0)
+  })
 })

@@ -7,25 +7,26 @@ import { Label } from '@/components/ui/label'
 import type { PsmConfig } from '@/lib/psm/types'
 
 interface Props {
-  onComplete: (config: Pick<PsmConfig, 'ratio' | 'caliper' | 'withReplacement'>) => void
+  onComplete: (config: Pick<PsmConfig, 'ratio' | 'caliper' | 'withReplacement'> & { method: 'nearest' | 'optimal' }) => void
   onBack: () => void
 }
 
-const RATIOS: { value: PsmConfig['ratio']; label: string; hint: string }[] = [
-  { value: 1, label: '1:1', hint: '1 control per treated subject (recommended)' },
-  { value: 2, label: '1:2', hint: '2 controls per treated subject' },
-  { value: 3, label: '1:3', hint: '3 controls per treated subject' },
-]
-
 export function WizardStep3Settings({ onComplete, onBack }: Props) {
-  const [ratio, setRatio] = useState<PsmConfig['ratio']>(1)
+  const [method, setMethod] = useState<'nearest' | 'optimal'>('nearest')
+  const [ratioStr, setRatioStr] = useState('1')
   const [caliperStr, setCaliperStr] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   function handleNext() {
     setError(null)
-    let caliper: number | null = null
 
+    const ratioNum = parseInt(ratioStr, 10)
+    if (isNaN(ratioNum) || ratioNum < 1 || ratioNum > 3) {
+      setError('Matching ratio must be between 1 and 3.')
+      return
+    }
+
+    let caliper: number | null = null
     if (caliperStr.trim() !== '') {
       const parsed = parseFloat(caliperStr)
       if (isNaN(parsed) || parsed <= 0) {
@@ -35,54 +36,74 @@ export function WizardStep3Settings({ onComplete, onBack }: Props) {
       caliper = parsed
     }
 
-    onComplete({ ratio, caliper, withReplacement: false })
+    onComplete({
+      method,
+      ratio: ratioNum as PsmConfig['ratio'],
+      caliper,
+      withReplacement: false,
+    })
   }
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="text-lg font-semibold">Step 3: Matching settings</h2>
+        <h2 className="text-lg font-semibold">Matching Configuration</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Choose a matching ratio and an optional caliper to limit maximum
-          propensity score distance.
+          Choose a matching method, ratio, and an optional caliper to limit
+          maximum propensity score distance.
         </p>
       </div>
 
-      {/* Ratio */}
+      {/* Matching method */}
       <div className="flex flex-col gap-2">
-        <Label>Matching ratio</Label>
-        <div className="flex flex-col gap-2">
-          {RATIOS.map(({ value, label, hint }) => (
-            <label key={value} className="flex cursor-pointer items-start gap-2.5 text-sm">
-              <input
-                type="radio"
-                name="ratio"
-                value={value}
-                checked={ratio === value}
-                onChange={() => setRatio(value)}
-                className="mt-0.5 accent-primary"
-              />
-              <span>
-                <span className="font-medium">{label}</span>
-                <span className="ml-1.5 text-muted-foreground">{hint}</span>
-              </span>
-            </label>
-          ))}
-        </div>
+        <Label htmlFor="method-select">Matching method</Label>
+        <select
+          id="method-select"
+          name="method"
+          className="rounded-md border border-input bg-background px-3 py-2 text-sm max-w-xs"
+          value={method}
+          onChange={e => setMethod(e.target.value as 'nearest' | 'optimal')}
+        >
+          <option value="nearest">Nearest neighbor (greedy)</option>
+          <option value="optimal">Optimal matching</option>
+        </select>
+        <p className="text-xs text-muted-foreground">
+          Nearest neighbor is faster; optimal matching minimizes total distance.
+        </p>
+      </div>
+
+      {/* Matching ratio */}
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="ratio-input">Matching ratio (controls per treated)</Label>
+        <Input
+          id="ratio-input"
+          name="ratio"
+          type="number"
+          min="1"
+          max="3"
+          step="1"
+          value={ratioStr}
+          onChange={e => setRatioStr(e.target.value)}
+          className="max-w-xs"
+        />
+        <p className="text-xs text-muted-foreground">
+          1 = 1:1 matching (recommended), 2 = 1:2, 3 = 1:3
+        </p>
       </div>
 
       {/* Caliper */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="caliper">
+        <Label htmlFor="caliper-input">
           Caliper{' '}
           <span className="font-normal text-muted-foreground">(optional)</span>
         </Label>
         <Input
-          id="caliper"
+          id="caliper-input"
+          name="caliper"
           type="number"
           min="0"
           step="0.01"
-          placeholder="e.g. 0.05 (recommended: 0.2 × SD of logit PS)"
+          placeholder="e.g. 0.2 (recommended: 0.2 × SD of logit PS)"
           value={caliperStr}
           onChange={e => setCaliperStr(e.target.value)}
           className="max-w-xs"
@@ -108,7 +129,7 @@ export function WizardStep3Settings({ onComplete, onBack }: Props) {
         <Button variant="outline" onClick={onBack}>
           ← Back
         </Button>
-        <Button onClick={handleNext}>Run Analysis →</Button>
+        <Button onClick={handleNext}>Next →</Button>
       </div>
     </div>
   )

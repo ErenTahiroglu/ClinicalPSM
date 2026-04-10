@@ -137,4 +137,25 @@ describe('computeBalance — additional edge cases', () => {
     expect(balance).toHaveLength(3)
     expect(balance.map(r => r.covariate)).toEqual(['a', 'b', 'c'])
   })
+
+  it('varianceRatio=0 when control variance=0 but treated variance>0 (defensive behavior)', () => {
+    // All control values identical → c.variance=0
+    // Treated values vary → t.variance>0
+    // computeSmd returns varianceRatio=0 to prevent Infinity in output (defensive choice)
+    const data: DataRow[] = [
+      { treatment: 1, age: 30 },
+      { treatment: 1, age: 50 },  // treated: variance > 0
+      { treatment: 0, age: 40 },
+      { treatment: 0, age: 40 },  // control: all same → variance = 0
+    ]
+    const scores = [0.4, 0.6, 0.4, 0.6]
+    const pairs = pairsOf([0, 1], [2, 3], scores)
+    const balance = computeBalance(data, scores, pairs, {
+      treatmentColumn: 'treatment',
+      covariates: ['age'],
+    })
+    // Documented behavior: returns 0 when c.variance=0 to avoid Infinity
+    expect(balance[0].varianceRatioBefore).toBe(0)
+    expect(isFinite(balance[0].varianceRatioBefore)).toBe(true)
+  })
 })

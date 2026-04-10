@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Trash2 } from 'lucide-react'
 import { useToast } from '@/components/shared/ToastProvider'
+import { getCsrfTokenFromCookie } from '@/lib/csrf-client'
 
 interface Props {
   analysisId: string
@@ -20,7 +21,12 @@ export function DeleteAnalysisButton({ analysisId, analysisName }: Props) {
 
     setIsPending(true)
     try {
-      const res = await fetch(`/api/analyses/${analysisId}`, { method: 'DELETE' })
+      const res = await fetch(`/api/analyses/${analysisId}`, { 
+        method: 'DELETE',
+        headers: {
+          'X-CSRF-Token': getCsrfTokenFromCookie() ?? ''
+        }
+      })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
         toast(body.error ?? 'Failed to delete analysis.', 'error')

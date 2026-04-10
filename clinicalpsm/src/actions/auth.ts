@@ -21,7 +21,14 @@ export async function login(
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithPassword({ email, password })
 
-  if (error) return { error: error.message }
+  if (error) {
+    // Normalize Supabase auth errors to user-friendly messages
+    const msg = error.message.toLowerCase()
+    if (msg.includes('invalid') || msg.includes('credentials') || msg.includes('password') || msg.includes('not found')) {
+      return { error: 'Invalid credentials' }
+    }
+    return { error: error.message }
+  }
 
   redirect('/analyses')
 }
@@ -37,7 +44,7 @@ export async function register(
   if (passwordError) return { error: passwordError }
 
   const supabase = await createClient()
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -46,6 +53,10 @@ export async function register(
   })
 
   if (error) return { error: error.message }
+
+  if (data.session) {
+    redirect('/analyses')
+  }
 
   return { message: 'Check your email to confirm your account.' }
 }

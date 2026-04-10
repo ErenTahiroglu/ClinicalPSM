@@ -53,6 +53,13 @@ export function computePropensityScores(
 
   const p = covariates.length
 
+  if (p === 0) {
+    throw new PsmError(
+      'NO_VARIANCE',
+      'At least one covariate must be selected for PSM analysis.'
+    )
+  }
+
   // Build raw covariate matrix
   const X: number[][] = data.map(row => covariates.map(col => row[col]))
 

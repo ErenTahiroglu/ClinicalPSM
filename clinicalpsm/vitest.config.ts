@@ -18,9 +18,15 @@ export default defineConfig({
       exclude: [
         // Browser-only: require Web Worker / Canvas / DOM APIs — untestable in node
         'src/lib/psm/worker.ts',
-        'src/lib/psm/runPsmInWorker.ts',
+        'src/lib/psm/run-psm-in-worker.ts',
         'src/lib/export/svg-to-png.ts',
       ],
+    },
+    pool: 'threads',
+    // @ts-ignore - Vitest 4 top-level pool options
+    threads: {
+      maxThreads: 1,
+      minThreads: 1,
     },
   },
   resolve: {

@@ -8,7 +8,7 @@ export interface AuditLogEntry {
   resource_id?: string
   ip_address?: string
   user_agent?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   timestamp: string
 }
 
@@ -54,7 +54,7 @@ export class AuditLogger {
     action: string,
     resourceType: string,
     resourceId?: string,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
     request?: Request
   ): Promise<void> {
     await this.log({
@@ -72,7 +72,7 @@ export class AuditLogger {
     action: string,
     resourceType: string,
     resourceId?: string,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
     request?: Request
   ): Promise<void> {
     await this.log({
@@ -91,7 +91,7 @@ export class AuditLogger {
 
   async logError(
     error: Error,
-    context: Record<string, any>,
+    context: Record<string, unknown>,
     request?: Request
   ): Promise<void> {
     await this.log({
@@ -146,7 +146,7 @@ export const auditLog = {
     )
   },
 
-  analysisCreated: async (userId: string, analysisId: string, metadata?: Record<string, any>, request?: Request) => {
+  analysisCreated: async (userId: string, analysisId: string, metadata?: Record<string, unknown>, request?: Request) => {
     const logger = await AuditLogger.getInstance()
     await logger.logUserAction(
       userId,
@@ -158,7 +158,7 @@ export const auditLog = {
     )
   },
 
-  analysisUpdated: async (userId: string, analysisId: string, metadata?: Record<string, any>, request?: Request) => {
+  analysisUpdated: async (userId: string, analysisId: string, metadata?: Record<string, unknown>, request?: Request) => {
     const logger = await AuditLogger.getInstance()
     await logger.logUserAction(
       userId,
@@ -170,7 +170,7 @@ export const auditLog = {
     )
   },
 
-  fileUploaded: async (userId: string, uploadId: string, metadata?: Record<string, any>, request?: Request) => {
+  fileUploaded: async (userId: string, uploadId: string, metadata?: Record<string, unknown>, request?: Request) => {
     const logger = await AuditLogger.getInstance()
     await logger.logUserAction(
       userId,
@@ -182,7 +182,7 @@ export const auditLog = {
     )
   },
 
-  rateLimitExceeded: async (resourceType: string, resourceId?: string, metadata?: Record<string, any>, request?: Request) => {
+  rateLimitExceeded: async (resourceType: string, resourceId?: string, metadata?: Record<string, unknown>, request?: Request) => {
     const logger = await AuditLogger.getInstance()
     await logger.logSecurityEvent(
       'RATE_LIMIT_EXCEEDED',
@@ -193,7 +193,7 @@ export const auditLog = {
     )
   },
 
-  suspiciousActivity: async (description: string, metadata?: Record<string, any>, request?: Request) => {
+  suspiciousActivity: async (description: string, metadata?: Record<string, unknown>, request?: Request) => {
     const logger = await AuditLogger.getInstance()
     await logger.logSecurityEvent(
       'SUSPICIOUS_ACTIVITY',
@@ -204,7 +204,7 @@ export const auditLog = {
     )
   },
 
-  errorOccurred: async (error: Error, context: Record<string, any>, request?: Request) => {
+  errorOccurred: async (error: Error, context: Record<string, unknown>, request?: Request) => {
     const logger = await AuditLogger.getInstance()
     await logger.logError(error, context, request)
   },

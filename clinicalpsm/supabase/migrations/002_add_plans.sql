@@ -11,7 +11,7 @@ ALTER TABLE profiles
 
 -- Add subscription tracking columns
 -- Plan limit reference:
---   free  → analyses_limit = 3
+--   free  → analyses_limit = 1
 --   plus  → analyses_limit = 25  ($5/mo, resets monthly via plan_reset_at)
 --   pro   → analyses_limit = 999999  ($20/mo, unlimited)
 ALTER TABLE profiles

@@ -1,0 +1,11 @@
+patient_id,treatment,outcome,age,gender,notes
+1,0,0.5,65,Male,"Patient with diabetes"
+2,1,0.8,72,Female,"History of hypertension"
+3,0,0.3,58,Male,""
+4,1,0.9,69,Female,"Smoker, 20 pack-years"
+5,0,0.4,61,Male,"Patient with ""multiple"" conditions"
+6,1,0.7,75,Female,"None"
+7,0,0.6,63,Male,"Regular exercise"
+8,1,0.8,70,Female,""
+9,0,0.5,67,Male,"Previous surgery"
+10,1,0.9,73,Female,"Medication: A,B,C"

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { WizardStep1Info } from './WizardStep1Info'
 import { WizardStep1Upload } from './WizardStep1Upload'
 import { WizardStep2Variables } from './WizardStep2Variables'
 import { WizardStep3Settings } from './WizardStep3Settings'
@@ -10,28 +11,35 @@ import type { RawRow } from '@/lib/psm/encoding'
 import type { ImputationStrategy } from '@/lib/psm/imputation'
 import { imputeData } from '@/lib/psm/imputation'
 
-type WizardStep = 1 | 2 | 3 | 4
+type WizardStep = 1 | 2 | 3 | 4 | 5
 
 interface WizardState {
   step: WizardStep
-  // Step 1
+  // Step 1 — Info
+  name: string
+  description: string
+  // Step 2 — Upload
   rawData: RawRow[]
   columns: string[]
   rowCount: number
   fileName: string
   analysisId: string
   uploadId: string
-  // Step 2
+  // Step 3 — Variables
   treatmentColumn: string
+  outcomeColumn: string
   covariates: string[]
   imputationStrategy: ImputationStrategy
-  // Step 3
+  // Step 4 — Settings
+  method: 'nearest' | 'optimal'
   ratio: PsmConfig['ratio']
   caliper: number | null
 }
 
 const INITIAL_STATE: WizardState = {
   step: 1,
+  name: '',
+  description: '',
   rawData: [],
   columns: [],
   rowCount: 0,
@@ -39,13 +47,16 @@ const INITIAL_STATE: WizardState = {
   analysisId: '',
   uploadId: '',
   treatmentColumn: '',
+  outcomeColumn: '',
   covariates: [],
   imputationStrategy: 'mean',
+  method: 'nearest',
   ratio: 1,
   caliper: null,
 }
 
 const STEP_LABELS = [
+  'Analysis Info',
   'Upload CSV',
   'Select Variables',
   'Settings',
@@ -58,6 +69,11 @@ export function PsmWizard() {
   function goTo(step: WizardStep) {
     setState(prev => ({ ...prev, step }))
   }
+
+  const imputedData =
+    state.rawData.length > 0 && state.covariates.length > 0
+      ? imputeData(state.rawData, state.covariates, state.imputationStrategy)
+      : state.rawData
 
   const psmConfig: PsmConfig = {
     treatmentColumn: state.treatmentColumn,
@@ -102,45 +118,73 @@ export function PsmWizard() {
       </nav>
 
       {/* Step content */}
-      <div className="rounded-lg border bg-card p-6 shadow-sm">
-        {state.step === 1 && (
-          <WizardStep1Upload
-            onComplete={data =>
-              setState(prev => ({ ...prev, ...data, step: 2 }))
-            }
-          />
-        )}
+      {state.step === 1 && (
+        <WizardStep1Info
+          onComplete={({ name, description }) => {
+            setState(prev => ({ ...prev, name, description, step: 2 }))
+          }}
+        />
+      )}
 
-        {state.step === 2 && (
-          <WizardStep2Variables
-            columns={state.columns}
-            rawData={state.rawData}
-            onComplete={data =>
-              setState(prev => ({ ...prev, ...data, step: 3 }))
-            }
-            onBack={() => goTo(1)}
-          />
-        )}
+      {state.step === 2 && (
+        <WizardStep1Upload
+          name={state.name}
+          onComplete={({ rawData, columns, rowCount, fileName, analysisId, uploadId }) => {
+            setState(prev => ({
+              ...prev,
+              rawData,
+              columns,
+              rowCount,
+              fileName,
+              analysisId,
+              uploadId,
+              step: 3,
+            }))
+          }}
+          onBack={() => goTo(1)}
+        />
+      )}
 
-        {state.step === 3 && (
-          <WizardStep3Settings
-            onComplete={data =>
-              setState(prev => ({ ...prev, ...data, step: 4 }))
-            }
-            onBack={() => goTo(2)}
-          />
-        )}
+      {state.step === 3 && (
+        <WizardStep2Variables
+          columns={state.columns}
+          rawData={state.rawData}
+          onComplete={({ treatmentColumn, outcomeColumn, covariates, imputationStrategy }) => {
+            setState(prev => ({
+              ...prev,
+              treatmentColumn,
+              outcomeColumn,
+              covariates,
+              imputationStrategy,
+              step: 4,
+            }))
+          }}
+          onBack={() => goTo(2)}
+        />
+      )}
 
-        {state.step === 4 && (
-          <WizardStep4Results
-            rawData={imputeData(state.rawData, state.covariates, state.imputationStrategy)}
-            columns={state.columns}
-            config={psmConfig}
-            analysisId={state.analysisId}
-            onBack={() => goTo(3)}
-          />
-        )}
-      </div>
+      {state.step === 4 && (
+        <WizardStep3Settings
+          onComplete={({ method, ratio, caliper }) => {
+            setState(prev => ({ ...prev, method, ratio, caliper, step: 5 }))
+          }}
+          onBack={() => goTo(3)}
+        />
+      )}
+
+      {state.step === 5 && (
+        <WizardStep4Results
+          rawData={imputedData}
+          columns={state.columns}
+          config={psmConfig}
+          analysisId={state.analysisId}
+          treatmentColumn={state.treatmentColumn}
+          outcomeColumn={state.outcomeColumn}
+          covariates={state.covariates}
+          method={state.method}
+          onBack={() => goTo(4)}
+        />
+      )}
     </div>
   )
 }
