@@ -43,3 +43,7 @@ yarn-error.log*
 PADDLE_INTEGRATION_GUIDE.md
 IMPLEMENTATION_SUMMARY.md
 CLINICALPSM_TEST_REPORT.md
+
+# Build output files
+build_output*.txt
+clinicalpsm/build_output*.txt
