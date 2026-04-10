@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run --exclude 'src/lib/supabase/__tests__/**'",
     "test:watch": "vitest --exclude 'src/lib/supabase/__tests__/**'",
     "test:coverage": "vitest run --coverage --exclude 'src/lib/supabase/__tests__/**'",
