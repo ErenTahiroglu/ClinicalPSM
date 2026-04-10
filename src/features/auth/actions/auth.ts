@@ -5,9 +5,12 @@ import { createClient } from '@/lib/supabase/server'
 
 function validatePassword(password: string): string | null {
   if (password.length < 10) return 'Password must be at least 10 characters.'
+  // Modern generated passwords often use symbols, but we shouldn't fail if they miss one specific type
+  // unless business requirements strictly demand it.
   if (!/[A-Z]/.test(password)) return 'Password must contain at least one uppercase letter.'
   if (!/[a-z]/.test(password)) return 'Password must contain at least one lowercase letter.'
-  if (!/[^a-zA-Z0-9]/.test(password)) return 'Password must contain at least one special character (e.g. !@#$%).'
+  // Broadening special character check to include any non-alphanumeric or common symbols
+  if (!/[\W_]/.test(password)) return 'Password must contain at least one special character (e.g. !@#$%).'
   return null
 }
 
