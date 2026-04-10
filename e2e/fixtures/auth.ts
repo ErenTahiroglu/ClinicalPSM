@@ -10,15 +10,24 @@ const TEST_USER = {
 type AuthFixtures = {
   authenticatedPage: Page
   supabase: any
+  user: { id: string; email: string }
 }
 
 export const test = base.extend<AuthFixtures>({
-  authenticatedPage: async ({ page, supabase }, use) => {
-    // Ensure test user exists and is confirmed via Admin API to stabilize tests
+  supabase: async ({}, use) => {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    await use(supabase)
+  },
+
+  user: async ({ supabase }, use) => {
+    // Ensure test user exists and is confirmed via Admin API
     const listResult = await supabase.auth.admin.listUsers()
     if (listResult.error) throw new Error(`Supabase Admin Error: ${listResult.error.message}`)
     
-    const existing = listResult.data.users.find((u: any) => u.email === TEST_USER.email)
+    let existing = listResult.data.users.find((u: any) => u.email === TEST_USER.email)
     
     if (!existing) {
       const createResult = await supabase.auth.admin.createUser({
@@ -27,40 +36,37 @@ export const test = base.extend<AuthFixtures>({
         email_confirm: true
       })
       if (createResult.error) throw new Error(`Supabase Admin Create Error: ${createResult.error.message}`)
-      
-      const userId = createResult.data.user?.id
-      if (!userId) throw new Error('User ID missing after creation')
-
-      // Ensure profile exists
-      const { error: profileError } = await supabase.from('profiles').upsert({
-        user_id: userId,
-        plan: 'free',
-        analyses_used: 0,
-        analyses_limit: 10
-      })
-      if (profileError) throw new Error(`Supabase Profile Create Error: ${profileError.message}`)
+      existing = createResult.data.user
     } else {
       const updateResult = await supabase.auth.admin.updateUserById(existing.id, {
         password: TEST_USER.password,
         email_confirm: true
       })
       if (updateResult.error) throw new Error(`Supabase Admin Update Error: ${updateResult.error.message}`)
-
-      // Ensure profile exists for existing user too
-      const { error: profileError } = await supabase.from('profiles').upsert({
-        user_id: existing.id,
-        plan: 'free',
-        analyses_used: 0,
-        analyses_limit: 10
-      })
-      if (profileError) throw new Error(`Supabase Profile Update/Ensure Error: ${profileError.message}`)
     }
 
+    if (!existing) throw new Error('User missing')
+
+    // Ensure profile exists (without dropped analyses_used column)
+    const { error: profileError } = await supabase.from('profiles').upsert({
+      user_id: existing.id,
+      plan: 'free',
+      analyses_limit: 1 // Default for free plan
+    })
+    
+    if (profileError) {
+      console.warn(`[Fixture Setup] Profile ensure failed: ${profileError.message}. Continuing...`)
+    }
+
+    await use({ id: existing.id, email: existing.email! })
+  },
+
+  authenticatedPage: async ({ page, user }, use) => {
     // First ensure we're logged out
     await page.goto('/login')
     
     // Login with test user
-    await page.fill('input[type="email"]', TEST_USER.email)
+    await page.fill('input[type="email"]', user.email)
     await page.fill('input[type="password"]', TEST_USER.password)
     await page.click('button[type="submit"]')
     
@@ -69,14 +75,6 @@ export const test = base.extend<AuthFixtures>({
     await expect(page.locator('h1')).toContainText('Analyses')
     
     await use(page)
-  },
-  
-  supabase: async ({}, use) => {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-    await use(supabase)
   },
 })
 

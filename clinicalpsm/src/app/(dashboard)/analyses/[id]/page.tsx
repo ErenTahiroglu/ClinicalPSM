@@ -1,8 +1,8 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { LovePlot } from '@/components/analysis/LovePlot'
-import { AnalysisDetailExport } from '@/components/analysis/AnalysisDetailExport'
+import { LovePlot } from '@/features/analysis/components/LovePlot'
+import { AnalysisDetailExport } from '@/features/analysis/components/AnalysisDetailExport'
 import { Badge } from '@/components/ui/badge'
 import type { Analysis } from '@/types/database'
 

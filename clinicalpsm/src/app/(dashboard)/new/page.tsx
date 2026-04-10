@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { PsmWizard } from '@/components/analysis/PsmWizard'
+import { PsmWizard } from '@/features/analysis/components/PsmWizard'
 import { ButtonLink } from '@/components/ui/button-link'
 import type { Profile } from '@/types/database'
+import { getCurrentUsage } from '@/lib/usage'
 
 export default async function NewAnalysisPage() {
   const supabase = await createClient()
@@ -14,17 +15,22 @@ export default async function NewAnalysisPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('analyses_used, analyses_limit, plan')
+    .select('analyses_limit, plan, plan_reset_at')
     .eq('user_id', user.id)
-    .single<Pick<Profile, 'analyses_used' | 'analyses_limit' | 'plan'>>()
+    .single<Pick<Profile, 'analyses_limit' | 'plan' | 'plan_reset_at'>>()
 
-  if (profile && profile.analyses_used >= profile.analyses_limit) {
+  const usage = profile 
+    ? await getCurrentUsage(supabase, user.id, profile.plan, profile.analyses_limit, profile.plan_reset_at)
+    : { used: 0, limit: 1, isAtLimit: false }
+
+  if (profile && usage.isAtLimit) {
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <h1 className="text-xl font-bold">Analysis limit reached</h1>
+        <h1 className="text-xl font-bold">Limit reached</h1>
         <p className="mt-2 text-muted-foreground">
-          You have used all {profile.analyses_limit} free analyses on the{' '}
-          <strong>{profile.plan}</strong> plan.
+          {profile.plan === 'free'
+            ? `You've used your daily free analysis. Try again tomorrow or upgrade.`
+            : `You've used all ${usage.limit} analyses for this period on the ${profile.plan} plan.`}
         </p>
         <div className="mt-6 flex justify-center gap-3">
           <ButtonLink href="/analyses" variant="outline" size="sm">

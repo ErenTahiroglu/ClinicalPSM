@@ -54,7 +54,7 @@ export default async function LandingPage() {
             {ctaLabel}
           </ButtonLink>
           <p className="text-sm text-muted-foreground">
-            1 analysis free — no credit card required ·{' '}
+            1 free analysis daily — no credit card required ·{' '}
             <a href="/pricing" className="underline hover:text-foreground">
               See pricing
             </a>

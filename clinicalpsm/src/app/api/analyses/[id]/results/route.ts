@@ -57,20 +57,6 @@ export async function POST(
       return Response.json({ error: updateError.message }, { status: 500 })
     }
 
-    // Increment usage quota (only on success)
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('analyses_used')
-      .eq('user_id', user.id)
-      .single()
-
-    if (profile) {
-      await supabase
-        .from('profiles')
-        .update({ analyses_used: profile.analyses_used + 1 })
-        .eq('user_id', user.id)
-    }
-
     return Response.json({ success: true })
   } catch {
     return Response.json({ error: 'Internal server error' }, { status: 500 })

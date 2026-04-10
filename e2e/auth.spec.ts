@@ -27,8 +27,7 @@ test.describe('Authentication', () => {
       await supabase.from('profiles').upsert({
         user_id: userId,
         plan: 'free',
-        analyses_used: 0,
-        analyses_limit: 10
+        analyses_limit: 1
       }, { onConflict: 'user_id' })
     }
   })

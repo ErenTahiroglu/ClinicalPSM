@@ -9,6 +9,8 @@ import {
   ForbiddenError,
 } from '@/lib/errors'
 import { auditLog } from '@/lib/audit'
+import { getUsagePeriodStart } from '@/lib/usage'
+import type { Analysis } from '@/types/database'
 
 async function handleCreateAnalysis(req: Request) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown'
@@ -25,37 +27,50 @@ async function handleCreateAnalysis(req: Request) {
 
   if (!user || authError) throw new UnauthorizedError()
 
-  // Server-side quota check
+  // Get current plan and limit config
   const { data: profile } = await supabase
     .from('profiles')
-    .select('analyses_used, analyses_limit')
+    .select('analyses_limit, plan, plan_reset_at')
     .eq('user_id', user.id)
     .single()
 
-  if (profile && profile.analyses_used >= profile.analyses_limit) {
-    throw new ForbiddenError('Analysis limit reached. Upgrade to continue.')
-  }
+  if (!profile) throw new ForbiddenError('Profile not found')
 
   const body = await req.json()
   const name = (body.name as string | undefined)?.trim() || 'Untitled Analysis'
+  const periodStart = getUsagePeriodStart(profile.plan, profile.plan_reset_at)
 
-  const { data, error } = await supabase
-    .from('analyses')
-    .insert({ user_id: user.id, name, status: 'draft' })
-    .select()
-    .single()
+  // Use the RPC to perform atomic check + insert with advisory lock
+  const { data: analyses, error: rpcError } = await supabase.rpc('create_analysis_with_limit_check', {
+    p_user_id: user.id,
+    p_name: name,
+    p_status: 'draft',
+    p_period_start: periodStart.toISOString(),
+    p_limit: profile.analyses_limit,
+  })
 
-  if (error) throw new Error(error.message)
+  if (rpcError) {
+    if (rpcError.message.includes('Daily limit reached') || rpcError.code === 'P0001') {
+      const msg = profile.plan === 'free' 
+        ? 'Daily analysis limit reached. Try again tomorrow or upgrade.'
+        : 'Monthly analysis limit reached. Upgrade to continue.'
+      throw new ForbiddenError(msg)
+    }
+    throw new Error(rpcError.message)
+  }
+
+  const analysis = (analyses as Analysis[] | null)?.[0]
+  if (!analysis) throw new Error('Failed to create analysis')
 
   // Log analysis creation
   await auditLog.analysisCreated(
     user.id,
-    data.id,
+    analysis.id,
     { name, status: 'draft' },
     req as NextRequest
   )
 
-  return NextResponse.json({ analysis: data }, { status: 201 })
+  return NextResponse.json({ analysis }, { status: 201 })
 }
 
 export const POST = withCSRF(withErrorHandling(handleCreateAnalysis))

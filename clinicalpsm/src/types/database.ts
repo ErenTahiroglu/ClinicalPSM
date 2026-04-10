@@ -4,7 +4,6 @@ export interface Profile {
   id: string
   user_id: string
   plan: 'free' | 'plus' | 'pro'
-  analyses_used: number
   analyses_limit: number
   polar_customer_id: string | null
   plan_interval: string | null

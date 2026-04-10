@@ -4,8 +4,8 @@ import { useActionState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { updatePassword } from '@/actions/auth'
-import { deleteAccount } from '@/actions/profile'
+import { updatePassword } from '@/features/auth/actions/auth'
+import { deleteAccount } from '@/features/profile/actions/profile'
 import type { Profile } from '@/types/database'
 
 const PLAN_LABELS: Record<Profile['plan'], string> = {
@@ -16,7 +16,7 @@ const PLAN_LABELS: Record<Profile['plan'], string> = {
 
 interface Props {
   email: string
-  profile: Pick<Profile, 'plan' | 'analyses_used' | 'analyses_limit' | 'plan_reset_at'> | null
+  profile: (Pick<Profile, 'plan' | 'analyses_limit' | 'plan_reset_at'> & { analyses_used: number }) | null
 }
 
 export function SettingsClient({ email, profile }: Props) {
@@ -46,7 +46,7 @@ export function SettingsClient({ email, profile }: Props) {
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Analyses used</span>
+              <span className="text-muted-foreground">Analyses used {profile.plan === 'free' ? '(today)' : '(current period)'}</span>
               <span className="font-medium">
                 {profile.analyses_used} / {profile.analyses_limit === 999999 ? '∞' : profile.analyses_limit}
               </span>
@@ -68,7 +68,7 @@ export function SettingsClient({ email, profile }: Props) {
                 href="/pricing"
                 className="mt-1 text-xs text-primary underline-offset-2 hover:underline"
               >
-                Upgrade to Plus or Pro →
+                Upgrade to Plus or Pro for more daily analyses →
               </a>
             )}
           </div>

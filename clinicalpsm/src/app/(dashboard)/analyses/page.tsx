@@ -12,9 +12,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { AnalysisResultDetail } from '@/components/analysis/AnalysisResultDetail'
-import { DeleteAnalysisButton } from '@/components/analysis/DeleteAnalysisButton'
+import { AnalysisResultDetail } from '@/features/analysis/components/AnalysisResultDetail'
+import { DeleteAnalysisButton } from '@/features/analysis/components/DeleteAnalysisButton'
 import type { Analysis, Profile } from '@/types/database'
+import { getCurrentUsage } from '@/lib/usage'
 
 const statusColors: Record<Analysis['status'], string> = {
   draft: 'bg-muted text-muted-foreground',
@@ -31,12 +32,12 @@ export default async function AnalysesPage() {
 
   if (!user) redirect('/login')
 
-  const [{ data: profile }, { data: analyses }] = await Promise.all([
+  const [{ data: profileData, error: profileError }, { data: analyses }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('analyses_used, analyses_limit, plan')
+      .select('analyses_limit, plan, plan_reset_at')
       .eq('user_id', user.id)
-      .single<Pick<Profile, 'analyses_used' | 'analyses_limit' | 'plan'>>(),
+      .single<Pick<Profile, 'analyses_limit' | 'plan' | 'plan_reset_at'>>(),
     supabase
       .from('analyses')
       .select('*')
@@ -45,9 +46,22 @@ export default async function AnalysesPage() {
       .returns<Analysis[]>(),
   ])
 
-  const atLimit =
-    profile !== null &&
-    profile.analyses_used >= profile.analyses_limit
+  // Fallback to free plan if profile is missing or table not found (PostgREST cache issue)
+  const profile = profileData || {
+    plan: 'free' as const,
+    analyses_limit: 1,
+    plan_reset_at: null
+  }
+
+  if (profileError && profileError.code !== 'PGRST116') { // PGRST116 is 'no rows found', which is fine
+    console.warn('[AnalysesPage] Profile fetch error, using fallback:', profileError.message)
+  }
+
+  const usage = profile 
+    ? await getCurrentUsage(supabase, user.id, profile.plan, profile.analyses_limit, profile.plan_reset_at)
+    : { used: 0, limit: 1, isAtLimit: false }
+
+  const atLimit = usage.isAtLimit
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -55,7 +69,9 @@ export default async function AnalysesPage() {
       {atLimit && (
         <div className="mb-6 flex items-center justify-between gap-4 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3">
           <p className="text-sm text-yellow-800">
-            You&apos;ve used all {profile!.analyses_limit} free analyses. Upgrade to continue.
+            {profile?.plan === 'free' 
+              ? `You've used your daily free analysis. Try again tomorrow or upgrade.`
+              : `You've used all ${usage.limit} analyses for this period. Upgrade to continue.`}
           </p>
           <ButtonLink href="/pricing" size="sm" variant="outline">
             See Plans
@@ -69,8 +85,8 @@ export default async function AnalysesPage() {
           <h1 className="text-2xl font-bold tracking-tight">Your Analyses</h1>
           {profile && (
             <p className="mt-1 text-sm text-muted-foreground">
-              {profile.analyses_used} / {profile.analyses_limit} free analyses
-              used
+              {usage.used} / {usage.limit === 999999 ? '∞' : usage.limit} {' '}
+              {profile.plan === 'free' ? 'daily' : ''} analyses used
               {profile.plan !== 'free' && ` (${profile.plan} plan)`}
             </p>
           )}

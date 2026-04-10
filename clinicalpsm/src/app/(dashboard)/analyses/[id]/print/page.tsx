@@ -1,8 +1,8 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { LovePlot } from '@/components/analysis/LovePlot'
+import { LovePlot } from '@/features/analysis/components/LovePlot'
 import { Badge } from '@/components/ui/badge'
-import { PrintButton } from '@/components/analysis/PrintButton'
+import { PrintButton } from '@/features/analysis/components/PrintButton'
 import type { Analysis } from '@/types/database'
 
 export default async function PrintPage({

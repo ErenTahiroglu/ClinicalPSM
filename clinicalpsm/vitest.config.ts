@@ -23,7 +23,7 @@ export default defineConfig({
       ],
     },
     pool: 'threads',
-    // @ts-ignore - Vitest 4 top-level pool options
+    // @ts-expect-error - Vitest 4 top-level pool options
     threads: {
       maxThreads: 1,
       minThreads: 1,

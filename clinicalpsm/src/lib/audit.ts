@@ -40,9 +40,13 @@ export class AuditLogger {
         .insert(auditEntry)
 
       if (error) {
-        // Fallback to console logging if database fails
-        console.error('[Audit] Failed to log to database:', error)
-        console.log('[Audit]', auditEntry)
+        // Only log to console, don't throw or cause server crash
+        if (error.code === 'PGRST204' || error.code === 'PGRST205') {
+          console.warn('[Audit] Skipping db log: table not found.')
+        } else {
+          console.error('[Audit] Database log error:', error)
+        }
+        console.log('[Audit Entry]', auditEntry)
       }
     } catch (error) {
       console.error('[Audit] Unexpected error:', error)

@@ -3,7 +3,7 @@
 import { useActionState, useState } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff, Mail } from 'lucide-react'
-import { register, resendConfirmation } from '@/actions/auth'
+import { register, resendConfirmation } from '@/features/auth/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -113,7 +113,7 @@ export default function RegisterPage() {
       <CardHeader>
         <CardTitle>Create account</CardTitle>
         <CardDescription>
-          Start with 1 free analysis — no credit card required.
+          Start with 1 free analysis daily — no credit card required.
         </CardDescription>
       </CardHeader>
 

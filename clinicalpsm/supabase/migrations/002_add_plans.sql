@@ -11,9 +11,9 @@ ALTER TABLE profiles
 
 -- Add subscription tracking columns
 -- Plan limit reference:
---   free  → analyses_limit = 1
---   plus  → analyses_limit = 25  ($5/mo, resets monthly via plan_reset_at)
---   pro   → analyses_limit = 999999  ($20/mo, unlimited)
+--   free  → 1 per day
+--   plus  → 20 per month (resets via plan_reset_at)
+--   pro   → unlimited (999999)
 ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS plan_interval TEXT DEFAULT 'monthly',
   ADD COLUMN IF NOT EXISTS polar_subscription_id TEXT,

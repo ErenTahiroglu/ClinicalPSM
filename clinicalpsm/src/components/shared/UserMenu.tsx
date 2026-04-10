@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { signOut } from '@/actions/auth'
+import { signOut } from '@/features/auth/actions/auth'
 
 export function UserMenu() {
   const [open, setOpen] = useState(false)

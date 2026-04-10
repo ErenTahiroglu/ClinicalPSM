@@ -6,7 +6,6 @@ CREATE TABLE profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
   plan TEXT DEFAULT 'free' CHECK (plan IN ('free', 'pro', 'team')),
-  analyses_used INTEGER DEFAULT 0,
   analyses_limit INTEGER DEFAULT 1,
   stripe_customer_id TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()

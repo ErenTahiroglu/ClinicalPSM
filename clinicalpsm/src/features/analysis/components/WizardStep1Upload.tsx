@@ -162,7 +162,7 @@ export function WizardStep1Upload({ name, onComplete, onBack }: Props) {
           Drop your CSV file here, or click to browse
         </p>
         <p className="text-xs text-muted-foreground">
-          CSV up to {MAX_FILE_SIZE_MB} MB · free plan: up to 500 rows
+          CSV up to {MAX_FILE_SIZE_MB} MB · free plan: 1 daily analysis, up to 500 rows
         </p>
         <input
           ref={inputRef}
