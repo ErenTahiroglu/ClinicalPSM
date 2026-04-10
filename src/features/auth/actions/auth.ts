@@ -60,7 +60,10 @@ export async function register(
     },
   })
 
-  if (error) return { error: error.message }
+  if (error) {
+    console.error('[Register] Supabase error:', error.message)
+    return { error: error.message }
+  }
 
   if (data.session) {
     redirect('/analyses')
