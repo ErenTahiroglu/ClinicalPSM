@@ -47,11 +47,16 @@ export async function register(
   if (passwordError) return { error: passwordError }
 
   const supabase = await createClient()
+  
+  // Use Vercel URL or custom Site URL for redirecting after email confirmation
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+                  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+
   const { data, error } = await supabase.auth.signUp({
-    email,
+    email: email.trim(),
     password,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/auth/callback`,
+      emailRedirectTo: `${siteUrl}/auth/callback`,
     },
   })
 
