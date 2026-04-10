@@ -1,6 +1,0 @@
-{
-  "buildCommand": "cd clinicalpsm && npm run build",
-  "installCommand": "cd clinicalpsm && npm install",
-  "framework": "nextjs",
-  "outputDirectory": "clinicalpsm/.next"
-}

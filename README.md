@@ -1,161 +1,70 @@
 # ClinicalPSM
 
-Propensity Score Matching (PSM) for clinical researchers — no coding required.
+ClinicalPSM is a modern web platform designed to make **Propensity Score Matching (PSM)** analysis accessible, secure, and intuitive for researchers and clinicians. Built with Next.js and Supabase, it provides a high-performance environment for observational data analysis.
 
-Upload a CSV, select your treatment and covariates, run the analysis, and download publication-ready results (balance table, love plot, matched dataset, PDF report).
+## ✨ Key Features
 
----
+- **Feature-Driven Architecture**: Highly scalable and maintainable folder structure organized by domain (auth, profile, analysis).
+- **Dynamic Limit Management**: Robust daily analysis limit system (1 free analysis/day) powered by **PostgreSQL Advisory Locks** to prevent race conditions.
+- **Atomic Creation**: Zero-latency analysis generation with atomic database operations.
+- **E2E Testing Suite**: Comprehensive end-to-end coverage using Playwright to ensure reliability across all critical workflows.
+- **Professional Analytics**: Detailed balance tables, SMD visualizations (Love Plots), and propensity score histograms.
 
-## Tech Stack
+## 💻 Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 16 (App Router) + TypeScript |
-| Styling | Tailwind CSS v4 + shadcn/ui (base-nova) |
-| Auth + DB | Supabase (Auth, PostgreSQL, Storage, RLS) |
-| PSM Engine | TypeScript (optimal matching, ATT/ATE) |
-| Payments | Polar.sh (planned — v0.2) |
-| Hosting | Vercel |
-| Testing | Vitest — 204 tests, 100% coverage |
-| CI | GitHub Actions |
+- **Framework**: [Next.js 16 (App Router)](https://nextjs.org/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Database & Auth**: [Supabase](https://supabase.com/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) & [shadcn/ui](https://ui.shadcn.com/)
+- **Testing**: [Playwright](https://playwright.dev/) & [Vitest](https://vitest.dev/)
+- **Payments**: [Polar.sh](https://polar.sh/) (Beta)
 
----
+## 🚀 Local Setup
 
-## Features
+Follow these steps to get the project running locally:
 
-- **CSV upload** — up to 500 rows (free plan), automatic column detection
-- **Missing value imputation** — mean, median, mode, or drop strategies
-- **Categorical encoding** — automatic one-hot encoding (k-1 dummies)
-- **PSM engine** — logistic regression, nearest-neighbor & optimal exact matching, common support, ATE/ATT
-- **Balance diagnostics** — SMD and variance ratio before/after matching
-- **Export** — matched dataset CSV, balance table CSV, love plot PNG, PDF report
-- **Password security** — minimum 10 characters, uppercase, lowercase, special character
-- **Rate limiting** — per-IP sliding window (upload: 5/min, analyses: 10/min)
-- **Quota system** — free: 3 analyses total, Plus: 25/month, Pro: unlimited
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/your-username/ClinicalPSM.git
+   cd clinicalpsm
+   ```
 
----
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-## Getting Started
+3. **Configure Environment Variables**:
+   Copy the example environment file and fill in your Supabase credentials:
+   ```bash
+   cp .env.example .env.local
+   ```
 
-### Prerequisites
+4. **Run development server**:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) with your browser to see the results.
 
-- Node.js 20+
-- A [Supabase](https://supabase.com) project
+## ☁️ Vercel Deployment
 
-### Local Development
+ClinicalPSM is optimized for Vercel. When deploying:
+1. Import your repository into the Vercel Dashboard.
+2. Add all environment variables listed in `.env.example` in the Project Settings -> Environment Variables section.
+3. Deploy!
 
+## 🧪 Testing
+
+To run the full test suite:
 ```bash
-cd clinicalpsm
+# Unit & Integration tests
+npm run test
 
-# Install dependencies
-npm install
-
-# Set up environment variables
-cp .env.local.example .env.local
-# Fill in your Supabase URL, anon key, and service role key
-
-# Apply database migrations
-npx supabase link --project-ref YOUR_PROJECT_REF
-npx supabase db push
-
-# Start the dev server
-npm run dev
+# End-to-End tests
+# (Requires a running dev/test server and environment setup)
+cd .. && npx playwright test
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+## 📄 License
 
-After linking Supabase, manually create the `csv-uploads` storage bucket (set to private) and configure RLS policies on all tables.
-
----
-
-## Project Structure
-
-```
-clinicalpsm/
-├── src/
-│   ├── actions/          # Server actions (auth, profile)
-│   ├── app/
-│   │   ├── (auth)/           # Login, register, forgot/reset password
-│   │   ├── (dashboard)/      # Protected: analyses list, wizard, detail, settings
-│   │   ├── api/              # API routes (analyses CRUD, file upload, results)
-│   │   ├── pricing/          # Pricing page
-│   │   └── page.tsx          # Landing page
-│   ├── components/
-│   │   ├── analysis/         # PSM wizard steps, love plot, histogram, export
-│   │   ├── settings/         # Settings page client component
-│   │   ├── shared/           # Header
-│   │   └── ui/               # shadcn/ui components
-│   ├── lib/
-│   │   ├── psm/              # PSM engine + Web Worker + tests
-│   │   ├── export/           # CSV, balance-table, SVG→PNG + tests
-│   │   ├── rate-limit.ts     # In-memory sliding window rate limiter
-│   │   └── supabase/         # Client and server helpers
-│   └── types/                # TypeScript type definitions
-├── supabase/
-│   └── migrations/           # SQL migrations (001–004)
-├── .github/
-│   └── workflows/ci.yml      # Lint + type-check + tests on push/PR
-└── docs/
-    ├── architecture.md       # Technical architecture
-    └── skills/               # AI coding guidelines
-```
-
----
-
-## Plans
-
-| Plan | Analyses | Price |
-|---|---|---|
-| Free | 3 total | $0 |
-| Plus | 25/month | $5/mo |
-| Pro | Unlimited | $20/mo |
-
-Payment integration (Polar.sh) is planned for v0.2.
-
----
-
-## Supabase Setup
-
-After linking your project:
-
-1. **Create storage bucket** in the Supabase dashboard: `csv-uploads` (private)
-2. **Add RLS policies** for the bucket so users can only access their own files
-3. **Set Auth URLs**: Site URL + redirect URL to your production domain
-
----
-
-## Environment Variables
-
-Copy `.env.local.example` to `.env.local` and fill in the values:
-
-```
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-```
-
-Polar.sh variables (`POLAR_ACCESS_TOKEN`, `POLAR_WEBHOOK_SECRET`, product IDs) are only needed when enabling paid plans (v0.2).
-
----
-
-## Scripts
-
-```bash
-npm run dev            # Start development server
-npm run build          # Production build
-npm run lint           # ESLint
-npx tsc --noEmit       # Type-check without building
-npm test               # Vitest unit tests (204 tests)
-npm run test:watch     # Vitest watch mode
-npm run test:coverage  # Coverage report (100% statements/branches/functions/lines)
-```
-
----
-
-## Roadmap
-
-- **v0.2** — Polar.sh payment integration (Plus & Pro plans)
-- **v0.3** — Python/FastAPI PSM engine (scikit-learn, larger datasets)
-- **v0.4** — Excel (.xlsx) support
-- **v0.5** — Multi-language support (Spanish)
+This project is licensed under the MIT License - see the LICENSE file for details.

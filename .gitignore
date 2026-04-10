@@ -1,49 +1,54 @@
-# macOS
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Next.js Build Output
+/.next/
+/out/
+/build
+
+# Testing (Vitest & Playwright)
+/coverage
+/playwright-report/
+/test-results/
+/blob-report/
+
+# OS Specific Files
 .DS_Store
 .DS_Store?
 ._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# IDE
-.vscode/
-.idea/
+# Environment Files - SECRETS MUST NEVER BE COMMITTED
+.env*
+# Except example files
+!.env*.example
 
-# Claude Code local settings
-.claude/
-
-# env files — never commit real credentials
-.env
-.env.local
-.env.*.local
-
-# Node
-node_modules/
-
-# Next.js build output
-clinicalpsm/.next/
-clinicalpsm/out/
-clinicalpsm/build/
-
-# Test coverage
-clinicalpsm/coverage/
-
-# TypeScript build info
-clinicalpsm/*.tsbuildinfo
-clinicalpsm/next-env.d.ts
-
-# Vercel
+# Vercel Configuration
 .vercel
 
-# Debug logs
+# Debug & Log Files
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# Documentation files (keep local, don't commit)
-PADDLE_INTEGRATION_GUIDE.md
-IMPLEMENTATION_SUMMARY.md
-CLINICALPSM_TEST_REPORT.md
+# Misc
+*.pem
+*.tsbuildinfo
+next-env.d.ts
 
-# Build output files
-build_output*.txt
-clinicalpsm/build_output*.txt
+# Supabase
+supabase/.branches/
+supabase/.temp/
