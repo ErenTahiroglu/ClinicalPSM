@@ -1,15 +1,20 @@
 import type { NextConfig } from 'next'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
-const supabaseHost = supabaseUrl ? new URL(supabaseUrl).hostname : ''
+let supabaseHost = ''
+try {
+  supabaseHost = supabaseUrl ? new URL(supabaseUrl).hostname : ''
+} catch (e) {
+  console.warn('[NextConfig] Invalid NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl)
+}
 
 const ContentSecurityPolicy = `
   default-src 'self';
   script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com;
-  img-src 'self' blob: data: https://${supabaseHost};
-  connect-src 'self' https://${supabaseHost} wss://${supabaseHost} https://va.vercel-scripts.com;
+  img-src 'self' blob: data: ${supabaseHost ? `https://${supabaseHost}` : ''};
+  connect-src 'self' ${supabaseHost ? `https://${supabaseHost} wss://${supabaseHost}` : ''} https://va.vercel-scripts.com;
   worker-src 'self' blob:;
   frame-ancestors 'none';
   base-uri 'self';
