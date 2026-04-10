@@ -4,7 +4,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
 let supabaseHost = ''
 try {
   supabaseHost = supabaseUrl ? new URL(supabaseUrl).hostname : ''
-} catch (e) {
+} catch (_e) {
   console.warn('[NextConfig] Invalid NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl)
 }
 

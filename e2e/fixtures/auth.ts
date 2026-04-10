@@ -1,5 +1,5 @@
 import { test as base, expect, type Page, type TestInfo } from '@playwright/test'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 // Test user credentials
 const TEST_USER = {
@@ -9,7 +9,7 @@ const TEST_USER = {
 
 type AuthFixtures = {
   authenticatedPage: Page
-  supabase: any
+  supabase: SupabaseClient
   user: { id: string; email: string }
 }
 
