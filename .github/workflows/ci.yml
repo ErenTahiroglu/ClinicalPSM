@@ -10,9 +10,6 @@ jobs:
   ci:
     name: Lint · Type-check · Test · Build
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: clinicalpsm
 
     steps:
       - uses: actions/checkout@v4
@@ -22,7 +19,6 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: clinicalpsm/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -44,7 +40,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: clinicalpsm/coverage/
+          path: coverage/
           retention-days: 30
 
       - name: Build production bundle

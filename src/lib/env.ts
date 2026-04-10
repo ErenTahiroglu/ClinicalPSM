@@ -18,6 +18,14 @@ interface ServerEnvConfig extends EnvConfig {
 
 function assertEnv(key: string, value: string | undefined): string {
   if (!value || value.trim() === '') {
+    // Only throw in development/runtime, not during static site generation (build)
+    const isBuild = process.env.NEXT_PHASE === 'phase-production-build'
+    if (isBuild) {
+      console.warn(`[ClinicalPSM] WARNING: Missing required environment variable: ${key} during build.\n` +
+        `This is normal if you haven't added variables to Vercel yet, but the app will not work properly at runtime.`)
+      return ''
+    }
+    
     throw new Error(
       `[ClinicalPSM] Missing required environment variable: ${key}\n` +
         `Please add it to your .env.local file.\n` +
