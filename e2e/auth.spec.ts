@@ -1,7 +1,7 @@
 import { test, expect } from './fixtures/auth'
 
-let testEmail = 'test@clinicalpsm.com'
-let testPassword = 'TestPassword123!'
+const testEmail = 'test@clinicalpsm.com'
+const testPassword = 'TestPassword123!'
 
 test.describe('Authentication', () => {
   test.skip('should allow user to register and auto-login', async ({ page }) => {
