@@ -1,16 +1,15 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { getTranslations, getLocale } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 
-function validatePassword(password: string): string | null {
-  if (password.length < 10) return 'Password must be at least 10 characters.'
-  // Modern generated passwords often use symbols, but we shouldn't fail if they miss one specific type
-  // unless business requirements strictly demand it.
-  if (!/[A-Z]/.test(password)) return 'Password must contain at least one uppercase letter.'
-  if (!/[a-z]/.test(password)) return 'Password must contain at least one lowercase letter.'
-  // Broadening special character check to include any non-alphanumeric or common symbols
-  if (!/[\W_]/.test(password)) return 'Password must contain at least one special character (e.g. !@#$%).'
+async function validatePassword(password: string, locale?: string): Promise<string | null> {
+  const t = await getTranslations({ locale: locale ?? 'en', namespace: 'auth.serverMessages' })
+  if (password.length < 10) return t('passwordTooShort')
+  if (!/[A-Z]/.test(password)) return t('passwordNoUppercase')
+  if (!/[a-z]/.test(password)) return t('passwordNoLowercase')
+  if (!/[\W_]/.test(password)) return t('passwordNoSpecial')
   return null
 }
 
@@ -20,20 +19,27 @@ export async function login(
 ): Promise<{ error: string } | null> {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+  const locale = (formData.get('locale') as string) || 'en'
 
+  const t = await getTranslations({ locale, namespace: 'auth' })
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) {
-    // Normalize Supabase auth errors to user-friendly messages
     const msg = error.message.toLowerCase()
-    if (msg.includes('invalid') || msg.includes('credentials') || msg.includes('password') || msg.includes('not found')) {
-      return { error: 'Invalid credentials' }
+    if (
+      msg.includes('invalid') ||
+      msg.includes('credentials') ||
+      msg.includes('password') ||
+      msg.includes('not found')
+    ) {
+      return { error: t('invalidCredentials') }
     }
     return { error: error.message }
   }
 
-  redirect('/analyses')
+  const currentLocale = await getLocale()
+  redirect(`/${currentLocale}/analyses`)
 }
 
 export async function register(
@@ -42,15 +48,17 @@ export async function register(
 ): Promise<{ error: string } | { message: string } | null> {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+  const locale = (formData.get('locale') as string) || 'en'
 
-  const passwordError = validatePassword(password)
+  const passwordError = await validatePassword(password, locale)
   if (passwordError) return { error: passwordError }
 
+  const t = await getTranslations({ locale, namespace: 'auth.serverMessages' })
   const supabase = await createClient()
-  
-  // Use Vercel URL or custom Site URL for redirecting after email confirmation
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
-                  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
   const { data, error } = await supabase.auth.signUp({
     email: email.trim(),
@@ -66,10 +74,11 @@ export async function register(
   }
 
   if (data.session) {
-    redirect('/analyses')
+    const currentLocale = await getLocale()
+    redirect(`/${currentLocale}/analyses`)
   }
 
-  return { message: 'Check your email to confirm your account.' }
+  return { message: t('emailConfirmationSent') }
 }
 
 export async function resendConfirmation(
@@ -77,6 +86,8 @@ export async function resendConfirmation(
   formData: FormData
 ): Promise<{ error: string } | { message: string }> {
   const email = formData.get('email') as string
+  const locale = await getLocale()
+  const t = await getTranslations({ locale, namespace: 'auth.serverMessages' })
   const supabase = await createClient()
   const { error } = await supabase.auth.resend({
     type: 'signup',
@@ -86,13 +97,14 @@ export async function resendConfirmation(
     },
   })
   if (error) return { error: error.message }
-  return { message: 'Confirmation email resent.' }
+  return { message: t('confirmationResent') }
 }
 
 export async function signOut(): Promise<never> {
   const supabase = await createClient()
   await supabase.auth.signOut()
-  redirect('/login')
+  const locale = await getLocale()
+  redirect(`/${locale}/login`)
 }
 
 export async function requestPasswordReset(
@@ -100,12 +112,14 @@ export async function requestPasswordReset(
   formData: FormData
 ): Promise<{ error: string } | { message: string }> {
   const email = formData.get('email') as string
+  const locale = await getLocale()
+  const t = await getTranslations({ locale, namespace: 'auth.serverMessages' })
   const supabase = await createClient()
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/reset-password`,
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/${locale}/reset-password`,
   })
   if (error) return { error: error.message }
-  return { message: 'Check your email for a password reset link.' }
+  return { message: t('passwordResetSent') }
 }
 
 export async function updatePassword(
@@ -113,12 +127,13 @@ export async function updatePassword(
   formData: FormData
 ): Promise<{ error: string } | { message: string }> {
   const password = formData.get('password') as string
+  const locale = await getLocale()
 
-  const passwordError = validatePassword(password)
+  const passwordError = await validatePassword(password, locale)
   if (passwordError) return { error: passwordError }
 
   const supabase = await createClient()
   const { error } = await supabase.auth.updateUser({ password })
   if (error) return { error: error.message }
-  redirect('/analyses')
+  redirect(`/${locale}/analyses`)
 }

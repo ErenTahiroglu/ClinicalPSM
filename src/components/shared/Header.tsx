@@ -1,9 +1,13 @@
 import Link from 'next/link'
+import { getTranslations, getLocale } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { ButtonLink } from '@/components/ui/button-link'
 import { UserMenu } from './UserMenu'
+import { LangSwitcher } from './LangSwitcher'
 
 export default async function Header() {
+  const locale = await getLocale()
+  const t = await getTranslations('common')
   const supabase = await createClient()
   const {
     data: { user },
@@ -12,34 +16,36 @@ export default async function Header() {
   return (
     <header className="border-b bg-background">
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-        <Link href="/" className="text-lg font-semibold tracking-tight">
-          ClinicalPSM
+        <Link href={`/${locale}`} className="text-lg font-semibold tracking-tight">
+          {t('brand')}
         </Link>
 
         <nav className="flex items-center gap-3">
           {user ? (
             <>
               <Link
-                href="/analyses"
+                href={`/${locale}/analyses`}
                 className="text-sm text-muted-foreground hover:text-foreground"
               >
-                Dashboard
+                {t('nav.dashboard')}
               </Link>
               <Link
-                href="/pricing"
+                href={`/${locale}/pricing`}
                 className="text-sm text-muted-foreground hover:text-foreground"
               >
-                Pricing
+                {t('nav.pricing')}
               </Link>
+              <LangSwitcher />
               <UserMenu />
             </>
           ) : (
             <>
-              <ButtonLink href="/login" variant="outline" size="sm">
-                Login
+              <LangSwitcher />
+              <ButtonLink href={`/${locale}/login`} variant="outline" size="sm">
+                {t('nav.login')}
               </ButtonLink>
-              <ButtonLink href="/register" size="sm">
-                Register
+              <ButtonLink href={`/${locale}/register`} size="sm">
+                {t('nav.register')}
               </ButtonLink>
             </>
           )}
