@@ -1,0 +1,272 @@
+{
+  "common": {
+    "brand": "ClinicalPSM",
+    "nav": {
+      "dashboard": "Dashboard",
+      "pricing": "Pricing",
+      "login": "Login",
+      "register": "Register",
+      "settings": "Settings",
+      "logout": "Logout",
+      "menu": "Menu"
+    },
+    "footer": "© {year} ClinicalPSM",
+    "langSwitch": "TR"
+  },
+  "landing": {
+    "hero": {
+      "title": "Run Propensity Score Matching Without Code",
+      "description": "ClinicalPSM is built for medical and academic researchers who need rigorous causal inference tools without R or Stata. Upload a CSV, configure your analysis, and download publication-ready results in minutes.",
+      "ctaDashboard": "Go to Dashboard",
+      "ctaStart": "Start Free Analysis",
+      "subtext": "1 free analysis daily — no credit card required · ",
+      "seePricing": "See pricing"
+    },
+    "features": {
+      "upload": {
+        "title": "Upload Your Data",
+        "description": "Upload your dataset in CSV format. Preview the first rows and columns instantly — no data leaves your browser until you run the analysis."
+      },
+      "configure": {
+        "title": "Configure & Match",
+        "description": "Select your treatment variable, outcome, and covariates. Set matching ratio (1:1, 1:2, 1:3) and an optional caliper. ClinicalPSM handles the rest."
+      },
+      "download": {
+        "title": "Download Results",
+        "description": "Get a standardized mean difference balance table, a Love plot, and a matched dataset CSV — ready for your paper or supplementary materials."
+      }
+    }
+  },
+  "auth": {
+    "invalidCredentials": "Invalid email or password",
+    "login": {
+      "title": "Sign in",
+      "description": "Enter your email and password to access your analyses.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@institution.edu",
+      "passwordLabel": "Password",
+      "forgotPassword": "Forgot password?",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "noAccount": "Don't have an account?",
+      "registerLink": "Register",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password"
+    },
+    "register": {
+      "title": "Create account",
+      "description": "Start with 1 free analysis daily — no credit card required.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@institution.edu",
+      "passwordLabel": "Password",
+      "passwordHint": "At least 10 characters with one uppercase, one lowercase, and one special character.",
+      "confirmLabel": "Confirm Password",
+      "submit": "Create account",
+      "submitting": "Creating account…",
+      "hasAccount": "Already have an account?",
+      "signInLink": "Sign in",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "validation": {
+        "invalidEmail": "Invalid email format",
+        "passwordTooShort": "Password must be at least 10 characters",
+        "passwordMismatch": "Passwords do not match"
+      },
+      "confirmation": {
+        "title": "Check your email",
+        "description": "We sent a confirmation link to",
+        "arrives": "Usually arrives within 1 minute.",
+        "spam": "Don't see it? Check your spam or junk folder.",
+        "resend": "Resend confirmation email",
+        "resending": "Sending…",
+        "alreadyConfirmed": "Already confirmed?",
+        "signInLink": "Sign in"
+      }
+    },
+    "forgotPassword": {
+      "title": "Reset your password",
+      "description": "Enter your email and we'll send you a reset link.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@institution.edu",
+      "submit": "Send reset link",
+      "submitting": "Sending…",
+      "rememberPassword": "Remember your password?",
+      "signInLink": "Sign in",
+      "successTitle": "Check your email",
+      "backToSignIn": "Back to sign in"
+    },
+    "resetPassword": {
+      "title": "Set new password",
+      "description": "Enter your new password below.",
+      "newPasswordLabel": "New password",
+      "confirmLabel": "Confirm new password",
+      "submit": "Update password",
+      "submitting": "Updating…",
+      "passwordHint": "At least 10 characters with one uppercase, one lowercase, and one special character.",
+      "mismatch": "Passwords do not match.",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password"
+    },
+    "serverMessages": {
+      "emailConfirmationSent": "Check your email to confirm your account.",
+      "confirmationResent": "Confirmation email resent.",
+      "passwordResetSent": "Check your email for a password reset link.",
+      "passwordTooShort": "Password must be at least 10 characters.",
+      "passwordNoUppercase": "Password must contain at least one uppercase letter.",
+      "passwordNoLowercase": "Password must contain at least one lowercase letter.",
+      "passwordNoSpecial": "Password must contain at least one special character (e.g. !@#$%)."
+    }
+  },
+  "analyses": {
+    "title": "Your Analyses",
+    "newAnalysis": "New Analysis",
+    "seePlans": "See Plans",
+    "limitFree": "You've used your daily free analysis. Try again tomorrow or upgrade.",
+    "limitPaid": "You've used all {limit} analyses for this period. Upgrade to continue.",
+    "usage": "{used} / {limit} {period} analyses used",
+    "usagePlan": "{used} / {limit} {period} analyses used ({plan} plan)",
+    "daily": "daily",
+    "unlimited": "∞",
+    "empty": {
+      "title": "No analyses yet",
+      "description": "Upload a CSV and run your first propensity score matching analysis.",
+      "cta": "Start your first analysis →"
+    },
+    "status": {
+      "draft": "draft",
+      "processing": "processing",
+      "completed": "completed",
+      "failed": "failed"
+    },
+    "matchedPairs": "matched pairs",
+    "overallSmd": "overall SMD after:"
+  },
+  "analysisDetail": {
+    "breadcrumb": "Your Analyses",
+    "noResults": "No results available for this analysis.",
+    "config": {
+      "title": "Configuration",
+      "treatment": "Treatment variable",
+      "ratio": "Matching ratio",
+      "caliper": "Caliper",
+      "covariates": "Covariates",
+      "none": "None"
+    },
+    "summary": {
+      "title": "Summary",
+      "treated": "Treated units",
+      "control": "Control units",
+      "matched": "Matched pairs",
+      "smdBefore": "Mean |SMD| before",
+      "smdAfter": "Mean |SMD| after",
+      "convergence": "Convergence",
+      "converged": "Yes",
+      "notConverged": "No (100 iter)"
+    },
+    "balanceTable": {
+      "title": "Balance Table",
+      "covariate": "Covariate",
+      "meanTreated": "Mean (Treated)",
+      "meanControl": "Mean (Control)",
+      "smdBefore": "SMD Before",
+      "smdAfter": "SMD After",
+      "vrBefore": "VR Before",
+      "vrAfter": "VR After",
+      "hint": "|SMD| < 0.1 indicates good balance (shown in green)."
+    },
+    "lovePlot": { "title": "Love Plot" }
+  },
+  "new": {
+    "limitTitle": "Limit reached",
+    "limitFree": "You've used your daily free analysis. Try again tomorrow or upgrade.",
+    "limitPaid": "You've used all {limit} analyses for this period on the {plan} plan.",
+    "backToDashboard": "Back to Dashboard",
+    "seePlans": "See Plans"
+  },
+  "settings": {
+    "title": "Settings",
+    "account": {
+      "title": "Account",
+      "emailLabel": "Email"
+    },
+    "plan": {
+      "title": "Plan & Usage",
+      "currentPlan": "Current plan",
+      "analysesUsed": "Analyses used",
+      "resetsOn": "Resets on",
+      "free": "Free",
+      "plus": "Plus",
+      "pro": "Pro",
+      "upgradeLink": "Upgrade to Plus or Pro for more daily analyses →",
+      "noInfo": "Could not load plan info.",
+      "today": "(today)",
+      "currentPeriod": "(current period)"
+    },
+    "password": {
+      "title": "Change Password",
+      "label": "New password",
+      "placeholder": "Min. 10 chars, uppercase, lowercase, special",
+      "submit": "Update Password",
+      "submitting": "Updating…"
+    },
+    "danger": {
+      "title": "Danger Zone",
+      "warning": "Permanently delete your account and all associated data. This cannot be undone.",
+      "confirm": "Are you sure? This will permanently delete your account and all your analyses.",
+      "submit": "Delete My Account",
+      "submitting": "Deleting…"
+    }
+  },
+  "pricing": {
+    "banner": "Paid plans launching soon. The Free plan is fully available — start running analyses today.",
+    "title": "Simple, transparent pricing",
+    "subtitle": "Start for free. Upgrade when you need more.",
+    "currentPlan": "Current plan",
+    "mostPopular": "Most popular",
+    "comingSoon": "Coming Soon",
+    "goToDashboard": "Go to dashboard",
+    "getStarted": "Get started free",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "description": "Get started with no commitment",
+        "analyses": "1 analysis / day",
+        "features": [
+          "1 free analysis daily",
+          "CSV upload (5 MB max)",
+          "Balance table + Love plot",
+          "CSV export"
+        ]
+      },
+      "plus": {
+        "name": "Plus",
+        "description": "For active researchers",
+        "analyses": "20 analyses / month",
+        "features": [
+          "20 analyses per month",
+          "CSV upload (5 MB max)",
+          "Balance table + Love plot",
+          "CSV export",
+          "Email support"
+        ]
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "For high-volume research",
+        "analyses": "Unlimited analyses",
+        "features": [
+          "Unlimited analyses",
+          "CSV upload (5 MB max)",
+          "Balance table + Love plot",
+          "CSV export",
+          "Priority support"
+        ]
+      }
+    }
+  },
+  "errors": {
+    "somethingWrong": "Something went wrong",
+    "tryAgain": "Try again",
+    "unexpected": "An unexpected error occurred."
+  }
+}

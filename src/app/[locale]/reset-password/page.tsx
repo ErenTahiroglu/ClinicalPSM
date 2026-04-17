@@ -1,0 +1,127 @@
+'use client'
+
+import { useActionState, useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { updatePassword } from '@/features/auth/actions/auth'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+
+export default function ResetPasswordPage() {
+  const t = useTranslations('auth.resetPassword')
+  const [state, action, isPending] = useActionState(updatePassword, null)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [clientError, setClientError] = useState<string | null>(null)
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    const form = e.currentTarget
+    const password = (form.elements.namedItem('password') as HTMLInputElement).value
+    const confirm = (form.elements.namedItem('confirm') as HTMLInputElement).value
+    if (password !== confirm) {
+      e.preventDefault()
+      setClientError(t('mismatch'))
+      return
+    }
+    setClientError(null)
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
+      <div className="w-full max-w-sm">
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('title')}</CardTitle>
+            <CardDescription>{t('description')}</CardDescription>
+          </CardHeader>
+
+          <form action={action} onSubmit={handleSubmit}>
+            <fieldset disabled={isPending} className="contents">
+              <CardContent className="flex flex-col gap-4">
+                {(clientError || (state && 'error' in state)) && (
+                  <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    {clientError ?? (state && 'error' in state ? state.error : '')}
+                  </p>
+                )}
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="password">{t('newPasswordLabel')}</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      placeholder="••••••••••"
+                      minLength={10}
+                      required
+                      className="pr-9"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(v => !v)}
+                      className="absolute inset-y-0 right-0 flex items-center px-2.5 text-muted-foreground hover:text-foreground"
+                      tabIndex={-1}
+                      aria-label={showPassword ? t('hidePassword') : t('showPassword')}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{t('passwordHint')}</p>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="confirm">{t('confirmLabel')}</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirm"
+                      name="confirm"
+                      type={showConfirm ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      placeholder="••••••••••"
+                      minLength={10}
+                      required
+                      className="pr-9"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm(v => !v)}
+                      className="absolute inset-y-0 right-0 flex items-center px-2.5 text-muted-foreground hover:text-foreground"
+                      tabIndex={-1}
+                      aria-label={showConfirm ? t('hidePassword') : t('showPassword')}
+                    >
+                      {showConfirm ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </CardContent>
+
+              <CardFooter>
+                <Button type="submit" className="w-full" disabled={isPending}>
+                  {isPending ? t('submitting') : t('submit')}
+                </Button>
+              </CardFooter>
+            </fieldset>
+          </form>
+        </Card>
+      </div>
+    </div>
+  )
+}

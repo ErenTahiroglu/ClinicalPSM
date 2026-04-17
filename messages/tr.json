@@ -1,0 +1,272 @@
+{
+  "common": {
+    "brand": "ClinicalPSM",
+    "nav": {
+      "dashboard": "Panel",
+      "pricing": "Fiyatlandırma",
+      "login": "Giriş",
+      "register": "Kayıt Ol",
+      "settings": "Ayarlar",
+      "logout": "Çıkış",
+      "menu": "Menü"
+    },
+    "footer": "© {year} ClinicalPSM",
+    "langSwitch": "EN"
+  },
+  "landing": {
+    "hero": {
+      "title": "Kod Yazmadan Eğilim Skoru Eşleştirmesi Yapın",
+      "description": "ClinicalPSM, R veya Stata olmadan kesin nedensel çıkarım araçlarına ihtiyaç duyan tıbbi ve akademik araştırmacılar için geliştirilmiştir. Bir CSV yükleyin, analizinizi yapılandırın ve dakikalar içinde yayına hazır sonuçlar indirin.",
+      "ctaDashboard": "Panele Git",
+      "ctaStart": "Ücretsiz Analiz Başlat",
+      "subtext": "Günde 1 ücretsiz analiz — kredi kartı gerekmez · ",
+      "seePricing": "Fiyatlara bak"
+    },
+    "features": {
+      "upload": {
+        "title": "Verinizi Yükleyin",
+        "description": "Veri kümenizi CSV formatında yükleyin. İlk satırları ve sütunları anında önizleyin — analizi çalıştırana kadar veriler tarayıcınızdan çıkmaz."
+      },
+      "configure": {
+        "title": "Yapılandırın ve Eşleştirin",
+        "description": "Tedavi değişkeninizi, sonucunuzu ve kovaryatlarınızı seçin. Eşleştirme oranını (1:1, 1:2, 1:3) ve isteğe bağlı bir caliperı ayarlayın. Gerisini ClinicalPSM halleder."
+      },
+      "download": {
+        "title": "Sonuçları İndirin",
+        "description": "Standartlaştırılmış ortalama fark denge tablosu, Love grafiği ve eşleştirilmiş veri kümesi CSV dosyası alın — makaleniz veya ek materyaller için hazır."
+      }
+    }
+  },
+  "auth": {
+    "invalidCredentials": "E-posta veya şifreniz hatalı",
+    "login": {
+      "title": "Giriş Yap",
+      "description": "Analizlerinize erişmek için e-posta ve şifrenizi girin.",
+      "emailLabel": "E-posta",
+      "emailPlaceholder": "siz@kurum.edu.tr",
+      "passwordLabel": "Şifre",
+      "forgotPassword": "Şifremi unuttum?",
+      "submit": "Giriş Yap",
+      "submitting": "Giriş yapılıyor…",
+      "noAccount": "Hesabınız yok mu?",
+      "registerLink": "Kayıt Ol",
+      "showPassword": "Şifreyi göster",
+      "hidePassword": "Şifreyi gizle"
+    },
+    "register": {
+      "title": "Hesap Oluştur",
+      "description": "Günde 1 ücretsiz analizle başlayın — kredi kartı gerekmez.",
+      "emailLabel": "E-posta",
+      "emailPlaceholder": "siz@kurum.edu.tr",
+      "passwordLabel": "Şifre",
+      "passwordHint": "En az 10 karakter, bir büyük harf, bir küçük harf ve bir özel karakter içermeli.",
+      "confirmLabel": "Şifreyi Onayla",
+      "submit": "Hesap Oluştur",
+      "submitting": "Hesap oluşturuluyor…",
+      "hasAccount": "Zaten hesabınız var mı?",
+      "signInLink": "Giriş Yap",
+      "showPassword": "Şifreyi göster",
+      "hidePassword": "Şifreyi gizle",
+      "validation": {
+        "invalidEmail": "Geçersiz e-posta formatı",
+        "passwordTooShort": "Şifre en az 10 karakter olmalı",
+        "passwordMismatch": "Şifreler eşleşmiyor"
+      },
+      "confirmation": {
+        "title": "E-postanızı kontrol edin",
+        "description": "Onay bağlantısını şu adrese gönderdik:",
+        "arrives": "Genellikle 1 dakika içinde ulaşır.",
+        "spam": "Göremedi mi? Spam veya önemsiz klasörünüzü kontrol edin.",
+        "resend": "Onay e-postasını yeniden gönder",
+        "resending": "Gönderiliyor…",
+        "alreadyConfirmed": "Zaten onayladınız mı?",
+        "signInLink": "Giriş Yap"
+      }
+    },
+    "forgotPassword": {
+      "title": "Şifrenizi Sıfırlayın",
+      "description": "E-postanızı girin, size sıfırlama bağlantısı gönderelim.",
+      "emailLabel": "E-posta",
+      "emailPlaceholder": "siz@kurum.edu.tr",
+      "submit": "Sıfırlama bağlantısı gönder",
+      "submitting": "Gönderiliyor…",
+      "rememberPassword": "Şifrenizi hatırladınız mı?",
+      "signInLink": "Giriş Yap",
+      "successTitle": "E-postanızı kontrol edin",
+      "backToSignIn": "Girişe dön"
+    },
+    "resetPassword": {
+      "title": "Yeni Şifre Belirle",
+      "description": "Aşağıya yeni şifrenizi girin.",
+      "newPasswordLabel": "Yeni şifre",
+      "confirmLabel": "Yeni şifreyi onayla",
+      "submit": "Şifreyi güncelle",
+      "submitting": "Güncelleniyor…",
+      "passwordHint": "En az 10 karakter, bir büyük harf, bir küçük harf ve bir özel karakter içermeli.",
+      "mismatch": "Şifreler eşleşmiyor.",
+      "showPassword": "Şifreyi göster",
+      "hidePassword": "Şifreyi gizle"
+    },
+    "serverMessages": {
+      "emailConfirmationSent": "Hesabınızı doğrulamak için e-postanızı kontrol edin.",
+      "confirmationResent": "Onay e-postası yeniden gönderildi.",
+      "passwordResetSent": "Şifre sıfırlama bağlantısı için e-postanızı kontrol edin.",
+      "passwordTooShort": "Şifre en az 10 karakter olmalıdır.",
+      "passwordNoUppercase": "Şifre en az bir büyük harf içermelidir.",
+      "passwordNoLowercase": "Şifre en az bir küçük harf içermelidir.",
+      "passwordNoSpecial": "Şifre en az bir özel karakter içermelidir (ör. !@#$%)."
+    }
+  },
+  "analyses": {
+    "title": "Analizleriniz",
+    "newAnalysis": "Yeni Analiz",
+    "seePlans": "Planları Gör",
+    "limitFree": "Günlük ücretsiz analizinizi kullandınız. Yarın tekrar deneyin veya yükseltin.",
+    "limitPaid": "Bu dönem için {limit} analizin tamamını kullandınız. Devam etmek için yükseltin.",
+    "usage": "{used} / {limit} {period} analiz kullanıldı",
+    "usagePlan": "{used} / {limit} {period} analiz kullanıldı ({plan} planı)",
+    "daily": "günlük",
+    "unlimited": "∞",
+    "empty": {
+      "title": "Henüz analiz yok",
+      "description": "Bir CSV yükleyin ve ilk eğilim skoru eşleştirme analizinizi çalıştırın.",
+      "cta": "İlk analizinizi başlatın →"
+    },
+    "status": {
+      "draft": "taslak",
+      "processing": "işleniyor",
+      "completed": "tamamlandı",
+      "failed": "başarısız"
+    },
+    "matchedPairs": "eşleşen çift",
+    "overallSmd": "genel SMD sonrası:"
+  },
+  "analysisDetail": {
+    "breadcrumb": "Analizleriniz",
+    "noResults": "Bu analiz için sonuç bulunmuyor.",
+    "config": {
+      "title": "Yapılandırma",
+      "treatment": "Tedavi değişkeni",
+      "ratio": "Eşleştirme oranı",
+      "caliper": "Caliper",
+      "covariates": "Kovaryatlar",
+      "none": "Yok"
+    },
+    "summary": {
+      "title": "Özet",
+      "treated": "Tedavi birimi",
+      "control": "Kontrol birimi",
+      "matched": "Eşleşen çift",
+      "smdBefore": "Ortalama |SMD| öncesi",
+      "smdAfter": "Ortalama |SMD| sonrası",
+      "convergence": "Yakınsama",
+      "converged": "Evet",
+      "notConverged": "Hayır (100 iter)"
+    },
+    "balanceTable": {
+      "title": "Denge Tablosu",
+      "covariate": "Kovaryat",
+      "meanTreated": "Ort. (Tedavi)",
+      "meanControl": "Ort. (Kontrol)",
+      "smdBefore": "SMD Öncesi",
+      "smdAfter": "SMD Sonrası",
+      "vrBefore": "VR Öncesi",
+      "vrAfter": "VR Sonrası",
+      "hint": "|SMD| < 0,1 iyi dengeyi gösterir (yeşil ile işaretli)."
+    },
+    "lovePlot": { "title": "Love Grafiği" }
+  },
+  "new": {
+    "limitTitle": "Limit doldu",
+    "limitFree": "Günlük ücretsiz analizinizi kullandınız. Yarın tekrar deneyin veya yükseltin.",
+    "limitPaid": "Bu dönemde {plan} planında {limit} analizin tamamını kullandınız.",
+    "backToDashboard": "Panele Dön",
+    "seePlans": "Planları Gör"
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "account": {
+      "title": "Hesap",
+      "emailLabel": "E-posta"
+    },
+    "plan": {
+      "title": "Plan ve Kullanım",
+      "currentPlan": "Mevcut plan",
+      "analysesUsed": "Kullanılan analiz",
+      "resetsOn": "Yenileme tarihi",
+      "free": "Ücretsiz",
+      "plus": "Plus",
+      "pro": "Pro",
+      "upgradeLink": "Daha fazla günlük analiz için Plus veya Pro'ya yükseltin →",
+      "noInfo": "Plan bilgisi yüklenemedi.",
+      "today": "(bugün)",
+      "currentPeriod": "(mevcut dönem)"
+    },
+    "password": {
+      "title": "Şifre Değiştir",
+      "label": "Yeni şifre",
+      "placeholder": "Min. 10 karakter, büyük/küçük harf, özel karakter",
+      "submit": "Şifreyi Güncelle",
+      "submitting": "Güncelleniyor…"
+    },
+    "danger": {
+      "title": "Tehlikeli Alan",
+      "warning": "Hesabınızı ve tüm ilişkili verileri kalıcı olarak silin. Bu işlem geri alınamaz.",
+      "confirm": "Emin misiniz? Bu işlem hesabınızı ve tüm analizlerinizi kalıcı olarak silecek.",
+      "submit": "Hesabımı Sil",
+      "submitting": "Siliniyor…"
+    }
+  },
+  "pricing": {
+    "banner": "Ücretli planlar yakında geliyor. Ücretsiz plan tamamen kullanılabilir — bugün analiz yapmaya başlayın.",
+    "title": "Sade ve şeffaf fiyatlandırma",
+    "subtitle": "Ücretsiz başlayın. İhtiyaç duyduğunuzda yükseltin.",
+    "currentPlan": "Mevcut plan",
+    "mostPopular": "En popüler",
+    "comingSoon": "Yakında",
+    "goToDashboard": "Panele git",
+    "getStarted": "Ücretsiz başla",
+    "plans": {
+      "free": {
+        "name": "Ücretsiz",
+        "description": "Taahhütsüz başlayın",
+        "analyses": "Günde 1 analiz",
+        "features": [
+          "Günde 1 ücretsiz analiz",
+          "CSV yükleme (maks. 5 MB)",
+          "Denge tablosu + Love grafiği",
+          "CSV dışa aktarma"
+        ]
+      },
+      "plus": {
+        "name": "Plus",
+        "description": "Aktif araştırmacılar için",
+        "analyses": "Ayda 20 analiz",
+        "features": [
+          "Ayda 20 analiz",
+          "CSV yükleme (maks. 5 MB)",
+          "Denge tablosu + Love grafiği",
+          "CSV dışa aktarma",
+          "E-posta desteği"
+        ]
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Yüksek hacimli araştırmalar için",
+        "analyses": "Sınırsız analiz",
+        "features": [
+          "Sınırsız analiz",
+          "CSV yükleme (maks. 5 MB)",
+          "Denge tablosu + Love grafiği",
+          "CSV dışa aktarma",
+          "Öncelikli destek"
+        ]
+      }
+    }
+  },
+  "errors": {
+    "somethingWrong": "Bir şeyler ters gitti",
+    "tryAgain": "Tekrar dene",
+    "unexpected": "Beklenmeyen bir hata oluştu."
+  }
+}
