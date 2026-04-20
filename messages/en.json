@@ -65,6 +65,8 @@
       "submitting": "Creating account…",
       "hasAccount": "Already have an account?",
       "signInLink": "Sign in",
+      "emailHint": "Use your institutional (.edu / .edu.tr) email — we're built for academic researchers.",
+      "academicBadge": "Academic ✓",
       "showPassword": "Show password",
       "hidePassword": "Hide password",
       "validation": {
@@ -218,19 +220,19 @@
     }
   },
   "pricing": {
-    "banner": "Paid plans launching soon. The Free plan is fully available — start running analyses today.",
     "title": "Simple, transparent pricing",
     "subtitle": "Start for free. Upgrade when you need more.",
     "currentPlan": "Current plan",
     "mostPopular": "Most popular",
-    "comingSoon": "Coming Soon",
     "goToDashboard": "Go to dashboard",
     "getStarted": "Get started free",
+    "subscribe": "Subscribe",
     "plans": {
       "free": {
         "name": "Free",
         "description": "Get started with no commitment",
         "analyses": "1 analysis / day",
+        "price": "$0",
         "features": [
           "1 free analysis daily",
           "CSV upload (5 MB max)",
@@ -242,6 +244,8 @@
         "name": "Plus",
         "description": "For active researchers",
         "analyses": "20 analyses / month",
+        "price": "$10/mo",
+        "priceNote": "Pay what you want · min $5",
         "features": [
           "20 analyses per month",
           "CSV upload (5 MB max)",
@@ -254,6 +258,8 @@
         "name": "Pro",
         "description": "For high-volume research",
         "analyses": "Unlimited analyses",
+        "price": "$25/mo",
+        "priceNote": "Pay what you want · min $20",
         "features": [
           "Unlimited analyses",
           "CSV upload (5 MB max)",

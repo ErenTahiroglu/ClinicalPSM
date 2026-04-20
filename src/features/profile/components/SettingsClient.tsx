@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -64,12 +65,12 @@ export function SettingsClient({ email, profile }: Props) {
               </div>
             )}
             {profile.plan === 'free' && (
-              <a
+              <Link
                 href="/pricing"
                 className="mt-1 text-xs text-primary underline-offset-2 hover:underline"
               >
                 Upgrade to Plus or Pro for more daily analyses →
-              </a>
+              </Link>
             )}
           </div>
         ) : (

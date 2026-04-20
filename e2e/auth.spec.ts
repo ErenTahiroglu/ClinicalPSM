@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures/auth'
+import { test as baseTest } from '@playwright/test'
 
 const testEmail = 'test@clinicalpsm.com'
 const testPassword = 'TestPassword123!'
@@ -70,5 +71,74 @@ test.describe('Authentication', () => {
 
   test.skip('should validate password confirmation', async ({ page }) => {
     // Registration validation tests skipped as per registration skip strategy
+  })
+})
+
+// ---------------------------------------------------------------------------
+// .edu academic badge — TR/EN parity
+// No auth required; tests only the register form UI.
+// ---------------------------------------------------------------------------
+
+baseTest.describe('.edu academic badge on register page', () => {
+  baseTest('EN: Academic ✓ badge appears for .edu address', async ({ page }) => {
+    await page.goto('/en/register')
+    await page.fill('input[name="email"]', 'researcher@mit.edu')
+    await expect(page.getByText('Academic ✓')).toBeVisible()
+  })
+
+  baseTest('EN: badge disappears when non-.edu address is typed', async ({ page }) => {
+    await page.goto('/en/register')
+    await page.fill('input[name="email"]', 'researcher@mit.edu')
+    await expect(page.getByText('Academic ✓')).toBeVisible()
+    await page.fill('input[name="email"]', 'me@gmail.com')
+    await expect(page.getByText('Academic ✓')).not.toBeVisible()
+  })
+
+  baseTest('EN: hint line is always visible regardless of email', async ({ page }) => {
+    await page.goto('/en/register')
+    await expect(page.getByText(/institutional.*\.edu/i)).toBeVisible()
+    await page.fill('input[name="email"]', 'me@gmail.com')
+    await expect(page.getByText(/institutional.*\.edu/i)).toBeVisible()
+  })
+
+  baseTest('TR: Akademik ✓ badge appears for .edu.tr address', async ({ page }) => {
+    await page.goto('/tr/register')
+    await page.fill('input[name="email"]', 'arastirmaci@bogazici.edu.tr')
+    await expect(page.getByText('Akademik ✓')).toBeVisible()
+  })
+
+  baseTest('TR: badge disappears when non-.edu address is typed', async ({ page }) => {
+    await page.goto('/tr/register')
+    await page.fill('input[name="email"]', 'arastirmaci@bogazici.edu.tr')
+    await expect(page.getByText('Akademik ✓')).toBeVisible()
+    await page.fill('input[name="email"]', 'ben@gmail.com')
+    await expect(page.getByText('Akademik ✓')).not.toBeVisible()
+  })
+
+  baseTest('TR: hint line is always visible regardless of email', async ({ page }) => {
+    await page.goto('/tr/register')
+    await expect(page.getByText(/Kurumsal.*\.edu/)).toBeVisible()
+    await page.fill('input[name="email"]', 'ben@gmail.com')
+    await expect(page.getByText(/Kurumsal.*\.edu/)).toBeVisible()
+  })
+
+  baseTest('EN badge, not TR text on EN page', async ({ page }) => {
+    await page.goto('/en/register')
+    await page.fill('input[name="email"]', 'user@uni.ac.uk')
+    await expect(page.getByText('Academic ✓')).toBeVisible()
+    await expect(page.getByText('Akademik ✓')).not.toBeVisible()
+  })
+
+  baseTest('TR badge, not EN text on TR page', async ({ page }) => {
+    await page.goto('/tr/register')
+    await page.fill('input[name="email"]', 'user@uni.ac.uk')
+    await expect(page.getByText('Akademik ✓')).toBeVisible()
+    await expect(page.getByText('Academic ✓')).not.toBeVisible()
+  })
+
+  baseTest('.ac.uk domain also triggers badge on EN page', async ({ page }) => {
+    await page.goto('/en/register')
+    await page.fill('input[name="email"]', 'phd@ox.ac.uk')
+    await expect(page.getByText('Academic ✓')).toBeVisible()
   })
 })

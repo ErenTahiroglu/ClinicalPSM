@@ -1,6 +1,25 @@
 import { createClient } from '@/lib/supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+export async function logPlanChanged(
+  adminClient: SupabaseClient,
+  userId: string,
+  metadata: { toPlan: string; subscriptionId?: string; fromPlan?: string }
+): Promise<void> {
+  try {
+    await adminClient.from('audit_logs').insert({
+      user_id: userId,
+      action: 'PLAN_CHANGED',
+      resource_type: 'profile',
+      resource_id: userId,
+      metadata,
+      timestamp: new Date().toISOString(),
+    })
+  } catch {
+    console.error('[Audit] Failed to log plan change for', userId)
+  }
+}
+
 export interface AuditLogEntry {
   user_id: string
   action: string

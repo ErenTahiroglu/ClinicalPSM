@@ -89,7 +89,7 @@ Migrations are in `supabase/migrations/` and applied via `npx supabase db push`.
 
 - Quota enforced server-side: `POST /api/analyses` checks `analyses_used < analyses_limit`, increments on result save.
 - Rate limiter (`src/lib/rate-limit.ts`): in-memory sliding window, 10 req/min per IP. Suitable for single-instance; upgrade to Redis for multi-instance.
-- Plans: Free (3 total), Plus (25/month), Pro (unlimited). Payment via Polar.sh is planned for v0.2.
+- Plans: Free (1/day), Plus (20/month), Pro (unlimited). Paid plan upgrades are applied by `src/app/api/webhooks/polar/route.ts`. Polar → webhook → `profiles` update (service-role client). Product ID ↔ plan mapping lives in `src/lib/polar.ts`.
 
 ## Key Conventions
 

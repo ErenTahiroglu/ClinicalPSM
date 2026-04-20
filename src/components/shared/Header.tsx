@@ -40,6 +40,12 @@ export default async function Header() {
             </>
           ) : (
             <>
+              <Link
+                href={`/${locale}/pricing`}
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                {t('nav.pricing')}
+              </Link>
               <LangSwitcher />
               <ButtonLink href={`/${locale}/login`} variant="outline" size="sm">
                 {t('nav.login')}

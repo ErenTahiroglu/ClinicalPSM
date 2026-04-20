@@ -49,6 +49,9 @@ export async function register(
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const locale = (formData.get('locale') as string) || 'en'
+  const redirectParam = formData.get('redirect') as string | null
+  const safeRedirect =
+    redirectParam?.startsWith('/') && !redirectParam.includes('//') ? redirectParam : null
 
   const passwordError = await validatePassword(password, locale)
   if (passwordError) return { error: passwordError }
@@ -75,7 +78,7 @@ export async function register(
 
   if (data.session) {
     const currentLocale = await getLocale()
-    redirect(`/${currentLocale}/analyses`)
+    redirect(safeRedirect ?? `/${currentLocale}/analyses`)
   }
 
   return { message: t('emailConfirmationSent') }

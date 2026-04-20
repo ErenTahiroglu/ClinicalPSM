@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function deleteAccount(
   _prevState: { error: string } | null,
@@ -36,10 +36,7 @@ export async function deleteAccount(
   }
 
   // Delete auth user via admin client (cascade deletes profiles/analyses via DB)
-  const adminClient = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  const adminClient = createAdminClient()
   const { error } = await adminClient.auth.admin.deleteUser(user.id)
 
   if (error) return { error: error.message }

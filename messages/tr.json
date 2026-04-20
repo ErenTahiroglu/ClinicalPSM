@@ -65,6 +65,8 @@
       "submitting": "Hesap oluşturuluyor…",
       "hasAccount": "Zaten hesabınız var mı?",
       "signInLink": "Giriş Yap",
+      "emailHint": "Kurumsal (.edu / .edu.tr) e-postanızı kullanın — platform akademik araştırmacılar için tasarlandı.",
+      "academicBadge": "Akademik ✓",
       "showPassword": "Şifreyi göster",
       "hidePassword": "Şifreyi gizle",
       "validation": {
@@ -218,19 +220,19 @@
     }
   },
   "pricing": {
-    "banner": "Ücretli planlar yakında geliyor. Ücretsiz plan tamamen kullanılabilir — bugün analiz yapmaya başlayın.",
     "title": "Sade ve şeffaf fiyatlandırma",
     "subtitle": "Ücretsiz başlayın. İhtiyaç duyduğunuzda yükseltin.",
     "currentPlan": "Mevcut plan",
     "mostPopular": "En popüler",
-    "comingSoon": "Yakında",
     "goToDashboard": "Panele git",
     "getStarted": "Ücretsiz başla",
+    "subscribe": "Abone Ol",
     "plans": {
       "free": {
         "name": "Ücretsiz",
         "description": "Taahhütsüz başlayın",
         "analyses": "Günde 1 analiz",
+        "price": "₺0",
         "features": [
           "Günde 1 ücretsiz analiz",
           "CSV yükleme (maks. 5 MB)",
@@ -242,6 +244,8 @@
         "name": "Plus",
         "description": "Aktif araştırmacılar için",
         "analyses": "Ayda 20 analiz",
+        "price": "₺250/ay",
+        "priceNote": "Dilediğiniz kadar ödeyin · min ₺200",
         "features": [
           "Ayda 20 analiz",
           "CSV yükleme (maks. 5 MB)",
@@ -254,6 +258,8 @@
         "name": "Pro",
         "description": "Yüksek hacimli araştırmalar için",
         "analyses": "Sınırsız analiz",
+        "price": "₺1250/ay",
+        "priceNote": "Dilediğiniz kadar ödeyin · min ₺1000",
         "features": [
           "Sınırsız analiz",
           "CSV yükleme (maks. 5 MB)",

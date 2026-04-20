@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { ButtonLink } from '@/components/ui/button-link'
+import { buildPolarCheckoutUrl } from '@/lib/polar'
 import type { Profile } from '@/types/database'
 
 export default async function PricingPage() {
@@ -36,10 +37,6 @@ export default async function PricingPage() {
     <div className="flex min-h-screen flex-col">
       <Header />
       <div className="mx-auto w-full max-w-5xl px-4 py-16">
-        <div className="mb-8 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-center text-sm text-blue-800">
-          {t('banner')}
-        </div>
-
         <div className="mb-12 text-center">
           <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="mt-3 text-muted-foreground">{t('subtitle')}</p>
@@ -49,6 +46,7 @@ export default async function PricingPage() {
           {planKeys.map(key => {
             const isCurrent = currentPlan === key
             const features = t.raw(`plans.${key}.features`) as string[]
+            const isPaid = key !== 'free'
 
             return (
               <Card
@@ -70,14 +68,12 @@ export default async function PricingPage() {
                     )}
                   </div>
                   <CardDescription>{t(`plans.${key}.description`)}</CardDescription>
-                  <div className="mt-2 flex items-baseline gap-1">
-                    <span className="text-3xl font-bold">
-                      {key === 'free' ? '$0' : key === 'plus' ? '$5' : '$20'}
-                    </span>
-                    {key !== 'free' && (
-                      <span className="text-sm text-muted-foreground">/month</span>
-                    )}
+                  <div className="mt-2">
+                    <span className="text-3xl font-bold">{t(`plans.${key}.price`)}</span>
                   </div>
+                  {isPaid && (
+                    <p className="text-xs text-muted-foreground">{t(`plans.${key}.priceNote`)}</p>
+                  )}
                   <p className="text-xs text-muted-foreground">{t(`plans.${key}.analyses`)}</p>
                 </CardHeader>
 
@@ -131,13 +127,25 @@ export default async function PricingPage() {
                     >
                       {t('currentPlan')}
                     </button>
-                  ) : (
-                    <button
-                      disabled
-                      className="w-full cursor-not-allowed rounded-md bg-primary/50 px-4 py-2 text-sm font-medium text-primary-foreground"
+                  ) : user ? (
+                    <ButtonLink
+                      href={buildPolarCheckoutUrl(key as 'plus' | 'pro', {
+                        email: user.email,
+                        userId: user.id,
+                      })}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full justify-center"
                     >
-                      {t('comingSoon')}
-                    </button>
+                      {t('subscribe')}
+                    </ButtonLink>
+                  ) : (
+                    <ButtonLink
+                      href={`/${locale}/register?redirect=/${locale}/pricing`}
+                      className="w-full justify-center"
+                    >
+                      {t('subscribe')}
+                    </ButtonLink>
                   )}
                 </CardFooter>
               </Card>

@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ButtonLink } from '@/components/ui/button-link'
 import { downloadBalanceTable } from '@/lib/export/balance-table'
@@ -34,9 +35,9 @@ export function AnalysisDetailExport({ analysis }: Props) {
       </div>
       <p className="mt-2 text-xs text-muted-foreground">
         To download the matched dataset and Love plot PNG, re-run the analysis from{' '}
-        <a href="/new" className="underline hover:text-foreground">
+        <Link href="/new" className="underline hover:text-foreground">
           New Analysis
-        </a>
+        </Link>
         .
       </p>
     </section>

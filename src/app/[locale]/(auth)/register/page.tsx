@@ -1,9 +1,10 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useState, Suspense } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff, Mail } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
+import { useSearchParams } from 'next/navigation'
 import { register, resendConfirmation } from '@/features/auth/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -74,6 +75,15 @@ function ConfirmationScreen({ email }: { email: string }) {
   )
 }
 
+function RedirectInput() {
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get('redirect') ?? ''
+  if (!redirect) return null
+  return <input type="hidden" name="redirect" value={redirect} />
+}
+
+const ACADEMIC_REGEX = /\.(edu(\.[a-z]{2,3})?|ac\.[a-z]{2,3})$/i
+
 export default function RegisterPage() {
   const t = useTranslations('auth.register')
   const locale = useLocale()
@@ -81,6 +91,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [emailValue, setEmailValue] = useState('')
   const [clientError, setClientError] = useState<string | null>(null)
+  const isAcademic = ACADEMIC_REGEX.test(emailValue)
 
   if (state && 'message' in state) {
     return <ConfirmationScreen email={emailValue} />
@@ -120,6 +131,7 @@ export default function RegisterPage() {
 
       <form action={action} onSubmit={handleSubmit} noValidate>
         <input type="hidden" name="locale" value={locale} />
+        <Suspense><RedirectInput /></Suspense>
         <fieldset disabled={isPending} className="contents">
           <CardContent className="flex flex-col gap-4">
             {(clientError || (state && 'error' in state)) && (
@@ -140,6 +152,14 @@ export default function RegisterPage() {
                 onChange={e => setEmailValue(e.target.value)}
                 required
               />
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs text-muted-foreground">{t('emailHint')}</p>
+                {isAcademic && (
+                  <span className="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                    {t('academicBadge')}
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="flex flex-col gap-1.5">

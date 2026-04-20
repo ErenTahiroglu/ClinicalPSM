@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import { Upload, Settings2, Download } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
@@ -56,9 +57,9 @@ export default async function LandingPage({
           </ButtonLink>
           <p className="text-sm text-muted-foreground">
             {t('hero.subtext')}
-            <a href="/pricing" className="underline hover:text-foreground">
+            <Link href={`/${locale}/pricing`} className="underline hover:text-foreground">
               {t('hero.seePricing')}
-            </a>
+            </Link>
           </p>
         </section>
 

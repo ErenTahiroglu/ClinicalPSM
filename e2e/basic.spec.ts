@@ -38,11 +38,18 @@ test.describe('Basic Functionality', () => {
 
   test('should show pricing page', async ({ page }) => {
     await page.goto(`${BASE_URL}/pricing`)
-    
+
     // Check pricing plans are displayed
     await expect(page.locator('text=Free')).toBeVisible()
     await expect(page.locator('text=Plus')).toBeVisible()
     await expect(page.locator('text=Pro')).toBeVisible()
+  })
+
+  test('pricing page shows subscribe CTAs for paid plans', async ({ page }) => {
+    await page.goto(`${BASE_URL}/en/pricing`)
+    const subscribeLinks = page.getByRole('link', { name: 'Subscribe' })
+    // Two paid plans (Plus and Pro) each get a Subscribe CTA
+    await expect(subscribeLinks).toHaveCount(2)
   })
 
   test('should redirect protected routes to login', async ({ page }) => {

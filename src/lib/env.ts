@@ -49,6 +49,27 @@ export const publicEnv: EnvConfig = {
   ),
 }
 
+interface PolarEnvConfig {
+  POLAR_WEBHOOK_SECRET: string
+  POLAR_PLUS_PRODUCT_ID: string
+  POLAR_PRO_PRODUCT_ID: string
+}
+
+/**
+ * Polar-specific server env vars — only assert these when the webhook route runs.
+ * Keeps the rest of the app functional when Polar vars are absent in local dev.
+ */
+export function getPolarEnv(): PolarEnvConfig {
+  if (typeof window !== 'undefined') {
+    throw new Error('[ClinicalPSM] getPolarEnv() called on client.')
+  }
+  return {
+    POLAR_WEBHOOK_SECRET: assertEnv('POLAR_WEBHOOK_SECRET', process.env.POLAR_WEBHOOK_SECRET),
+    POLAR_PLUS_PRODUCT_ID: assertEnv('POLAR_PLUS_PRODUCT_ID', process.env.POLAR_PLUS_PRODUCT_ID),
+    POLAR_PRO_PRODUCT_ID: assertEnv('POLAR_PRO_PRODUCT_ID', process.env.POLAR_PRO_PRODUCT_ID),
+  }
+}
+
 /**
  * Server-only environment variables — NEVER import this in client components.
  * Throws at module load time if any variable is missing.
