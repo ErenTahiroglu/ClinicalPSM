@@ -36,6 +36,8 @@ The server is never in the path of the dataset or of row-level outputs.
 | L11 | Method honesty: UI exposes only methods the worker executes; the selected method is part of `PsmConfig` and the worker rejects unknown methods rather than substituting. | Unit test on worker input. |
 | L12 | Outcome variable, if collected, is consumed by an implemented estimator or not collected. | Wizard test. |
 | L13 | CP-00 constants removed or flipped only in a PR referencing the Red Team decision; DB triggers from 010 dropped by a reviewed migration. | PR checklist. |
+| L15 | Audit events use the closed allowlist in `src/lib/audit.ts`; any new event or field requires a schema + adversarial-test update. | `audit.test.ts` |
+| L16 | Every migration passes the exposure gate (`src/db/__tests__/exposure-gate.test.ts`) and the real-Supabase verification procedure before release. | CI + operator checklist |
 | L14 | Account deletion also purges server-side residue (audit rows tied to the user, legacy tables) per documented retention. | Integration test on branch DB. |
 
 ## 4. Server exceptions (must be justified and recorded)

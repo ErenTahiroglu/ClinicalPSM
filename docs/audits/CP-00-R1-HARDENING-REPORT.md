@@ -148,3 +148,6 @@ Legacy CSVs, `result_summary`, `uploads`, cache rows and old audit rows still ex
 ## K. CP-01 readiness
 
 Not started. Cannot begin until the Red Team accepts this report, 011 is applied and verified on a Supabase branch, and the operator actions A-C are confirmed by a human.
+
+---
+**R2 update:** the future-function gap in 011 (default privileges) and the name-only Storage check were confirmed and addressed by migration 012; see `docs/audits/CP-00-R2-SECURITY-HARDENING-REPORT.md`. Playwright in §E2 was subsequently run for the unauthenticated specs using an installed Chromium-based browser.
