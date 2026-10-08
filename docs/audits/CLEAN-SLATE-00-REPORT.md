@@ -66,6 +66,7 @@ Three remediation branches are pushed, no PR open. Merge order, each as a PR wit
 - Zone settings (SSL mode, Always Use HTTPS, existing rulesets) unread.
 - Engine not statistically validated; demo is synthetic and labelled so.
 - Legal text is a disclosure draft, not reviewed by counsel. Operator identity is a placeholder until set; production builds refuse without it.
+- First CI run failed cf01.free-compat: the header check assumed apps/web/public already built (CI order). Fixed in the follow-up commit; each _headers is checked only if present, and required under --strict-web.
 - `git diff --check` gate compares HEAD~1..HEAD; it runs on the committed state only.
 
 ## Proposed Red Team verdict

@@ -39,11 +39,14 @@ for (const dir of ['apps/web/public', 'experiments/cf01-static-site/public']) if
   console.log(`ok   static assets: ${n} files, largest ${(max / 1024).toFixed(0)} KiB`)
 }
 // forbidden material in the static site: no inline script allowed by CSP, no third-party URLs
-const hdrDir = 'apps/web/public'
-const hdr = existsSync(hdrDir + '/_headers') ? readFileSync(hdrDir + '/_headers', 'utf8') : ''
-if (strictWeb && !hdr) fail('apps/web/public/_headers missing: run the web build first')
-if (strictWeb && hdr.split('\n').filter(l => l.trim() && !/^\s/.test(l)).length > 100) fail('_headers exceeds 100 rules')
-if (/unsafe-/.test(hdr)) fail('_headers CSP contains unsafe-*')
-if (!/frame-ancestors 'none'/.test(hdr)) fail('_headers CSP lacks frame-ancestors none')
+for (const d of ['apps/web/public', 'experiments/cf01-static-site/public']) {
+  const f = d + '/_headers'
+  if (!existsSync(f)) { if (strictWeb && d.startsWith('apps/web')) fail('apps/web/public/_headers missing: run the web build first'); continue }
+  const hdr = readFileSync(f, 'utf8')
+  if (hdr.split('\n').filter(l => l.trim() && !/^\s/.test(l)).length > 100) fail(`${f} exceeds 100 rules`)
+  if (/unsafe-/.test(hdr)) fail(`${f} CSP contains unsafe-*`)
+  if (!/frame-ancestors 'none'/.test(hdr)) fail(`${f} CSP lacks frame-ancestors none`)
+  console.log(`ok   ${f} headers`)
+}
 console.log(bad ? `FAILED (${bad})` : 'Cloudflare Free compatibility checks: OK')
 process.exit(bad ? 1 : 0)
