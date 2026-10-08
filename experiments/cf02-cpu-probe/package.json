@@ -1,0 +1,7 @@
+{
+  "name": "cf02-cpu-probe",
+  "private": true,
+  "type": "module",
+  "dependencies": { "@better-auth/utils": "0.5.0" },
+  "devDependencies": { "wrangler": "^4.148.0" }
+}

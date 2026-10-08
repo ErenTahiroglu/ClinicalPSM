@@ -1,0 +1,40 @@
+# Graphify scope for ClinicalPSM: SOURCE CODE ONLY (privacy by construction).
+# Patterns follow .gitignore syntax. Everything not code is excluded even though --code-only skips docs.
+node_modules/
+dist/
+.next/
+.wrangler/
+.vinext/
+.cloudflare/
+coverage/
+graphify-out/
+.cbm/
+experiments/**/public/
+experiments/**/dist-prod/
+experiments/**/node_modules/
+# owner-owned research material and any private material
+Derin*/
+*.pdf
+*.docx
+*.xlsx
+*.csv
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+# secrets and local env
+.env
+.env.*
+.dev.vars*
+*.pem
+*.key
+# lockfiles and generated data
+package-lock.json
+e2e/test-results/
+e2e/fixtures/
+messages/
+# documentation is not part of the code-only scope
+docs/
+*.md
+*.mdx

@@ -1,6 +1,6 @@
 # CF-01 Live Free-Plan Test Runbook (NOT EXECUTED: owner approval missing)
 
-Status: **BLOCKED**. No remote command in this runbook has been run. Do not run it, and I will not run it, until the owner gives the written approval in section 1. All resources are disposable and named `cf01-throwaway-*`.
+Status: **EXECUTED on 2026-10-08 under the owner's written authorization** (see `docs/audits/CF-01-LIVE-VERIFICATION-REPORT.md`). Deviations from this plan: the auth PoC was NOT deployed (instead a bounded token-protected CPU/D1 probe, `experiments/cf02-cpu-probe`, was); the plan could not be verified through the API and relied on the owner's attestation; cleanup is still pending separate approval. All resources are disposable and named `cf01-throwaway-*`.
 
 ## 1. Approval checklist (owner must confirm each item in writing)
 1. I approve a disposable deployment to **workers.dev only** (no custom domain, no routes, no DNS change, `clinicalpsm.com` untouched).

@@ -48,3 +48,6 @@ CP-00 containment/retirement; CF-01 this feasibility gate; CP-01 local-first arc
 
 ## 7. Verdict
 `CONDITIONAL_PASS_CANDIDATE`. Conditions: (1) owner-approved live Free-plan deployment of the static site to confirm delivery, headers and zero charges; (2) any future Worker/D1 component re-tested live for CPU; (3) account design deferred to CP-06 with OAuth first; (4) legal review of terms and data processing; (5) Red Team acceptance.
+
+## 8. Addendum after the authorized live test (2026-10-08)
+See `docs/audits/CF-01-LIVE-VERIFICATION-REPORT.md`. The static prototype passed all 75 browser checks live on workers.dev; D1 operations cost about 1 ms CPU. Standard password hashing cost about 140 ms CPU and was nevertheless accepted with no Error 1102, contradicting the documented 10 ms Free limit (cause unexplained; plan owner-attested only). Because enforcement cannot be relied upon, the decision stands: **accountless static launch now, delegated OAuth later, no password service on Free.** Additional hard facts: production WebCrypto rejects PBKDF2 above 100,000 iterations, so OWASP-class PBKDF2 (600,000) is unavailable there; libraries must use scrypt (about 140 ms CPU) instead.

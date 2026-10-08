@@ -1,0 +1,61 @@
+name: Cumulative gates
+
+# Runs scripts/devtools/gates.mjs. The approved phase is set by GATE_PHASE; later phases report NOT_APPLICABLE.
+# No LLM/API keys, no graph-building services, no source upload.
+permissions:
+  contents: read
+
+on:
+  push:
+  pull_request:
+
+env:
+  GATE_PHASE: CF-01
+
+jobs:
+  base:
+    name: Base gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: bash scripts/devtools/install-gitleaks.sh
+      - name: Base gates
+        run: node scripts/devtools/gates.mjs --phase "$GATE_PHASE" --only base --strict
+  cloudflare:
+    name: Cloudflare gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Browser for the site tests
+        run: npx playwright install --with-deps chromium
+      - name: Cloudflare gates
+        run: node scripts/devtools/gates.mjs --phase "$GATE_PHASE" --only cf01 --strict
+        env:
+          PW_EXECUTABLE: playwright
+  future-gates:
+    name: Future gates (status listing)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 20
+      - name: List gate statuses (NOT_APPLICABLE until the phase is approved; never hidden)
+        run: node scripts/devtools/gates.mjs --phase "$GATE_PHASE" --only cp

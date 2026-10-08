@@ -61,3 +61,11 @@ supabase/.temp/
 /experiments/**/.wrangler/
 /experiments/**/dist-prod/
 /experiments/cf01-static-site/public/
+
+# Dev toolchain (DEVTOOLS-00): generated graphs, indexes and scanner reports stay local
+/graphify-out/
+/.cbm/
+/.gitleaks-report*
+/.tools/
+/experiments/**/wrangler.deploy.local.jsonc
+.gates-report.json

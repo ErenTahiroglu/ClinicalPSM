@@ -9,7 +9,8 @@ const axeSrc = readFileSync(createRequire(import.meta.url).resolve('axe-core/axe
 const results = []
 const rec = (n, ok, d = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${d ? '  :: ' + d : ''}`) }
 
-const browser = await chromium.launch({ executablePath: '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser' })
+const exe = process.env.PW_EXECUTABLE ?? '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser'
+const browser = await chromium.launch(exe === 'playwright' ? {} : { executablePath: exe })
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } })
 const page = await ctx.newPage()
 // axe needs script injection, which the site's CSP (correctly) forbids: use a dedicated context that bypasses CSP for the a11y pass only.

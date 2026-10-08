@@ -1,0 +1,23 @@
+[
+ {
+  "RuleID": "generic-api-key",
+  "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+  "StartLine": 17,
+  "EndLine": 17,
+  "StartColumn": 15,
+  "EndColumn": 43,
+  "Match": "password\": \"REDACTED\"",
+  "Secret": "REDACTED",
+  "File": ".vscode/settings.json",
+  "SymlinkFile": "",
+  "Commit": "00d12c24b54affb51f78ff384b2c14a7e879d9fa",
+  "Link": "https://github.com/ErenTahiroglu/ClinicalPSM/blob/00d12c24b54affb51f78ff384b2c14a7e879d9fa/.vscode/settings.json#L17",
+  "Entropy": 3.875,
+  "Author": "Eren Tahiroğlu",
+  "Email": "erentahiroglu@hotmail.com.tr",
+  "Date": "2026-04-10T21:23:41Z",
+  "Message": "fix: move next.js project to root directory for vercel auto-detection",
+  "Tags": [],
+  "Fingerprint": "00d12c24b54affb51f78ff384b2c14a7e879d9fa:.vscode/settings.json:generic-api-key:17"
+ }
+]

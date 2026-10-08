@@ -1,0 +1,9 @@
+{
+  // Throwaway CPU probe. No vars, no secrets in the file (PROBE_TOKEN is set with `wrangler secret put`).
+  "name": "cf01-throwaway-probe",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-10-06",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": { "enabled": false }
+}

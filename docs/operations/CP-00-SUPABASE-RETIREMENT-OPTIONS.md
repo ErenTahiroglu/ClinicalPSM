@@ -54,5 +54,13 @@ Triggered when any count above is non-zero beyond owner-confirmed synthetic rows
 ## 5. External dependencies to clear in both paths
 Vercel env vars and previews; Polar webhook and products (no subscriptions: archive checkout links per runbook); DNS (Cloudflare) records pointing to Vercel; Supabase auth redirect URLs; email sender domains; any scripts using the anon key; Git history (no secrets committed; confirm `.env*` ignored).
 
+## 5b. New blocking finding (DEVTOOLS-00): leaked database credential
+A Supabase database password is committed in `.vscode/settings.json` in the PUBLIC repository (since 2026-04-11). It must be **rotated first**, before any other retirement step; until then treat the project as potentially accessed by third parties and choose **Path B** unless logs prove otherwise. After rotation: review Supabase connection/auth logs from 2026-04-11, then continue. (No value is recorded in any document.)
+
+## 5c. Is an encrypted backup needed before decommissioning?
+- **Path A confirmed (all counts zero, owner-only synthetic rows):** no data backup is needed. Keep a schema-only dump (no data) and the metadata sheet.
+- **Any non-zero protected-data count, or Path B:** take ONE encrypted backup before deletion, only if the data's legal owner (and counsel) decide retention is lawful or required: `pg_dump` of the affected schemas encrypted with `age` (public-key) and stored offline on owner-controlled media, with the key held separately; record SHA-256 of the archive and a destruction date. If the decision is deletion without retention, skip the backup and document why. Never place an unencrypted dump in the repository, Vercel, or a cloud drive.
+- Provider-side backups/PITR expire on the provider's schedule; deleting the project does not give an earlier guarantee, so record that date.
+
 ## 6. Status
-Inventory **NOT RUN** (no authorization to access production). Path selection is **undetermined** until the owner provides the results.
+Inventory **NOT RUN** (no read-only Supabase connection was authorized for this phase; the owner's Cloudflare authorization does not cover Supabase). Path selection is **undetermined** until the owner provides the results.
