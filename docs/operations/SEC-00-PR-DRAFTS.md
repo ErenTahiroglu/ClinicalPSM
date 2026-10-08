@@ -2,6 +2,10 @@
 
 Opening a PR to `main` triggers `ci.yml` (currently failing on `main` since 2026-04-17) and a Vercel preview build (protected by Vercel Authentication). Nothing is merged without Red Team approval; merging into `main` redeploys production.
 
+## PR 0 (do first, separate): `ci/sec-00-main-ci-node24` -> `main` (commit `2c1b405`, 1 line)
+Title: `CI: run on Node 24 (npm 11) so npm ci matches the lockfile`
+Cause reproduced locally on `main` `dfa475b`: `npx npm@10 ci` fails with "Missing: @swc/helpers@0.5.23 from lock file" (a Node 20 runner ships npm 10); `npm@11 ci` succeeds. Vercel's project already uses Node 24.x. The same change passed `npm ci`, lint, type-check, tests and build on GitHub runners in the SEC-00 branches. Not yet run on GitHub as a PR to `main`.
+
 ## PR 1: `security/sec-00-untrack-vscode-main` -> `main` (commit `fe7f5e7`, 2 files)
 Title: `SEC-00: stop tracking editor connection settings`
 Body:
