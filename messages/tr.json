@@ -16,24 +16,24 @@
   "landing": {
     "hero": {
       "title": "Kod Yazmadan Eğilim Skoru Eşleştirmesi Yapın",
-      "description": "ClinicalPSM, R veya Stata olmadan kesin nedensel çıkarım araçlarına ihtiyaç duyan tıbbi ve akademik araştırmacılar için geliştirilmiştir. Bir CSV yükleyin, analizinizi yapılandırın ve dakikalar içinde yayına hazır sonuçlar indirin.",
+      "description": "ClinicalPSM, tıbbi ve akademik araştırmacılar için bir eğilim skoru eşleştirme aracıdır. Şu anda gizlilik ve bağımsız istatistiksel inceleme altındadır; yeni analizler geçici olarak durdurulmuştur.",
       "ctaDashboard": "Panele Git",
-      "ctaStart": "Ücretsiz Analiz Başlat",
-      "subtext": "Günde 1 ücretsiz analiz — kredi kartı gerekmez · ",
+      "ctaStart": "Ücretsiz Hesap Oluştur",
+      "subtext": "Yeni analizler geçici olarak durduruldu · ",
       "seePricing": "Fiyatlara bak"
     },
     "features": {
       "upload": {
         "title": "Verinizi Yükleyin",
-        "description": "Veri kümenizi CSV formatında yükleyin. İlk satırları ve sütunları anında önizleyin — analizi çalıştırana kadar veriler tarayıcınızdan çıkmaz."
+        "description": "CSV yükleme, gizlilik incelemesi süresince durdurulmuştur. Planlanan tasarım veri kümelerini tarayıcınızda yerel olarak işler; bu tasarım henüz hayata geçirilmemiştir."
       },
       "configure": {
         "title": "Yapılandırın ve Eşleştirin",
-        "description": "Tedavi değişkeninizi, sonucunuzu ve kovaryatlarınızı seçin. Eşleştirme oranını (1:1, 1:2, 1:3) ve isteğe bağlı bir caliperı ayarlayın. Gerisini ClinicalPSM halleder."
+        "description": "Tedavi değişkeninizi, sonucunuzu ve kovaryatlarınızı seçin. Eşleştirme oranını (1:1, 1:2, 1:3) ve isteğe bağlı bir caliperı ayarlayın. Yalnızca en yakın komşu eşleştirmesi."
       },
       "download": {
         "title": "Sonuçları İndirin",
-        "description": "Standartlaştırılmış ortalama fark denge tablosu, Love grafiği ve eşleştirilmiş veri kümesi CSV dosyası alın — makaleniz veya ek materyaller için hazır."
+        "description": "Çıktılar arasında standartlaştırılmış ortalama fark denge tablosu, Love grafiği ve eşleştirilmiş veri kümesi CSV dosyası bulunur. Bu çıktılar bağımsız istatistiksel doğrulamadan geçmemiştir; yayın amaçlı kullanmadan önce doğrulayın."
       }
     }
   },
@@ -131,7 +131,7 @@
     "unlimited": "∞",
     "empty": {
       "title": "Henüz analiz yok",
-      "description": "Bir CSV yükleyin ve ilk eğilim skoru eşleştirme analizinizi çalıştırın.",
+      "description": "Yeni analizler geçici olarak kullanılamıyor. Mevcut analizlerinize erişebilirsiniz.",
       "cta": "İlk analizinizi başlatın →"
     },
     "status": {
@@ -176,14 +176,18 @@
       "vrAfter": "VR Sonrası",
       "hint": "|SMD| < 0,1 iyi dengeyi gösterir (yeşil ile işaretli)."
     },
-    "lovePlot": { "title": "Love Grafiği" }
+    "lovePlot": {
+      "title": "Love Grafiği"
+    }
   },
   "new": {
     "limitTitle": "Limit doldu",
     "limitFree": "Günlük ücretsiz analizinizi kullandınız. Yarın tekrar deneyin veya yükseltin.",
     "limitPaid": "Bu dönemde {plan} planında {limit} analizin tamamını kullandınız.",
     "backToDashboard": "Panele Dön",
-    "seePlans": "Planları Gör"
+    "seePlans": "Planları Gör",
+    "holdTitle": "Yeni analizler geçici olarak kullanılamıyor",
+    "holdBody": "Gizlilik ve istatistiksel doğrulama incelemesi sürerken yeni veri yüklemelerini ve yeni analizleri durdurduk. Mevcut analizleriniz ve hesabınız erişilebilir durumda. Bu uyarı kaldırılana kadar lütfen hasta düzeyinde veri göndermeyin."
   },
   "settings": {
     "title": "Ayarlar",
@@ -268,7 +272,9 @@
           "Öncelikli destek"
         ]
       }
-    }
+    },
+    "holdNotice": "Gizlilik ve istatistiksel doğrulama incelemesi sürerken yeni ücretli abonelikler geçici olarak durduruldu. Mevcut abonelikler etkilenmez.",
+    "purchasesPaused": "Geçici olarak kullanılamıyor"
   },
   "errors": {
     "somethingWrong": "Bir şeyler ters gitti",

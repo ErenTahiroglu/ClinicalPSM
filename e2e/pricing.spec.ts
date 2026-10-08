@@ -5,39 +5,25 @@ import { test, expect } from '@playwright/test'
  * Covers locale-specific prices, subscribe CTAs, and redirect behaviour.
  */
 test.describe('Pricing page', () => {
-  // ── Subscribe CTA count ────────────────────────────────────────────────────
-  test('EN: shows 2 Subscribe buttons for paid plans', async ({ page }) => {
+  // ── CP-00 purchase hold ────────────────────────────────────────────────────
+  test('EN: no Subscribe links; paid plans show paused state', async ({ page }) => {
     await page.goto('/en/pricing')
-    const links = page.getByRole('link', { name: 'Subscribe' })
-    await expect(links).toHaveCount(2)
+    await expect(page.getByRole('link', { name: 'Subscribe' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Temporarily unavailable' })).toHaveCount(2)
+    await expect(page.getByRole('status')).toContainText('temporarily paused')
   })
 
-  test('TR: shows 2 Abone Ol buttons for paid plans', async ({ page }) => {
+  test('TR: no Abone Ol links; paid plans show paused state', async ({ page }) => {
     await page.goto('/tr/pricing')
-    const links = page.getByRole('link', { name: 'Abone Ol' })
-    await expect(links).toHaveCount(2)
+    await expect(page.getByRole('link', { name: 'Abone Ol' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Geçici olarak kullanılamıyor' })).toHaveCount(2)
+    await expect(page.getByRole('status')).toContainText('geçici olarak durduruldu')
   })
 
-  // ── Unauthenticated redirect ───────────────────────────────────────────────
-  test('EN: unauthenticated Subscribe links go to /register, not Polar', async ({ page }) => {
-    await page.goto('/en/pricing')
-    const links = page.getByRole('link', { name: 'Subscribe' })
-    const count = await links.count()
-    for (let i = 0; i < count; i++) {
-      const href = await links.nth(i).getAttribute('href')
-      expect(href).toContain('/register')
-      expect(href).not.toContain('buy.polar.sh')
-    }
-  })
-
-  test('TR: unauthenticated Abone Ol links go to /register, not Polar', async ({ page }) => {
-    await page.goto('/tr/pricing')
-    const links = page.getByRole('link', { name: 'Abone Ol' })
-    const count = await links.count()
-    for (let i = 0; i < count; i++) {
-      const href = await links.nth(i).getAttribute('href')
-      expect(href).toContain('/register')
-      expect(href).not.toContain('buy.polar.sh')
+  test('page HTML never contains a hosted checkout URL', async ({ page }) => {
+    for (const l of ['en', 'tr']) {
+      await page.goto(`/${l}/pricing`)
+      expect(await page.content()).not.toContain('buy.polar.sh')
     }
   })
 

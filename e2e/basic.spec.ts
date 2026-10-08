@@ -45,11 +45,9 @@ test.describe('Basic Functionality', () => {
     await expect(page.locator('text=Pro')).toBeVisible()
   })
 
-  test('pricing page shows subscribe CTAs for paid plans', async ({ page }) => {
+  test('pricing page shows no Subscribe CTAs during CP-00 purchase hold', async ({ page }) => {
     await page.goto(`${BASE_URL}/en/pricing`)
-    const subscribeLinks = page.getByRole('link', { name: 'Subscribe' })
-    // Two paid plans (Plus and Pro) each get a Subscribe CTA
-    await expect(subscribeLinks).toHaveCount(2)
+    await expect(page.getByRole('link', { name: 'Subscribe' })).toHaveCount(0)
   })
 
   test('should redirect protected routes to login', async ({ page }) => {

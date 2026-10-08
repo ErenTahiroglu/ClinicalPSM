@@ -16,24 +16,24 @@
   "landing": {
     "hero": {
       "title": "Run Propensity Score Matching Without Code",
-      "description": "ClinicalPSM is built for medical and academic researchers who need rigorous causal inference tools without R or Stata. Upload a CSV, configure your analysis, and download publication-ready results in minutes.",
+      "description": "ClinicalPSM is a propensity score matching tool for medical and academic researchers. It is currently under privacy and independent statistical review, and new analyses are temporarily paused.",
       "ctaDashboard": "Go to Dashboard",
-      "ctaStart": "Start Free Analysis",
-      "subtext": "1 free analysis daily — no credit card required · ",
+      "ctaStart": "Create Free Account",
+      "subtext": "New analyses are temporarily paused · ",
       "seePricing": "See pricing"
     },
     "features": {
       "upload": {
         "title": "Upload Your Data",
-        "description": "Upload your dataset in CSV format. Preview the first rows and columns instantly — no data leaves your browser until you run the analysis."
+        "description": "CSV upload is paused during a privacy review. Our planned design processes datasets locally in your browser; that design is not yet in place."
       },
       "configure": {
         "title": "Configure & Match",
-        "description": "Select your treatment variable, outcome, and covariates. Set matching ratio (1:1, 1:2, 1:3) and an optional caliper. ClinicalPSM handles the rest."
+        "description": "Select your treatment variable, outcome, and covariates. Set matching ratio (1:1, 1:2, 1:3) and an optional caliper. Nearest-neighbor matching only."
       },
       "download": {
         "title": "Download Results",
-        "description": "Get a standardized mean difference balance table, a Love plot, and a matched dataset CSV — ready for your paper or supplementary materials."
+        "description": "Outputs include a standardized mean difference balance table, a Love plot, and a matched dataset CSV. These outputs have not completed independent statistical validation; verify them before any publication use."
       }
     }
   },
@@ -131,7 +131,7 @@
     "unlimited": "∞",
     "empty": {
       "title": "No analyses yet",
-      "description": "Upload a CSV and run your first propensity score matching analysis.",
+      "description": "New analyses are temporarily unavailable. Your existing analyses remain accessible.",
       "cta": "Start your first analysis →"
     },
     "status": {
@@ -176,14 +176,18 @@
       "vrAfter": "VR After",
       "hint": "|SMD| < 0.1 indicates good balance (shown in green)."
     },
-    "lovePlot": { "title": "Love Plot" }
+    "lovePlot": {
+      "title": "Love Plot"
+    }
   },
   "new": {
     "limitTitle": "Limit reached",
     "limitFree": "You've used your daily free analysis. Try again tomorrow or upgrade.",
     "limitPaid": "You've used all {limit} analyses for this period on the {plan} plan.",
     "backToDashboard": "Back to Dashboard",
-    "seePlans": "See Plans"
+    "seePlans": "See Plans",
+    "holdTitle": "New analyses are temporarily unavailable",
+    "holdBody": "We have paused new dataset uploads and new analyses while a privacy and statistical-validation review is in progress. Your existing analyses and account remain available. Please do not submit patient-level data to this service until this notice is removed."
   },
   "settings": {
     "title": "Settings",
@@ -268,7 +272,9 @@
           "Priority support"
         ]
       }
-    }
+    },
+    "holdNotice": "New paid subscriptions are temporarily paused while a privacy and statistical-validation review is in progress. Existing subscriptions are not affected.",
+    "purchasesPaused": "Temporarily unavailable"
   },
   "errors": {
     "somethingWrong": "Something went wrong",

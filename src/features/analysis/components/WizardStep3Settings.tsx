@@ -20,6 +20,11 @@ export function WizardStep3Settings({ onComplete, onBack }: Props) {
   function handleNext() {
     setError(null)
 
+    if (method !== 'nearest') {
+      setError('Optimal matching is not available. Use nearest neighbor.')
+      return
+    }
+
     const ratioNum = parseInt(ratioStr, 10)
     if (isNaN(ratioNum) || ratioNum < 1 || ratioNum > 3) {
       setError('Matching ratio must be between 1 and 3.')
@@ -49,8 +54,8 @@ export function WizardStep3Settings({ onComplete, onBack }: Props) {
       <div>
         <h2 className="text-lg font-semibold">Matching Configuration</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Choose a matching method, ratio, and an optional caliper to limit
-          maximum propensity score distance.
+          Choose a matching ratio and an optional caliper to limit the maximum
+          propensity score distance.
         </p>
       </div>
 
@@ -65,10 +70,12 @@ export function WizardStep3Settings({ onComplete, onBack }: Props) {
           onChange={e => setMethod(e.target.value as 'nearest' | 'optimal')}
         >
           <option value="nearest">Nearest neighbor (greedy)</option>
-          <option value="optimal">Optimal matching</option>
+          <option value="optimal" disabled>
+            Optimal matching (not available)
+          </option>
         </select>
         <p className="text-xs text-muted-foreground">
-          Nearest neighbor is faster; optimal matching minimizes total distance.
+          Only greedy nearest-neighbor matching is currently available. Optimal matching is not yet validated and is disabled.
         </p>
       </div>
 
@@ -103,13 +110,13 @@ export function WizardStep3Settings({ onComplete, onBack }: Props) {
           type="number"
           min="0"
           step="0.01"
-          placeholder="e.g. 0.2 (recommended: 0.2 × SD of logit PS)"
+          placeholder="e.g. 0.05 (max propensity score difference)"
           value={caliperStr}
           onChange={e => setCaliperStr(e.target.value)}
           className="max-w-xs"
         />
         <p className="text-xs text-muted-foreground">
-          Recommended: 0.2 × SD of propensity score. Leave blank for no caliper.
+          The caliper is the maximum allowed absolute difference in propensity score (probability scale, 0–1), not a multiple of an SD. Leave blank for no caliper.
         </p>
       </div>
 
