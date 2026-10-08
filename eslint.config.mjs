@@ -14,6 +14,10 @@ const eslintConfig = defineConfig([
     'next-env.d.ts',
     // Generated files:
     'coverage/**',
+    // CF-00 research branch: generated build output and disposable experiments (linted separately)
+    'dist/**',
+    '.wrangler/**',
+    'experiments/**',
   ]),
   {
     rules: {

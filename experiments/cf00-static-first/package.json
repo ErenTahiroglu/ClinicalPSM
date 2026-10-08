@@ -1,0 +1,16 @@
+{
+  "name": "cf00-static-first-poc",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --local --port 8790",
+    "test": "node test/run.mjs http://localhost:8790"
+  },
+  "dependencies": {
+    "better-auth": "^1.7.7"
+  },
+  "devDependencies": {
+    "wrangler": "^4.148.0",
+    "typescript": "^5.9.0"
+  }
+}

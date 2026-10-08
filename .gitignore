@@ -52,3 +52,10 @@ next-env.d.ts
 # Supabase
 supabase/.branches/
 supabase/.temp/
+/dist/
+.vinext/
+.cloudflare/
+/.wrangler/
+.dev.vars
+/experiments/**/node_modules/
+/experiments/**/.wrangler/

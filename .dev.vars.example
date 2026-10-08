@@ -1,0 +1,6 @@
+NEXT_PUBLIC_SUPABASE_URL=https://dummy.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=dummy
+SUPABASE_SERVICE_ROLE_KEY=dummy
+POLAR_WEBHOOK_SECRET=dummy-webhook-secret-for-local-tests
+POLAR_PLUS_PRODUCT_ID=dummy_plus
+POLAR_PRO_PRODUCT_ID=dummy_pro
