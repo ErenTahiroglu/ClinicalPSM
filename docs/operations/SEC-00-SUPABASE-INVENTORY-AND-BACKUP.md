@@ -71,3 +71,43 @@ Target: a **new** project or local PostgreSQL (restoring over the live project i
 
 ## 7. Explicit stop conditions
 Unexpected rows or objects; unknown schemas/tables; schema drift that the repo cannot explain (see `rls_auto_enable`); any prompt to enter or paste a connection string into a shared place; any need to disable TLS verification; evidence of unfamiliar logins in the logs. In each case: stop, preserve evidence, report.
+
+## 8. R1 minimal verified procedure (supersedes sections 3.1-3.3 where they differ)
+Verified against Supabase documentation (2026-10-08): `supabase db dump` **excludes the `auth` and `storage` schemas and extension schemas by default**, so it does not back up Auth users or Storage metadata; use `pg_dump -n auth` for Auth. The CLI's `-p/--password` flag puts the password in the process arguments (visible in `ps`): do not use it. Database dumps never contain Storage objects. Free projects have no automatic backups.
+
+### 8.0 Where backup material lives (hard rules)
+- Create the directory **outside every Git repository and outside `~/Documents/GitHub`** (so neither Git nor the Claude/CBM/Graphify indexers can see it), e.g. on an encrypted external volume or `~/SEC00-BACKUP-2026-10-08` with `chmod 700`:
+  ```
+  d=~/SEC00-BACKUP-$(date +%F); mkdir -m 700 "$d" && cd "$d"
+  git rev-parse --is-inside-work-tree 2>/dev/null && { echo "STOP: inside a Git work tree"; exit 1; }
+  ```
+- Never run Claude (or any coding agent) with that directory as working directory; never paste its content, hashes of rows, or the age key into chat.
+- The age private key is stored offline on separate media; only the **public** key is used on the machine that makes the archive.
+
+### 8.1 Tier 1: schema and roles only (no data; always allowed)
+```
+pg_dump --schema-only --no-owner --no-privileges -Fc -f schema-public-$(date +%F).dump -n public     # application schema
+pg_dump --schema-only --no-owner --no-privileges -Fc -f schema-auth-$(date +%F).dump   -n auth       # optional, Supabase-managed
+pg_dumpall --roles-only --no-role-passwords -f roles-$(date +%F).sql
+```
+### 8.2 Tier 2: Auth and audit data (only after the section 2 gate and written owner approval)
+Contains emails, IP addresses and (in `auth.users`) password hashes: treat as personal data.
+```
+# application tables (no Auth): audit trail and profile
+pg_dump --data-only --no-owner -Fc -t public.audit_logs -t public.profiles -f data-public-$(date +%F).dump
+# Auth without password hashes: explicit columns through psql \copy (pg_dump cannot select columns)
+psql -X -v ON_ERROR_STOP=1 -c "\copy (SELECT id, created_at, last_sign_in_at, email_confirmed_at, raw_app_meta_data, is_anonymous FROM auth.users ORDER BY created_at) TO 'auth-users-nohash-$(date +%F).csv' CSV HEADER"
+```
+(If the owner wants the account **restorable** (hash included), run `pg_dump --data-only -t auth.users -t auth.identities` instead and treat the archive as high sensitivity.)
+### 8.3 Tier 3: Storage objects
+Inventory shows 0 objects: nothing to copy. If that changes, STOP (clinical file risk) and follow section 5.
+### 8.4 Encrypt, verify, destroy plaintext
+```
+for f in *.dump *.csv *.sql; do age -r "$AGE_PUBLIC_KEY" -o "$f.age" "$f" && rm -P "$f"; done
+shasum -a 256 *.age > SHA256SUMS
+shasum -a 256 -c SHA256SUMS                                           # integrity of the ciphertext
+age -d -i /path/to/OFFLINE/age-key.txt data-public-*.dump.age | pg_restore --list | head -40    # TOC only, no rows
+```
+Record, as numbers only, the counts from the inventory query next to the archive names. Make two copies on separate media. A full test restore is done only into a throwaway local PostgreSQL 17, never production.
+### 8.5 Not backed up by any of the above (document the consequence)
+Auth settings, SMTP/OAuth configuration and API keys (Supabase: not stored in the database); Vault root encryption key (retrieve before pause/delete if `vault.secrets` is non-empty); webhooks; Edge Functions (none); Storage objects.
