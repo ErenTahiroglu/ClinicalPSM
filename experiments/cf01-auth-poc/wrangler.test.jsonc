@@ -1,0 +1,14 @@
+{
+  // LOCAL TEST configuration only. Dummy values. NEVER deploy with this file.
+  "name": "cf01-auth-poc-test-only",
+  "main": "src/worker.test.ts",
+  "compatibility_date": "2026-10-06",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "d1_databases": [{ "binding": "DB", "database_name": "cf01-test-local", "database_id": "00000000-0000-0000-0000-000000000000" }],
+  "vars": {
+    "BETTER_AUTH_URL": "http://localhost:8790",
+    "BETTER_AUTH_SECRET": "test-only-secret-0123456789abcdef0123456789abcdef",
+    "WEBHOOK_SECRET": "test-only-webhook-secret"
+  }
+}

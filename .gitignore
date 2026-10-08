@@ -59,3 +59,5 @@ supabase/.temp/
 .dev.vars
 /experiments/**/node_modules/
 /experiments/**/.wrangler/
+/experiments/**/dist-prod/
+/experiments/cf01-static-site/public/

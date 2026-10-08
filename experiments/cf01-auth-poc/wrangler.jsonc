@@ -1,0 +1,11 @@
+{
+  // DEPLOYABLE configuration. No [vars], no secrets, no test entrypoint, no D1 id (set at provisioning time).
+  // Secrets are provided with `wrangler secret put` (BETTER_AUTH_SECRET, BETTER_AUTH_URL, WEBHOOK_SECRET).
+  "name": "cf01-auth-poc",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-10-06",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": { "enabled": false },
+  "d1_databases": [{ "binding": "DB", "database_name": "cf01-auth-poc", "database_id": "00000000-0000-0000-0000-000000000000" }]
+}
