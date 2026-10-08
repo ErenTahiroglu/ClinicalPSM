@@ -22,9 +22,11 @@ jobs:
         run: bash scripts/devtools/install-gitleaks.sh
       - name: Scan history (new findings fail; baseline findings are listed, never hidden)
         run: bash scripts/devtools/gitleaks.sh history
-      - name: Scanner self-test (synthetic positives and negatives)
+      - name: Current tracked tree must contain ZERO live secrets (no baseline applies)
+        run: bash scripts/devtools/gitleaks.sh current
+      - name: Scanner self-test (synthetic positives and negatives, baseline semantics)
         run: bash scripts/devtools/gitleaks.sh selftest
-      - name: Known baseline findings (visible warning)
+      - name: Known historical findings (visible warning; an accepted baseline is NOT remediation)
         run: |
           python3 - <<'PY'
           import json

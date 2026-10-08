@@ -38,4 +38,31 @@ EOP
 done
 set +e; "$GL" dir "$tmp/neg" --config "$ROOT/.gitleaks.toml" --redact=100 --no-banner --log-level error >/dev/null 2>&1; rc=$?; set -e
 [ $rc -eq 0 ] && ok "benign/placeholder file passes" || bad "false positive on benign fixture rc=$rc"
+
+# ---- baseline semantics: a historical exception must not excuse reappearance, and current files must stay clean ----
+repo="$tmp/repo"; mkdir -p "$repo"; cd "$repo"
+g(){ git -c user.name=t -c user.email=t@example.test -c commit.gpgsign=false "$@"; }
+g init -q .; tokfile="$tmp/tok"; printf 'ghp_%s' "$(rand 36)" > "$tokfile"
+printf 'token = "%s"\n' "$(cat "$tokfile")" > old.txt; g add old.txt; g commit -qm "historical synthetic leak"
+set +e
+"$GL" git . --redact=100 --no-banner --log-level error --report-path "$tmp/base.json" --report-format json >/dev/null 2>&1
+[ -s "$tmp/base.json" ] && ok "historical synthetic finding is detected and baselined (visible)" || bad "baseline fixture produced no finding"
+"$GL" git . --redact=100 --no-banner --log-level error --baseline-path "$tmp/base.json" >/dev/null 2>&1; rc=$?
+[ $rc -eq 0 ] && ok "baselined historical finding does not fail the history gate" || bad "baseline did not tolerate the known finding rc=$rc"
+"$GL" git . --redact=100 --no-banner --log-level error >/dev/null 2>&1; rc=$?
+[ $rc -eq 1 ] && ok "without the baseline the historical finding is still reported (not erased)" || bad "history scan without baseline rc=$rc"
+# current-tree gate must FAIL while the old file is still tracked (baseline is irrelevant to it)
+mkdir -p "$tmp/cur1"; git ls-files -z | tar --null -T - -cf - | tar -xf - -C "$tmp/cur1"
+"$GL" dir "$tmp/cur1" --redact=100 --no-banner --log-level error >/dev/null 2>&1; rc=$?
+[ $rc -eq 1 ] && ok "current-tree scan fails while a live secret is still tracked (baseline cannot excuse it)" || bad "current-tree scan rc=$rc"
+# the same secret re-added in a NEW file/commit must fail the baseline-aware history gate
+printf 'again = "%s"\n' "$(cat "$tokfile")" > new.txt; g add new.txt; g commit -qm "reintroduce"
+"$GL" git . --redact=100 --no-banner --log-level error --baseline-path "$tmp/base.json" >/dev/null 2>&1; rc=$?
+[ $rc -eq 1 ] && ok "reintroduced secret fails despite the baseline" || bad "reintroduction not detected rc=$rc"
+# remediation: remove both files -> current tree clean again
+g rm -q old.txt new.txt; g commit -qm "remove"; mkdir -p "$tmp/cur2"
+git ls-files -z | tar --null -T - -cf - 2>/dev/null | tar -xf - -C "$tmp/cur2"
+"$GL" dir "$tmp/cur2" --redact=100 --no-banner --log-level error >/dev/null 2>&1; rc=$?
+[ $rc -eq 0 ] && ok "current-tree scan passes once the secret is removed from tracked files" || bad "current-tree scan after removal rc=$rc"
+set -e; cd "$ROOT"
 echo "selftest: $pass passed, $fail failed"; [ $fail -eq 0 ]

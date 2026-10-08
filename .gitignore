@@ -69,3 +69,8 @@ supabase/.temp/
 /.tools/
 /experiments/**/wrangler.deploy.local.jsonc
 .gates-report.json
+
+# SEC-00: editor connection settings (SQL clients store credentials here); never track
+/.vscode/settings.json
+/.vscode/*.code-workspace
+/.vscode/sqltools*

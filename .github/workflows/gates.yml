@@ -23,7 +23,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
       - run: npm ci
       - run: bash scripts/devtools/install-gitleaks.sh
@@ -38,7 +38,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
       - run: npm ci
       - name: Browser for the site tests
@@ -56,6 +56,6 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 20
+          node-version: 24
       - name: List gate statuses (NOT_APPLICABLE until the phase is approved; never hidden)
         run: node scripts/devtools/gates.mjs --phase "$GATE_PHASE" --only cp

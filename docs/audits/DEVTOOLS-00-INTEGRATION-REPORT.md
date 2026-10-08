@@ -60,3 +60,6 @@ Base: 9/9 PASS (`typecheck`, `lint`, `unit-tests` 431, `build`, `gitleaks-histor
 2. Codebase Memory binary provenance (WARN).
 3. GitHub Actions workflows unexecuted.
 4. Gitleaks upstream has no signed provenance for the release; integrity relies on the published checksum.
+
+## Addendum (SEC-00)
+The credential finding in section 1 was investigated in `docs/audits/SEC-00-CREDENTIAL-INCIDENT-REPORT.md`: the leaked project does not belong to the ClinicalPSM production project; the file was untracked on a security branch; a current-tree gate without baseline was added. GitHub Actions ran for `d364052`: `Security (gitleaks)` succeeded; `Cumulative gates` failed at `npm ci` (Node 20 runner / npm 10 vs a lockfile written by npm 11); fixed by moving the runners to Node 24.
