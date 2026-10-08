@@ -7,7 +7,7 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(() => { throw new Error('user-session client must not be used for audit') }),
 }))
 
-import { AuditLogger, auditLog, buildAuditEntry, truncateIp, logPlanChanged } from '../audit'
+import { AuditLogger, auditLog, buildAuditEntry, truncateIp, logPlanChanged, AUDIT_MAX_BYTES, AUDIT_MAX_FILE_BYTES, AUDIT_MAX_ROWS } from '../audit'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
@@ -110,6 +110,42 @@ describe('allowlist schema: adversarial sentinel content never reaches the persi
     expect(truncateIp('2001:db8:abcd:12::1')).toBe('2001:db8:abcd::/48')
     expect(truncateIp('not an ip SYNTH_CELL_99')).toBeUndefined()
     expect(truncateIp(undefined)).toBeUndefined()
+  })
+})
+
+describe('numeric bounds (regression: 1 << 40 === 256)', () => {
+  const sus = (m: Record<string, unknown>) =>
+    buildAuditEntry({ user_id: 'system', action: 'SUSPICIOUS_ACTIVITY', resource_type: 'security', metadata: m })?.metadata
+  const upl = (m: Record<string, unknown>) =>
+    buildAuditEntry({ user_id: UID, action: 'FILE_UPLOADED', resource_type: 'upload', metadata: m })?.metadata
+
+  it('documents the JavaScript pitfall the old code hit', () => {
+    expect(1 << 40).toBe(256)
+  })
+  it('bounds are the intended magnitudes', () => {
+    expect(AUDIT_MAX_BYTES).toBe(1_099_511_627_776)
+    expect(AUDIT_MAX_FILE_BYTES).toBe(1_073_741_824)
+    expect(AUDIT_MAX_ROWS).toBe(10_000_000)
+    expect(Number.isSafeInteger(AUDIT_MAX_BYTES)).toBe(true)
+  })
+  it('a realistic 5 MB oversize request is recorded (old code dropped anything > 256)', () => {
+    expect(sus({ contentLength: 5 * 1024 * 1024, maxSize: 5 * 1024 * 1024 })).toEqual({ contentLength: 5242880, maxSize: 5242880 })
+    expect(sus({ fileSize: 300, maxFileSize: 10 * 1024 * 1024 })).toEqual({ fileSize: 300, maxFileSize: 10485760 })
+  })
+  it('accepts 0 and the exact upper bound; rejects one above, negatives, floats, NaN, Infinity, strings, unsafe ints', () => {
+    expect(sus({ contentLength: 0 })).toEqual({ contentLength: 0 })
+    expect(sus({ contentLength: AUDIT_MAX_BYTES })).toEqual({ contentLength: AUDIT_MAX_BYTES })
+    for (const bad of [AUDIT_MAX_BYTES + 1, -1, 1.5, NaN, Infinity, '5', Number.MAX_SAFE_INTEGER + 2, null, {}]) {
+      expect(sus({ contentLength: bad })).toEqual({})
+    }
+  })
+  it('upload file size and row count bounds', () => {
+    expect(upl({ fileSize: AUDIT_MAX_FILE_BYTES, rowCount: AUDIT_MAX_ROWS })).toEqual({ fileSize: AUDIT_MAX_FILE_BYTES, rowCount: AUDIT_MAX_ROWS })
+    expect(upl({ fileSize: AUDIT_MAX_FILE_BYTES + 1, rowCount: AUDIT_MAX_ROWS + 1 })).toEqual({})
+  })
+  it('the metadata allowlist stayed closed (no new keys introduced)', () => {
+    const e = sus({ contentLength: 1, notes: 'SYNTH_PATIENT_MRN_0042', fileName: 'x.csv', nested: { a: 1 } })
+    expect(e).toEqual({ contentLength: 1 })
   })
 })
 

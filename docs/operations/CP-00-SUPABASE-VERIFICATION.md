@@ -9,6 +9,34 @@ Status when written: **NOT RUN** (the implementation environment had no Docker, 
 - Migrations 001-012 from commit under review, applied in order with `supabase db reset` (local) or branch migration. Run as the `postgres` role.
 - Two synthetic users (A, B) created through Auth signup; keep their JWTs in env vars `JWT_A`, `JWT_B`; `ANON_KEY`, `SERVICE_KEY` from the **branch** only.
 
+## 0.1 Operator checklist: what the owner must provide or authorize (no secrets in chat)
+1. **Authorize a non-production Supabase target**: a Supabase *branch* of the project or a separate throwaway project (not production). Say which in writing.
+2. **Provide access without pasting secrets**: either run the commands yourself and paste only *outputs that contain no keys/data rows*, or export `SUPABASE_DB_URL`, `ANON_KEY`, `SERVICE_KEY` of the **test target only** as environment variables in your own shell (`! export ...` in this session keeps them out of the transcript if you prefer to run it yourself). Never provide production keys.
+3. **Confirm synthetic-only**: test target has no real user or patient data.
+4. **Run the read-only inventory first** (below) and share the result; it decides whether 012 can run unchanged.
+5. **Install prerequisites if you want me to run it**: Docker Desktop + Supabase CLI for a local stack (`supabase start`), or a branch DB URL.
+6. **Decide** the outcome of the §0.2 decision table before anything is applied to production.
+
+## 0.2 Read-only inventory that decides whether 012 is compatible (run first, as `postgres`)
+```sql
+SELECT current_user, rolsuper, rolcreaterole, rolbypassrls FROM pg_roles WHERE rolname = current_user;
+SELECT r.rolname, pg_has_role(current_user, r.oid, 'MEMBER') AS can_set_role
+FROM pg_roles r WHERE r.rolname IN ('supabase_admin','supabase_storage_admin','anon','authenticated','service_role');
+SELECT d.defaclrole::regrole AS creator, d.defaclnamespace::regnamespace AS schema, d.defaclobjtype AS type,
+       a.grantee::regrole AS grantee, a.privilege_type
+FROM pg_default_acl d, aclexplode(d.defaclacl) a ORDER BY 1,2,3,4;
+SELECT c.relname, c.relowner::regrole FROM pg_class c WHERE c.relnamespace='storage'::regnamespace AND c.relname='objects';
+SELECT proname, proowner::regrole FROM pg_proc WHERE pronamespace='public'::regnamespace;
+```
+**Known facts from Supabase docs (fetched 2026-10-08):** new `public` tables/functions get default grants to `anon/authenticated/service_role` "applied by `supabase_admin`"; the docs' own recipe revokes with `ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public ...`. **Not stated in docs:** whether `postgres` is a superuser or a member of `supabase_admin`, and who owns `storage.objects`.
+
+| Inventory result | Consequence for migration 012 | Action (needs Red Team decision; not made here) |
+|---|---|---|
+| No `pg_default_acl` rows for roles other than `postgres` grant to anon/authenticated/PUBLIC | 012 runs unchanged | proceed on branch |
+| Rows exist for `supabase_admin` AND `can_set_role = true` | 012's dynamic revoke succeeds | proceed on branch |
+| Rows exist for `supabase_admin` AND `can_set_role = false` | 012 **aborts** (fail-closed) at the dynamic revoke, and its final inventory check would also flag them | Options: (a) operator runs the single `ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin ...` as that role through the Supabase-supported path, then re-run 012; (b) Red Team approves narrowing 012's check to the migration owner's defaults only, since objects are created by `postgres` through migrations. Do not edit 012 without that decision. |
+| `storage.objects` owner is not `postgres` and `postgres` cannot create policies | 010 warns, 011/012 abort | create the two policies from the Dashboard/Storage policy UI path as the owner, then re-run |
+
 ## 1. Migration reliability
 1. Apply 001-009, insert synthetic legacy rows (analyses with `result_summary`, uploads, cache, audit), then apply 010, 011, 012. Expect no error and no `WARNING: CP-00: could not create storage.objects policies` (that warning from 010 means the policies were NOT installed by 010; 011/012 then must have installed them without error).
 2. Re-apply 012 (idempotent). Compare row-hash of the five tables before/after (see query in §6).
@@ -79,6 +107,9 @@ UNION ALL SELECT 'analysis_cache', md5(coalesce(string_agg(c::text,'|' ORDER BY 
 UNION ALL SELECT 'audit_logs', md5(coalesce(string_agg(l::text,'|' ORDER BY id),'')) FROM public.audit_logs l;
 ```
 Run before and after 011/012; values must match.
+
+## 6.1 Finding: the documented Supabase recipe does not close PUBLIC function EXECUTE
+Supabase's "revoke default privileges" snippet uses `ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM public`. In real PostgreSQL (PGlite test `closure.test.ts`, "documented schema-scoped default-privilege recipe") a function created afterwards was **still executable by anon and authenticated**; only the global form (`ALTER DEFAULT PRIVILEGES REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC`, used in 012) removed it. Confirm on the real target with the probe in 012's verification block; do not rely on the docs snippet alone.
 
 ## 7. Release gate for every future schema change
 Any PR that adds a migration must (a) pass `src/db/__tests__/exposure-gate.test.ts` (it applies all migrations and fails on any client-reachable table/sequence/function), (b) re-run §2 on a branch, (c) create objects only as `postgres` via migrations (objects created by `supabase_admin` or other roles keep PostgreSQL's implicit PUBLIC EXECUTE on functions, which migration 012 cannot prevent), and (d) never expose a new schema through PostgREST without an explicit review.

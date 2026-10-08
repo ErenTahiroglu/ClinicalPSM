@@ -22,8 +22,16 @@ const uuid: Validator = v =>
   typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)
     ? v.toLowerCase()
     : undefined
+/**
+ * Explicit numeric bounds (exponentiation, NOT bit shifts: `1 << 40` is 256 in JavaScript
+ * because shift counts are taken modulo 32). All values are well below Number.MAX_SAFE_INTEGER.
+ */
+export const AUDIT_MAX_BYTES = 2 ** 40 // 1 TiB: upper sanity bound for any request/file size
+export const AUDIT_MAX_FILE_BYTES = 2 ** 30 // 1 GiB: upload file size recorded
+export const AUDIT_MAX_ROWS = 10_000_000
+
 const int = (max: number): Validator => v =>
-  typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= max ? v : undefined
+  typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 && v <= max ? v : undefined
 const oneOf = (...values: string[]): Validator => v =>
   typeof v === 'string' && values.includes(v) ? v : undefined
 const bool: Validator = v => (typeof v === 'boolean' ? v : undefined)
@@ -57,7 +65,7 @@ const EVENT_SCHEMA = {
   ANALYSIS_UPDATED: { resource: ['analysis'], fields: { status: oneOf('draft', 'processing', 'completed', 'failed') } },
   FILE_UPLOADED: {
     resource: ['upload'],
-    fields: { analysisId: uuid, fileSize: int(1 << 30), rowCount: int(10_000_000) },
+    fields: { analysisId: uuid, fileSize: int(AUDIT_MAX_FILE_BYTES), rowCount: int(AUDIT_MAX_ROWS) },
   },
   RATE_LIMIT_EXCEEDED: { resource: ['analysis', 'upload', 'auth', 'security'], fields: { analysisId: uuid } },
   SUSPICIOUS_ACTIVITY: {
@@ -65,12 +73,12 @@ const EVENT_SCHEMA = {
     fields: {
       reason: oneOf(...SUSPICIOUS_REASONS),
       method: METHODS,
-      contentLength: int(1 << 40),
-      fileSize: int(1 << 40),
-      maxSize: int(1 << 40),
-      maxFileSize: int(1 << 40),
-      rowCount: int(10_000_000),
-      maxRows: int(10_000_000),
+      contentLength: int(AUDIT_MAX_BYTES),
+      fileSize: int(AUDIT_MAX_BYTES),
+      maxSize: int(AUDIT_MAX_BYTES),
+      maxFileSize: int(AUDIT_MAX_BYTES),
+      rowCount: int(AUDIT_MAX_ROWS),
+      maxRows: int(AUDIT_MAX_ROWS),
       hasCsrfHeader: bool,
       hasCsrfCookie: bool,
     },

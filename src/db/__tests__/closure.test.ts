@@ -266,3 +266,20 @@ describe('Storage policy deep verification (mutation tests)', () => {
     await d.close()
   }, 60_000)
 })
+
+describe('documented schema-scoped default-privilege recipe (finding)', () => {
+  it('Supabase docs recipe `IN SCHEMA public REVOKE EXECUTE ... FROM public` does NOT remove PUBLIC EXECUTE on new functions; the global revoke in 012 does', async () => {
+    const d = await newDb()
+    await d.exec(`
+      ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM anon, authenticated, service_role;
+      ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM public;
+      CREATE FUNCTION public.recipe_fn() RETURNS int LANGUAGE sql AS 'select 1';`)
+    const [r] = (await d.query<{ a: boolean; u: boolean }>(
+      `SELECT has_function_privilege('anon','public.recipe_fn()','EXECUTE') a, has_function_privilege('authenticated','public.recipe_fn()','EXECUTE') u`)).rows
+    expect(r).toEqual({ a: true, u: true })
+    await d.exec(`ALTER DEFAULT PRIVILEGES REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC; CREATE FUNCTION public.global_fn() RETURNS int LANGUAGE sql AS 'select 1';`)
+    const [g] = (await d.query<{ a: boolean }>(`SELECT has_function_privilege('anon','public.global_fn()','EXECUTE') a`)).rows
+    expect(g.a).toBe(false)
+    await d.close()
+  }, 60_000)
+})
