@@ -10,7 +10,7 @@ on:
   pull_request:
 
 env:
-  GATE_PHASE: CS-00
+  GATE_PHASE: CS-02
 
 jobs:
   base:
@@ -53,6 +53,8 @@ jobs:
         run: node scripts/devtools/gates.mjs --phase "$GATE_PHASE" --only cs00 --strict
         env:
           PW_EXECUTABLE: playwright
+      - name: Cutover redirect/HTTPS evaluator (synthetic chains)
+        run: node scripts/devtools/gates.mjs --phase "$GATE_PHASE" --only cs02 --strict
   future-gates:
     name: Future gates (status listing)
     runs-on: ubuntu-latest

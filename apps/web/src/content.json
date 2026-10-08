@@ -17,13 +17,13 @@
     "banner": "Research preview. The statistical engine is NOT validated. Do not use it for clinical or research decisions, and do not enter patient data: this site does not accept uploads.",
     "home": {
       "title": "Propensity score matching, designed to run in your browser",
-      "lead": "ClinicalPSM is being rebuilt so that clinical datasets are processed locally in the browser and never sent to a server. This preview shows the planned workflow using synthetic data only.",
+      "lead": "ClinicalPSM is being rebuilt so that, by design, clinical datasets are processed locally in the browser instead of being uploaded to a server. This preview shows the planned workflow using synthetic data only.",
       "s1t": "What it will do",
       "s1": "Estimate propensity scores, match treated and control units, and report covariate balance (standardized mean differences, variance ratios) for observational studies.",
       "s2t": "What it is today",
       "s2": "A research preview. The matching code runs in a Web Worker in your browser. It has not been independently validated against a reference implementation, so its numbers must not be relied on.",
       "s3t": "Privacy by design (planned)",
-      "s3": "The target design processes data only in browser memory. This preview has no file upload, no accounts and no analytics. Nothing you do here is sent to a server.",
+      "s3": "The target design processes datasets only in browser memory. This preview has no file upload, no accounts and no analytics. Opening the pages involves ordinary web requests, which Cloudflare (the host) processes as described in the Privacy notice. The synthetic demo runs in your browser and makes no requests of its own while it runs.",
       "cta": "Try the synthetic demo",
       "cta2": "Read the limitations"
     },
@@ -100,7 +100,7 @@
         ]
       ]
     },
-    "footer": "ClinicalPSM research preview. No cookies, no analytics, no uploads.",
+    "footer": "ClinicalPSM research preview. No cookies, no analytics, no uploads. Hosted on Cloudflare; see the Privacy notice.",
     "operator": "Operator",
     "contact": "Contact",
     "placeholderOp": "[operator name: set before launch]",
@@ -145,13 +145,13 @@
     "banner": "Araştırma önizlemesi. İstatistik motoru DOĞRULANMAMIŞTIR. Klinik veya araştırma kararları için kullanmayın ve hasta verisi girmeyin: bu site dosya yüklemeyi kabul etmez.",
     "home": {
       "title": "Tarayıcınızda çalışacak şekilde tasarlanan eğilim skoru eşleştirme",
-      "lead": "ClinicalPSM, klinik veri kümeleri tarayıcıda yerel olarak işlenecek ve hiçbir sunucuya gönderilmeyecek şekilde yeniden kurulmaktadır. Bu önizleme planlanan iş akışını yalnızca sentetik veriyle gösterir.",
+      "lead": "ClinicalPSM, tasarım gereği klinik veri kümeleri bir sunucuya yüklenmek yerine tarayıcıda yerel olarak işlenecek şekilde yeniden kurulmaktadır. Bu önizleme planlanan iş akışını yalnızca sentetik veriyle gösterir.",
       "s1t": "Ne yapacak",
       "s1": "Gözlemsel çalışmalar için eğilim skorlarını tahmin eder, tedavi ve kontrol birimlerini eşleştirir ve kovaryat dengesini (standartlaştırılmış ortalama farklar, varyans oranları) raporlar.",
       "s2t": "Bugün ne durumda",
       "s2": "Bir araştırma önizlemesi. Eşleştirme kodu tarayıcınızda bir Web Worker içinde çalışır. Bir referans uygulamaya karşı bağımsız olarak doğrulanmamıştır; sayılarına güvenilmemelidir.",
       "s3t": "Tasarımla gizlilik (planlanan)",
-      "s3": "Hedef tasarım veriyi yalnızca tarayıcı belleğinde işler. Bu önizlemede dosya yükleme, hesap veya analitik yoktur. Burada yaptığınız hiçbir şey sunucuya gönderilmez.",
+      "s3": "Hedef tasarım veri kümelerini yalnızca tarayıcı belleğinde işler. Bu önizlemede dosya yükleme, hesap veya analitik yoktur. Sayfaları açmak, barındırıcı Cloudflare'ın Gizlilik bildiriminde anlatıldığı gibi işlediği olağan web istekleri içerir. Sentetik demo tarayıcınızda çalışır ve çalışırken kendi başına istek yapmaz.",
       "cta": "Sentetik demoyu deneyin",
       "cta2": "Sınırlamaları okuyun"
     },
@@ -228,7 +228,7 @@
         ]
       ]
     },
-    "footer": "ClinicalPSM araştırma önizlemesi. Çerez yok, analitik yok, yükleme yok.",
+    "footer": "ClinicalPSM araştırma önizlemesi. Çerez yok, analitik yok, yükleme yok. Cloudflare üzerinde barındırılır; Gizlilik bildirimine bakın.",
     "operator": "İşletici",
     "contact": "İletişim",
     "placeholderOp": "[işletici adı: yayından önce belirlenecek]",

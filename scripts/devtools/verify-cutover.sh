@@ -15,7 +15,8 @@ code(){ curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$1"; }
 if [ "$mode" = "--selftest" ]; then
   # no network: parser sanity only
   printf 'HTTP/2 301\r\nLocation: https://www.example.org/x\r\n' | tr -d '\r' | awk 'tolower($1)=="location:"{print $2}' | grep -q '^https://www.example.org/x$' || { echo "selftest FAIL"; exit 1; }
-  bash -n "$0" && echo "selftest OK" && exit 0; exit 1
+  bash -n "$0" || exit 1
+  node "$(dirname "$0")/cutover-redirects.test.mjs" | tail -1 | grep -q "passed" && node "$(dirname "$0")/cutover-redirects.test.mjs" >/dev/null && echo "selftest OK (redirect-chain tests included)" && exit 0; exit 1
 fi
 
 echo "== 1. DNS (public resolvers)"
@@ -26,20 +27,10 @@ for h in "$APEX" "$WWW"; do
     [ "$mode" = "--post" ] && res FAIL "$h still points at Vercel (dangling-takeover risk)" || res INFO "$h points at Vercel (expected before cutover; remove at cutover step 2)"
   fi
 done
-echo "== 2. Apex redirect (path + query preserved, HTTPS, no open redirect, no loop)"
-EXPECT="${EXPECT_REDIRECT_STATUS:-301}"
+echo "== 2. HTTPS enforcement and redirect chains (http+https, apex+www; path+query preserved; bounded; no loop; no off-domain)"
 if [ "$mode" = "--post" ]; then
-  chk(){ # $1=label $2=url $3=expected Location
-    c="$(code "$2")"; loc="$(hdr "$2" | awk 'tolower($1)=="location:"{print $2}' | head -1)"
-    if [ "$c" = "$EXPECT" ] && [ "$loc" = "$3" ]; then res PASS "$1 -> $c $loc"; else res FAIL "$1 -> $c [$loc] (want $EXPECT $3)"; fi; }
-  chk "T1 https apex path+query" "https://$APEX/en/pricing/?a=1&b=two" "https://$WWW/en/pricing/?a=1&b=two"
-  chk "T2 http apex path+query" "http://$APEX/en/?x=1" "https://$WWW/en/?x=1"
-  for u in "https://$APEX//evil.example/" "https://$APEX/?next=https://evil.example" "http://$APEX/%2f%2fevil.example"; do
-    loc="$(hdr "$u" | awk 'tolower($1)=="location:"{print $2}' | head -1)"
-    echo "$loc" | grep -Eq "^https://$WWW(/|$)" && res PASS "T4 off-host probe stays on $WWW: ${loc:-none}" || { [ -z "$loc" ] && res INFO "T4 probe returned no redirect" || res FAIL "T4 redirect leaves $WWW: $loc"; }
-  done
-  hops="$(curl -s -o /dev/null -L --max-redirs 5 -w '%{num_redirects} %{http_code} %{url_effective}' --max-time 30 "http://$APEX/en/?x=1")"
-  case "$hops" in *" 200 https://$WWW/en/?x=1") res PASS "T5 chain ends at 200 on https www: $hops";; *) res FAIL "T5 chain: $hops";; esac
+  extra=""; [ "${REQUIRE_PERMANENT:-0}" = 1 ] && extra="--permanent"
+  if node "$(dirname "$0")/cutover-redirects.mjs" $extra; then res PASS "all redirect-chain and HTTPS cases passed"; else res FAIL "redirect-chain/HTTPS cases failed (details above)"; fi
 else res INFO "skipped before cutover"; fi
 echo "== 3. www serving, headers, TLS"
 c="$(code "https://$WWW/en/")"
@@ -51,10 +42,10 @@ if [ "$mode" = "--post" ]; then
   for want in "content-security-policy:" "x-content-type-options: nosniff" "x-frame-options: deny" "referrer-policy: no-referrer" "permissions-policy:"; do
     echo "$h" | grep -qi "^$want" && res PASS "header $want" || res FAIL "missing header $want"
   done
+  if [ "${EXPECT_INDEXABLE:-0}" = 1 ]; then echo "$h" | grep -qi '^x-robots-tag:' && res FAIL "indexable build still sends X-Robots-Tag" || res PASS "no X-Robots-Tag (indexable build)"
+  else echo "$h" | grep -qi '^x-robots-tag:.*noindex' && res PASS "X-Robots-Tag noindex (default)" || res FAIL "missing X-Robots-Tag noindex (indexing is not approved)"; fi
   echo "$h" | grep -qi "unsafe-" && res FAIL "CSP contains unsafe-*" || res PASS "CSP has no unsafe-*"
   echo "$h" | grep -qi '^set-cookie:' && res FAIL "response sets a cookie" || res PASS "no Set-Cookie"
-  hc="$(code "http://$WWW/en/")"
-  { [ "$hc" = 301 ] || [ "$hc" = 308 ]; } && res PASS "http -> https redirect" || res INFO "http redirect not observed (enable Always Use HTTPS)"
   curl -sI --max-time 20 "https://$WWW/" -o /dev/null && res PASS "TLS handshake valid (certificate verified by curl)" || res FAIL "TLS verification failed"
 else
   [ "$c" = 200 ] && res INFO "www already serves 200 (cutover may be done: rerun with --post)" || res INFO "www -> $c (expected before cutover)"

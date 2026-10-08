@@ -4,6 +4,8 @@
     "BASE",
     "CF-01",
     "CS-00",
+    "CS-01",
+    "CS-02",
     "CP-01",
     "CP-02",
     "CP-03",
@@ -129,6 +131,12 @@
       "phase": "CS-00",
       "cmd": "bash scripts/devtools/verify-cutover.sh --selftest",
       "note": "verifier script syntax and parsing self-test, no network"
+    },
+    {
+      "id": "cs02.redirect-chain-tests",
+      "phase": "CS-02",
+      "cmd": "node scripts/devtools/cutover-redirects.test.mjs",
+      "note": "24 synthetic redirect/HTTPS chains incl. negatives: http never upgraded, query/path dropped, wrong host, off-domain, loop, too long, non-200, TLS error, open-redirect probes"
     },
     {
       "id": "cp01.no-clinical-upload-paths",

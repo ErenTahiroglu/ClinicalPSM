@@ -40,6 +40,15 @@ rec('preview build never sets INDEXABLE even when env asks', (run({ ...good, IND
 run({}, [])
 rec('preview build keeps placeholders and writes no security.txt', /set before launch/.test(readFileSync('public/en/privacy/index.html', 'utf8')) && !existsSync('public/.well-known/security.txt'))
 
+// Privacy wording: no categorical "nothing reaches a server" claims anywhere in served text; routine hosting processing is acknowledged
+{
+  const claim = /nothing you do here is sent|never sent to a server|no (personal )?data (is|are|ever) (sent|reach)|hiçbir şey sunucuya gönderilmez|hiçbir sunucuya gönderilmeyecek|hiçbir veri .{0,30}gönderilmez/i
+  const hits = []
+  for (const l of ['en', 'tr']) for (const p of ['index', 'demo/index', 'pricing/index', 'limits/index', 'privacy/index']) { const h = readFileSync(`public/${l}/${p}.html`, 'utf8'); if (claim.test(h)) hits.push(`${l}/${p}`) }
+  rec('no categorical "nothing is sent to any server" claim on any page', hits.length === 0, hits.join(','))
+  rec('home and privacy pages acknowledge Cloudflare technical request processing (EN and TR)', ['en', 'tr'].every(l => /Cloudflare/.test(readFileSync(`public/${l}/index.html`, 'utf8')) && /Cloudflare/.test(readFileSync(`public/${l}/privacy/index.html`, 'utf8'))))
+}
+
 const failed = results.filter(x => !x).length
 console.log(`\n${results.length - failed}/${results.length} passed`)
 process.exit(failed ? 1 : 0)
