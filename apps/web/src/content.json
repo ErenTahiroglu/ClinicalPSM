@@ -110,7 +110,7 @@
       "p0": "This is a static research-preview website. It has no accounts, no cookies, no analytics, no advertising and no file upload.",
       "h1": "What this site processes",
       "l1": [
-        "Your browser downloads the page, style sheet and scripts from Cloudflare, which hosts this site. Like any web host, Cloudflare processes technical request data (such as your IP address, the requested address and a browser identifier) to deliver the site and protect it from abuse. The operator does not receive a copy of your IP address through this site.",
+        "Your browser downloads the page, style sheet and scripts from Cloudflare, which hosts this site. Like any web host, Cloudflare processes technical request information (such as your IP address, the requested address and a browser identifier) to deliver the site and protect it from abuse. The operator has not enabled analytics, advertising or tracking features for this site; standard service-level statistics provided by Cloudflare may still be visible to the operator.",
         "The synthetic demo generates made-up data inside your browser and runs the matching code in a Web Worker in your browser. Nothing you see in the demo is sent anywhere.",
         "The site has no input fields, forms or upload controls. Please do not send patient-level data to the operator through any other channel for use with this tool."
       ],
@@ -118,7 +118,7 @@
       "l2": [
         "It does not set cookies or use browser storage.",
         "It does not load third-party scripts, fonts, trackers or advertising.",
-        "It does not collect, store or process clinical or personal data on a server."
+        "It has no clinical dataset upload and no site-owned accounts, database or behavioural analytics. The demo's synthetic data is generated and processed in your browser only."
       ],
       "h3": "Hosting provider and your rights",
       "p3": "The site is served by Cloudflare. Cloudflare acts as an independent hosting provider and publishes its own privacy information. If you have a privacy question about this site, contact the operator below.",
@@ -238,7 +238,7 @@
       "p0": "Bu, statik bir araştırma önizleme sitesidir. Hesap, çerez, analitik, reklam ve dosya yükleme yoktur.",
       "h1": "Bu site neyi işler",
       "l1": [
-        "Tarayıcınız sayfayı, stil dosyasını ve betikleri bu siteyi barındıran Cloudflare üzerinden indirir. Her web barındırıcısı gibi Cloudflare de siteyi sunmak ve kötüye kullanıma karşı korumak için teknik istek verilerini (IP adresiniz, istenen adres ve tarayıcı tanımlayıcısı gibi) işler. İşletici, bu site üzerinden IP adresinizin bir kopyasını almaz.",
+        "Tarayıcınız sayfayı, stil dosyasını ve betikleri bu siteyi barındıran Cloudflare üzerinden indirir. Her web barındırıcısı gibi Cloudflare de siteyi sunmak ve kötüye kullanıma karşı korumak için teknik istek bilgilerini (IP adresiniz, istenen adres ve tarayıcı tanımlayıcısı gibi) işler. İşletici bu site için analitik, reklam veya izleme özelliği etkinleştirmemiştir; Cloudflare'ın sunduğu standart hizmet düzeyi istatistikleri yine de işleticiye görünebilir.",
         "Sentetik demo, tarayıcınızın içinde uydurma veri üretir ve eşleştirme kodunu tarayıcınızdaki bir Web Worker içinde çalıştırır. Demoda gördüğünüz hiçbir şey bir yere gönderilmez.",
         "Sitede giriş alanı, form veya yükleme denetimi yoktur. Lütfen bu aracla kullanılmak üzere hasta düzeyinde veriyi başka bir kanaldan da işleticiye göndermeyin."
       ],
@@ -246,7 +246,7 @@
       "l2": [
         "Çerez ayarlamaz, tarayıcı depolamasını kullanmaz.",
         "Üçüncü taraf betik, yazı tipi, izleyici veya reklam yüklemez.",
-        "Bir sunucuda klinik veya kişisel veri toplamaz, saklamaz veya işlemez."
+        "Klinik veri seti yüklemesi, siteye ait hesap, veritabanı veya davranışsal analitik yoktur. Demonun sentetik verisi yalnızca tarayıcınızda üretilir ve işlenir."
       ],
       "h3": "Barındırma sağlayıcısı ve haklarınız",
       "p3": "Site Cloudflare tarafından sunulur. Cloudflare bağımsız bir barındırma sağlayıcısı olarak kendi gizlilik bilgilerini yayımlar. Bu siteyle ilgili bir gizlilik sorunuz varsa aşağıdaki işleticiyle iletişime geçin.",

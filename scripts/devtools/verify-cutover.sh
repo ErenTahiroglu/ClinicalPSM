@@ -26,16 +26,26 @@ for h in "$APEX" "$WWW"; do
     [ "$mode" = "--post" ] && res FAIL "$h still points at Vercel (dangling-takeover risk)" || res INFO "$h points at Vercel (expected before cutover; remove at cutover step 2)"
   fi
 done
-echo "== 2. Apex redirect"
+echo "== 2. Apex redirect (path + query preserved, HTTPS, no open redirect, no loop)"
+EXPECT="${EXPECT_REDIRECT_STATUS:-301}"
 if [ "$mode" = "--post" ]; then
-  loc="$(hdr "https://$APEX/en/pricing/?x=1" | awk 'tolower($1)=="location:"{print $2}' | head -1)"; c="$(code "https://$APEX/en/pricing/?x=1")"
-  [ "$c" = 301 ] && [ "$loc" = "https://$WWW/en/pricing/?x=1" ] && res PASS "apex -> 301 $loc (path and query preserved)" || res FAIL "apex returned $c location=[$loc]"
+  chk(){ # $1=label $2=url $3=expected Location
+    c="$(code "$2")"; loc="$(hdr "$2" | awk 'tolower($1)=="location:"{print $2}' | head -1)"
+    if [ "$c" = "$EXPECT" ] && [ "$loc" = "$3" ]; then res PASS "$1 -> $c $loc"; else res FAIL "$1 -> $c [$loc] (want $EXPECT $3)"; fi; }
+  chk "T1 https apex path+query" "https://$APEX/en/pricing/?a=1&b=two" "https://$WWW/en/pricing/?a=1&b=two"
+  chk "T2 http apex path+query" "http://$APEX/en/?x=1" "https://$WWW/en/?x=1"
+  for u in "https://$APEX//evil.example/" "https://$APEX/?next=https://evil.example" "http://$APEX/%2f%2fevil.example"; do
+    loc="$(hdr "$u" | awk 'tolower($1)=="location:"{print $2}' | head -1)"
+    echo "$loc" | grep -Eq "^https://$WWW(/|$)" && res PASS "T4 off-host probe stays on $WWW: ${loc:-none}" || { [ -z "$loc" ] && res INFO "T4 probe returned no redirect" || res FAIL "T4 redirect leaves $WWW: $loc"; }
+  done
+  hops="$(curl -s -o /dev/null -L --max-redirs 5 -w '%{num_redirects} %{http_code} %{url_effective}' --max-time 30 "http://$APEX/en/?x=1")"
+  case "$hops" in *" 200 https://$WWW/en/?x=1") res PASS "T5 chain ends at 200 on https www: $hops";; *) res FAIL "T5 chain: $hops";; esac
 else res INFO "skipped before cutover"; fi
 echo "== 3. www serving, headers, TLS"
 c="$(code "https://$WWW/en/")"
 if [ "$mode" = "--post" ]; then
   [ "$c" = 200 ] && res PASS "https://$WWW/en/ -> 200" || res FAIL "https://$WWW/en/ -> $c"
-  for p in /en/ /tr/ /en/demo/ /tr/privacy/ /en/limits/ /en/pricing/; do [ "$(code "https://$WWW$p")" = 200 ] && res PASS "$p 200" || res FAIL "$p not 200"; done
+  for p in /en/ /tr/ /en/demo/ /tr/privacy/ /en/limits/ /en/pricing/ /tr/pricing/ /tr/limits/ /tr/demo/ /en/privacy/; do [ "$(code "https://$WWW$p")" = 200 ] && res PASS "$p 200" || res FAIL "$p not 200"; done
   [ "$(code "https://$WWW/no-such-page")" = 404 ] && res PASS "unknown path -> 404" || res FAIL "unknown path not 404"
   h="$(hdr "https://$WWW/en/")"
   for want in "content-security-policy:" "x-content-type-options: nosniff" "x-frame-options: deny" "referrer-policy: no-referrer" "permissions-policy:"; do

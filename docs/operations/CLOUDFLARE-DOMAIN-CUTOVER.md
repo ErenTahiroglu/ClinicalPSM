@@ -1,60 +1,89 @@
-# clinicalpsm.com: Cloudflare cutover plan (prepared, NOT executed)
+# clinicalpsm.com: Cloudflare cutover runbook (prepared, NOT executed)
 
-Nothing here has been run. Every step that changes DNS, deploys, or touches the Cloudflare zone needs the owner's separate written approval. Claude Code has only read-only access to this zone (DNS records, SSL settings and rulesets are not readable with the current token).
+Nothing here has been run. Every step that changes DNS, deploys to the domain, or edits zone rules needs the owner's separate written approval. Claude Code's token can read the zone object but **not** its DNS records, SSL settings or rulesets (verified: Authentication error), so the owner performs every zone step in the dashboard.
 
-## 0. State observed (public, read-only, 2026-10-08)
+Sources: Cloudflare docs, Workers *Custom Domains* (updated 2026-09-29), Rules *Create a redirect rule in the dashboard* and *Redirect from root to WWW* (updated 2026-05-05). Read 2026-10-08.
 
-| Item | Observation |
-|---|---|
-| Zone | `clinicalpsm.com` active on Cloudflare Free; NS `jermaine` / `shaz` |
-| Apex | A `64.29.17.1`, `216.198.79.1` (Vercel); DNS-only |
-| `www` | CNAME `09e0f8ac8620059b.vercel-dns-017.com` (Vercel); DNS-only |
-| HTTP | both hosts return `404 DEPLOYMENT_NOT_FOUND` (Vercel project deleted) |
-| Other records | no AAAA, MX, TXT, CAA at the apex (as seen by public resolvers) |
+## 0. Observed state (public DNS and HTTP, 2026-10-08)
 
-**Risk:** the records point at infrastructure the owner no longer controls. Until they are removed, the site is down and a future Vercel account claiming the same domain name could serve content on it. Removing them is the first cutover action and is safe to do even before the new site is live.
+| Host | Public resolvers | HTTP |
+|---|---|---|
+| `clinicalpsm.com` | A `216.198.79.65`, `64.29.17.65` (earlier today `.1` variants; Vercel anycast, order rotates) | `http://` → 308 to `https://clinicalpsm.com/`; https → 404 `DEPLOYMENT_NOT_FOUND` |
+| `www.clinicalpsm.com` | CNAME `09e0f8ac8620059b.vercel-dns-017.com` → A `64.29.17.1`, `216.198.79.1` | 404 `DEPLOYMENT_NOT_FOUND` |
+| NS | `shaz` / `jermaine` `.ns.cloudflare.com` | |
+| AAAA, MX, TXT, CAA at apex; `_dmarc`, `mail`, `api`, `staging`, `app` | none seen | |
 
-## 1. Preconditions (owner)
+The authoritative nameservers could not be queried directly from this network (port 53 timeout), so the list is what public resolvers return, not the dashboard's record table. Records the zone holds that resolvers do not return (for example disabled or unrelated ones) are unknown.
 
-1. Decide `OPERATOR_NAME` and `CONTACT_EMAIL` (publicly displayed; use a role address, not a personal one if preferred).
-2. Review `apps/web` privacy text and limitations with whoever is responsible for legal review.
-3. Confirm the Red Team verdict on CLEAN-SLATE-00.
-4. Approve the workers.dev deployment (step 1) in writing.
+**Stale/dangling:** all apex A records and the `www` CNAME point to a Vercel project that no longer exists.
 
-## 2. Steps
+## 1. DNS change sheet (owner approves each row; nothing was changed)
 
-| # | Action | Who | Reversible | Verify |
-|---|---|---|---|---|
-| 1 | Deploy `clinicalpsm-web` to **workers.dev only**: `cd apps/web && CONTACT_EMAIL=… OPERATOR_NAME=… CANONICAL_HOST=www.clinicalpsm.com npm run build:prod && npx wrangler deploy` | owner | yes (delete Worker) | open `https://clinicalpsm-web.erentahiroglu.workers.dev/en/` and `/tr/`; run browser tests against it |
-| 2 | In the DNS tab delete the Vercel-pointing apex A records and the `www` CNAME. Record their values first (screenshot) | owner | yes (re-add) | `verify-cutover.sh --pre` shows no Vercel pointers |
-| 3 | Workers & Pages → `clinicalpsm-web` → Settings → Domains & Routes → add Custom Domain `www.clinicalpsm.com` | owner | yes | certificate becomes active; `https://www.clinicalpsm.com/en/` returns 200 |
-| 3b | If the dashboard refuses Custom Domains on Free: add a proxied (orange-cloud) placeholder record for `www` and attach a **Route** `www.clinicalpsm.com/*` instead. Do not buy any add-on | owner | yes | same as 3 |
-| 4 | Apex: add a proxied placeholder record for `@` (needed so Cloudflare answers), then a **Single Redirect** (Rules → Redirect Rules): when hostname equals `clinicalpsm.com`, dynamic target `concat("https://www.clinicalpsm.com", http.request.uri.path)` with query preserved, status **301** | owner | yes | `verify-cutover.sh --post` |
-| 5 | SSL/TLS mode: **Full (strict)** is irrelevant for assets-only; ensure **Always Use HTTPS** is on | owner | yes | `http://` returns 301/308 |
-| 6 | Wait at least 7 days with the site live. Only then rebuild with `HSTS_MAX_AGE=300`, redeploy, observe, and raise gradually. **No `includeSubDomains`, no `preload`** | owner | HSTS is sticky; raise slowly | header check |
-| 7 | Optional: rebuild with `INDEXABLE=1` after Red Team approval of copy and legal text | owner | yes | canonical + sitemap present |
-| 8 | Optional: DNS records for email (MX/SPF/DKIM/DMARC) only if a mailbox is introduced. None today | owner | n/a | n/a |
+Before starting: screenshot the full DNS table of `clinicalpsm.com` and confirm each "Delete" row matches exactly. Anything not on this sheet stays untouched. Do not touch `erentahiroglu.com` or any other zone.
 
-Use `docs/operations/cutover/wrangler.cutover.jsonc.example` for step 3 if deploying the domain from the CLI instead of the dashboard. It is a template and is read by nothing.
+| # | Zone | Type | Name | Content | Action | Why |
+|---|---|---|---|---|---|---|
+| D1 | clinicalpsm.com | A | `@` | `64.29.17.1`, `64.29.17.65`, `216.198.79.1`, `216.198.79.65` (whichever exist) | **Delete** | stale Vercel, takeover risk |
+| D2 | clinicalpsm.com | CNAME | `www` | `09e0f8ac8620059b.vercel-dns-017.com` | **Delete** | stale Vercel; a Custom Domain cannot be created over an existing record |
+| D3 | clinicalpsm.com | any other `vercel`-related record (`_vercel` TXT, etc.) | | | **Delete only if present and clearly Vercel-owned** | stale |
+| D4 | clinicalpsm.com | A | `@` | `192.0.2.0`, **Proxied** | **Add** (after step S2) | placeholder so Cloudflare can answer the apex and apply the redirect; per the Custom Domains doc |
+| W1 | (automatic) | | `www` | created by Cloudflare when the Custom Domain is added | **do not add manually** | |
+| — | | MX/TXT/CAA/other | | | **leave** | none are known; do not add email records unless a mailbox is introduced |
 
-## 3. Rollback
+D1 and D2 may be done early (they are safe on their own: the site is already down and removal ends the takeover risk). D4 and W1 happen at cutover.
 
-Vercel no longer exists, so "roll back to the old site" is not possible. Rollback means: remove the custom domain and redirect, and either leave the hostnames unresolved or attach a one-page maintenance build of `apps/web`. The workers.dev URL remains available throughout.
+## 2. Preconditions (owner)
 
-## 4. Verification
+1. Staging verified (`CLEAN-SLATE-01-LIVE-STAGING-REPORT.md`) and Red Team decision received.
+2. Public `OPERATOR_NAME` and `CONTACT_EMAIL` chosen. The production build refuses without them; no identity is invented.
+3. Owner has decided separately whether the site may be indexed. Default: **not indexable**.
+4. Privacy and limitation text reviewed by whoever is responsible for legal review.
 
-```
-bash scripts/devtools/verify-cutover.sh --pre    # before steps 2-4
-bash scripts/devtools/verify-cutover.sh --post   # after: DNS, apex 301 with path+query, 6 pages 200, 404, headers, CSP, no cookie, TLS
-bash scripts/devtools/verify-containment.sh      # legacy Vercel/Supabase stay gone
-```
+## 3. Steps with operator checkpoints
 
-Manual: open `/en/` and `/tr/` in a private window; language switch keeps the page; demo runs and is labelled synthetic; DevTools Network shows only same-origin requests; no cookies or storage.
+Mark each checkpoint in the PR or a private note; stop if any check fails.
 
-## 5. Zero-cost checks at cutover
+| # | Action | Check before continuing |
+|---|---|---|
+| S1 | Build production artifact: `cd apps/web && CONTACT_EMAIL=… OPERATOR_NAME=… CANONICAL_HOST=www.clinicalpsm.com npm run build:prod` (no `INDEXABLE`, no `HSTS_MAX_AGE`) | exit 0; `public/_headers` contains `X-Robots-Tag: noindex, nofollow`; footer shows the chosen identity |
+| S2 | Delete D1, D2 (and D3 if present) | `bash scripts/devtools/verify-cutover.sh --pre` shows no Vercel pointer |
+| S3 | Deploy the Worker: `npx wrangler deploy` (config name `clinicalpsm-web`, `workers.dev` only; **no route in the file**) | `https://clinicalpsm-web.erentahiroglu.workers.dev/en/` → 200; `node test/live.mjs <url>` passes |
+| S4 | Dashboard: Workers & Pages → `clinicalpsm-web` → Settings → Domains & Routes → Add → **Custom Domain** → `www.clinicalpsm.com` | dashboard shows the domain active and the certificate issued; **no payment prompt**. Record what the dashboard says about the certificate |
+| S5 | `curl -sI https://www.clinicalpsm.com/en/` | 200, headers present, `cf-ray` present |
+| S6 | Add D4 (`@` A `192.0.2.0` proxied) | record shows orange cloud |
+| S7 | Rules → Redirect Rules → Create rule → **Wildcard pattern**. Request URL `http*://clinicalpsm.com/*`; Target URL `https://www.clinicalpsm.com/${2}`; **Status code 302 (temporary, first)**; **Preserve query string: enabled**. Deploy | see tests T1–T6 below |
+| S8 | When T1–T6 pass, edit the rule: status **301** | rerun T1–T6 expecting 301 |
+| S9 | Ensure SSL/TLS → Edge Certificates → **Always Use HTTPS** is on | T3 passes |
+| S10 | Wait ≥ 7 days. Only then consider HSTS: rebuild with `HSTS_MAX_AGE=300`, redeploy, observe, raise gradually. **Never `includeSubDomains` or `preload`** until every subdomain is under control | header check |
+| S11 | Indexing: only on explicit owner decision, rebuild with `INDEXABLE=1`. The build then removes the noindex meta, the `X-Robots-Tag` header, adds canonical and sitemap on all pages including root | `node test/production-build.mjs`; live `node test/live.mjs <url> --indexable` |
 
-- Dashboard shows **Workers Free** and no paid add-on prompts accepted.
-- No Workers Paid, no Advanced Certificate Manager, no Argo, no Load Balancing, no Rate Limiting add-on.
-- Custom Domain accepted on Free (step 3) or Route fallback used (step 3b). Record which.
-- Observability stays off.
-- Domain renewal cost is excluded from the zero-cost claim.
+**Why wildcard `http*://…/*`:** the docs' example (`https://example.com/*`) redirects HTTPS only and leaves `http://example.com/…` unchanged. Using `http*` covers both schemes in one rule (Free allows 10 Single Redirects per zone; this uses 1). `${2}` is the path captured by the second `*`, so the original path is kept. Query strings are kept only because **Preserve query string** is enabled; do not use a target built from the path alone.
+
+**Why 302 first:** a 301 is cached by browsers and search engines. Verify behaviour with a temporary redirect, then promote it.
+
+## 4. Tests after S7/S8 (read-only; `verify-cutover.sh --post` automates them)
+
+| ID | Request | Expect |
+|---|---|---|
+| T1 | `https://clinicalpsm.com/en/pricing/?a=1&b=two` | 302/301, `Location: https://www.clinicalpsm.com/en/pricing/?a=1&b=two` (path and query unchanged) |
+| T2 | `http://clinicalpsm.com/en/?x=1` | redirect to `https://www.clinicalpsm.com/en/?x=1` (one hop or a short chain, always ending on https www) |
+| T3 | `http://www.clinicalpsm.com/en/` | redirect to `https://www.clinicalpsm.com/en/` |
+| T4 | `https://clinicalpsm.com//evil.example/` and `https://clinicalpsm.com/?next=https://evil.example` | `Location` host is still `www.clinicalpsm.com`; never `evil.example` |
+| T5 | follow redirects from every URL above, max 5 hops | terminates on a 200; no loop |
+| T6 | `https://www.clinicalpsm.com/en/`, `/tr/`, `/en/demo/`, `/tr/privacy/`, unknown path | 200 / 200 / 200 / 200 / 404; CSP, nosniff, DENY, no-referrer, no `Set-Cookie`, no `unsafe-` |
+
+## 5. Custom Domains on Free: what is and is not known
+
+- Documented: Custom Domains need an active zone and a Worker; Cloudflare creates the DNS record and certificate. A hostname with an existing record cannot be used (hence D1/D2).
+- Documented: creating one also generates an "Advanced Certificate" for the hostname; the page states no separate Advanced Certificate Manager subscription is required. The docs do not say the plan tier this works on.
+- **Observed on this account (read-only API):** a Custom Domain `erentahiroglu.com → erentahiroglu` exists on a Free zone, with an issued certificate. So Custom Domains on a Free zone work for this account. This is evidence for the account, not for `clinicalpsm.com`; confirm at S4.
+- Account plan tier itself is not readable with the token (subscriptions: Authentication error). The owner confirms "Workers Free" in the dashboard.
+- **Route fallback** (use only if S4 is refused): add a proxied A `www` → `192.0.2.0`, then attach a Route `www.clinicalpsm.com/*` to `clinicalpsm-web` (`workers_routes` is permitted by the token but is never used here). The assets-only Worker serves it identically. Do not enable any paid add-on to make either path work.
+
+## 6. Rollback
+
+Vercel no longer exists. Rollback = remove the Custom Domain and the redirect rule (or switch the rule off), leaving the hostnames unresolved or serving a maintenance build. The `workers.dev` URL stays up throughout. Nothing in this runbook depends on removed data.
+
+## 7. Zero-cost checks at cutover
+
+Dashboard shows **Workers Free**; no Workers Paid, ACM, Argo, Load Balancing, Rate Limiting or Spectrum add-on is enabled or offered-and-accepted; observability off; domain renewal excluded by definition. If any step requires a payment, stop.

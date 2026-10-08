@@ -110,7 +110,7 @@ for (const lang of ['en', 'tr']) {
 
 // root: language chooser (works without JavaScript)
 w('index.html', `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>ClinicalPSM</title><meta name="robots" content="noindex">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>ClinicalPSM</title>${INDEXABLE ? `<link rel="canonical" href="https://${HOST}/">` : '<meta name="robots" content="noindex">'}
 <link rel="stylesheet" href="/assets/style.css"></head>
 <body><main id="main" style="max-width:40rem;margin:3rem auto;padding:0 1rem"><h1>ClinicalPSM</h1>
 <p>Research preview · Araştırma önizlemesi</p>
@@ -121,15 +121,15 @@ w('404.html', `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta 
 `)
 if (INDEXABLE) {
   w('robots.txt', `User-agent: *\nAllow: /\nSitemap: https://${HOST}/sitemap.xml\n`)
-  const urls = ['en', 'tr'].flatMap(l => pages.map(p => `https://${HOST}${path(l, p)}`))
+  const urls = [`https://${HOST}/`, ...['en', 'tr'].flatMap(l => pages.map(p => `https://${HOST}${path(l, p)}`))]
   w('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(u => `<url><loc>${u}</loc></url>`).join('\n')}\n</urlset>\n`)
-} else w('robots.txt', 'User-agent: *\nDisallow: /\n')
+} else w('robots.txt', 'User-agent: *\nAllow: /\n') // crawl allowed on purpose: a Disallow would hide the noindex directive from crawlers
 if (PROD) {
   const exp = new Date(Date.now() + 300 * 864e5).toISOString().replace(/\.\d+Z$/, 'Z')
   w('.well-known/security.txt', `Contact: mailto:${CONTACT}\nExpires: ${exp}\nPreferred-Languages: en, tr\nCanonical: https://${HOST}/.well-known/security.txt\n`)
 }
 w('_headers', `/*
-  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'
+${INDEXABLE ? '' : '  X-Robots-Tag: noindex, nofollow\n'}  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer

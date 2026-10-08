@@ -25,13 +25,16 @@ for (const [name, env] of [
 
 let r = run(good)
 rec('production build succeeds with complete identity', r.status === 0, r.stderr.slice(0, 200))
-rec('default production build is noindex, has no sitemap, no HSTS', /noindex/.test(readFileSync('public/en/index.html', 'utf8')) && !existsSync('public/sitemap.xml') && !/Strict-Transport/.test(readFileSync('public/_headers', 'utf8')) && /Disallow: \//.test(readFileSync('public/robots.txt', 'utf8')))
+rec('default production build is noindex, has no sitemap, no HSTS', /noindex/.test(readFileSync('public/en/index.html', 'utf8')) && !existsSync('public/sitemap.xml') && !/Strict-Transport/.test(readFileSync('public/_headers', 'utf8')) && !/Disallow: \//.test(readFileSync('public/robots.txt', 'utf8')))
+rec('every noindex build sends X-Robots-Tag and noindex meta on root, EN, TR (no canonical, no sitemap, robots does not hide the directive)', ['index', 'en/index', 'tr/index', 'en/demo/index'].every(p => /name="robots" content="noindex"/.test(readFileSync(`public/${p}.html`, 'utf8')) && !/rel="canonical"/.test(readFileSync(`public/${p}.html`, 'utf8'))) && /X-Robots-Tag: noindex, nofollow/.test(readFileSync('public/_headers', 'utf8')))
 rec('security.txt written with contact and expiry', /Contact: mailto:security@example.org/.test(readFileSync('public/.well-known/security.txt', 'utf8')) && /Expires: /.test(readFileSync('public/.well-known/security.txt', 'utf8')))
 rec('operator identity rendered in footer and privacy page', ['en', 'tr'].every(l => ['index', 'privacy/index'].every(p => { const h = readFileSync(`public/${l}/${p.replace('index', '') ? p : 'index'}.html`, 'utf8'); return /Example Operator/.test(h) && /security@example\.org/.test(h) })))
 
 r = run({ ...good, INDEXABLE: '1', HSTS_MAX_AGE: '300' })
 const idx = readFileSync('public/en/index.html', 'utf8')
-rec('indexable build: canonical, sitemap (10 urls), allow robots', r.status === 0 && /rel="canonical" href="https:\/\/www\.example\.org\/en\/"/.test(idx) && !/noindex/.test(idx) && (readFileSync('public/sitemap.xml', 'utf8').match(/<loc>/g) ?? []).length === 10 && /Allow: \//.test(readFileSync('public/robots.txt', 'utf8')))
+const root = readFileSync('public/index.html', 'utf8'), hdrs = readFileSync('public/_headers', 'utf8')
+rec('indexable build: no contradictory signals (no X-Robots-Tag, no noindex on root/EN/TR/demo, canonical on every page, 404 stays noindex)', r.status === 0 && !/X-Robots-Tag/.test(hdrs) && ['index', 'en/index', 'tr/index', 'en/privacy/index'].every(p => { const h = readFileSync(`public/${p}.html`, 'utf8'); return !/noindex/.test(h) && /rel="canonical" href="https:\/\/www\.example\.org\//.test(h) }) && /rel="canonical" href="https:\/\/www\.example\.org\/"/.test(root) && /noindex/.test(readFileSync('public/404.html', 'utf8')))
+rec('indexable build: canonical, sitemap (11 urls incl. root), allow robots + Sitemap line', r.status === 0 && /Sitemap: https:\/\/www\.example\.org\/sitemap\.xml/.test(readFileSync('public/robots.txt', 'utf8')) && /rel="canonical" href="https:\/\/www\.example\.org\/en\/"/.test(idx) && !/noindex/.test(idx) && (readFileSync('public/sitemap.xml', 'utf8').match(/<loc>/g) ?? []).length === 11 && /Allow: \//.test(readFileSync('public/robots.txt', 'utf8')))
 rec('HSTS only when HSTS_MAX_AGE set (short value, no includeSubDomains/preload)', /Strict-Transport-Security: max-age=300\n/.test(readFileSync('public/_headers', 'utf8')) && !/preload|includeSubDomains/i.test(readFileSync('public/_headers', 'utf8')))
 rec('preview build never sets INDEXABLE even when env asks', (run({ ...good, INDEXABLE: '1' }, []), !existsSync('public/sitemap.xml') && /noindex/.test(readFileSync('public/en/index.html', 'utf8'))))
 run({}, [])

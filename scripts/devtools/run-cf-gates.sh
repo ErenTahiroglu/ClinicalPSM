@@ -41,6 +41,6 @@ case "${1:?mode}" in
     pids+=($!); wait_http http://localhost:8793/en/
     (cd "$WEB" && node test/site.mjs http://localhost:8793) ;;
   web-prod)
-    install "$WEB"; (cd "$WEB" && node test/production-build.mjs && node build.mjs) ;;
+    install "$WEB"; (cd "$WEB" && node --check test/live.mjs && node test/production-build.mjs && node build.mjs) ;;
   *) echo "unknown mode" >&2; exit 64 ;;
 esac
