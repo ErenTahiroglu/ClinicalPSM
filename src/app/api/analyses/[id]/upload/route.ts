@@ -101,7 +101,6 @@ async function handleUpload(
       user.id,
       upload.id,
       { 
-        fileName: file.name,
         fileSize: file.size,
         rowCount,
         analysisId 

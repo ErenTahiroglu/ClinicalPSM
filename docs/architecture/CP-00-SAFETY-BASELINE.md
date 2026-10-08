@@ -28,7 +28,8 @@ Trade-off: re-enabling needs a deploy. That is intentional for a safety hold.
    - `src/app/api/analyses/route.ts` (outermost; before CSRF, session, quota RPC)
 
    The wrapper returns a static `503` (`CLINICAL_DATA_WRITES_SUSPENDED`) **before** reading the body, session, DB, Storage, rate limiter, or audit log. The body is a constant string: it never echoes filenames, columns, cells, or IDs.
-2. **Database layer (migration `010_cp00_safety_hold.sql`, NOT yet applied).** The browser holds the Supabase anon key and a user JWT, and RLS (`FOR ALL` on `analyses`/`uploads`) lets users write rows directly via PostgREST, bypassing Next.js. Migration 010 adds `BEFORE INSERT/UPDATE` triggers that reject a non-null `result_summary` on `analyses`, any new/changed `uploads` path/columns, any write to `analysis_cache`, and `RESTRICTIVE` policies on `storage.objects` for the `csv-uploads` bucket. It is additive: no existing row/object is read, changed, or removed; SELECT and DELETE (user data deletion) remain possible. Rollback SQL is in the migration header.
+2. **Database layer (migrations `010_cp00_safety_hold.sql` and `011_cp00_r1_authorization_lockdown.sql`, NOT yet applied).** 010 is retained unchanged; 011 is additive, fails hard instead of warning, and removes client write grants entirely (see R1 report). The 010 description follows.
+    The browser holds the Supabase anon key and a user JWT, and RLS (`FOR ALL` on `analyses`/`uploads`) lets users write rows directly via PostgREST, bypassing Next.js. Migration 010 adds `BEFORE INSERT/UPDATE` triggers that reject a non-null `result_summary` on `analyses`, any new/changed `uploads` path/columns, any write to `analysis_cache`, and `RESTRICTIVE` policies on `storage.objects` for the `csv-uploads` bucket. It is additive: no existing row/object is read, changed, or removed; SELECT and DELETE (user data deletion) remain possible. Rollback SQL is in the migration header.
 3. **UI layer.** `/[locale]/new` renders a hold notice (EN/TR) before any quota query; the wizard is unreachable. `/[locale]/pricing` shows a notice and disabled "Temporarily unavailable" buttons for paid plans; no Polar URL is rendered (`getCheckoutUrl()` returns `null`).
 
 ### Preserved
@@ -63,3 +64,7 @@ New analyses, new uploads, new result saves, new paid checkouts (including upgra
 - Migration 010 must be applied for the DB layer to exist. Until then a direct PostgREST/Storage write with a user JWT is still possible. **This is the main residual risk of this PR.**
 - Polar hosted checkout links (`buy.polar.sh/...`) were publicly distributed and are still valid. Disabling them requires a Polar dashboard action by an account owner. Until then, a purchase via an old link would still be applied by the (unchanged) webhook.
 - Vercel: previously deployed builds and preview deployments of older commits keep the old behavior until superseded or disabled.
+
+## 5. R1 addendum
+
+Row-level protection is now enforced by **privileges first, RLS second** (migration 011): clients (`anon`, `authenticated`) hold no write privilege on any public table and no EXECUTE on any public function; only `service_role` writes. `audit_logs` is written through a stateless service-role client (`src/lib/audit.ts`). The 010 triggers remain as defense in depth and also block `service_role` writes of row-level results.

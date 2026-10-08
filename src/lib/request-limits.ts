@@ -71,7 +71,6 @@ export function withRequestSizeLimit<T extends Record<string, unknown>>(
           await auditLog.suspiciousActivity(
             'File size limit exceeded',
             { 
-              fileName: file.name,
               fileSize: file.size,
               maxFileSize,
               userAgent: req.headers.get('user-agent'),
@@ -96,7 +95,6 @@ export function withRequestSizeLimit<T extends Record<string, unknown>>(
               await auditLog.suspiciousActivity(
                 'CSV row limit exceeded',
                 { 
-                  fileName: file.name,
                   rowCount: rows,
                   maxRows,
                   userAgent: req.headers.get('user-agent'),

@@ -73,3 +73,14 @@ Supabase automated backups / PITR retention, whether Storage objects are include
 - Worker is created per run (`run-psm-in-worker.ts`), receives `rawData` by structured clone, is terminated on result/error/60 s timeout. No persistence inside the worker.
 - Cookies: Supabase session cookies and a `csrf-token` cookie (readable by JS, double-submit).
 - Object URLs/Blobs for downloads are created client-side (`downloadCsv`, PNG export); no server round trip.
+
+## 9. R1 update: confirmed authorization risks (see docs/audits/CP-00-R1-HARDENING-REPORT.md)
+
+Executed against a real Postgres engine with a Supabase role emulation (not a live Supabase):
+
+- `profiles`: `FOR ALL` own-row policy plus Supabase default grants let any user set `plan`, `analyses_limit`, `polar_*`, and delete/recreate their profile. **Confirmed.**
+- `create_analysis_with_limit_check`: `SECURITY DEFINER`, executable by `anon`, takes caller-chosen `user_id`, `limit`, `name`. **Confirmed** (anon created an analysis for another user with unlimited quota).
+- `audit_logs`: any Pro user reads all rows; `anon` can forge rows. **Confirmed.**
+- `analysis_cache`: `anon` can read all rows. **Confirmed.**
+- `analyses.name/config/status` and `uploads` direct client writes: not covered by 010. **Confirmed.**
+- Migration 011 closes all of these. Effective grants on the live project are still **deployment-dependent**.

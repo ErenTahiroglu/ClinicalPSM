@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 export async function logPlanChanged(
@@ -31,19 +31,39 @@ export interface AuditLogEntry {
   timestamp: string
 }
 
+/**
+ * Keys that may carry clinical content or identifiers. Stripped from every
+ * audit entry regardless of caller (defense in depth, CP-00 R1).
+ */
+const FORBIDDEN_AUDIT_KEYS = new Set([
+  'filename', 'file_name', 'filepath', 'file_path', 'columnnames', 'column_names',
+  'body', 'payload', 'rows', 'data', 'stack', 'error_stack', 'error_message', 'message',
+])
+
+export function sanitizeAuditMetadata(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sanitizeAuditMetadata)
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (FORBIDDEN_AUDIT_KEYS.has(k.toLowerCase())) continue
+      out[k] = sanitizeAuditMetadata(v)
+    }
+    return out
+  }
+  return value
+}
+
+/**
+ * Audit writes use the trusted service-role client. audit_logs has no client
+ * RLS policies or grants (migration 011), so a user-session client cannot write
+ * or read it. A fresh stateless client is created per write: no cached user
+ * session can leak between requests.
+ */
 export class AuditLogger {
   private static instance: AuditLogger
-  private supabase: SupabaseClient
-
-  private constructor(supabase: SupabaseClient) {
-    this.supabase = supabase
-  }
 
   static async getInstance(): Promise<AuditLogger> {
-    if (!AuditLogger.instance) {
-      const supabase = await createClient()
-      AuditLogger.instance = new AuditLogger(supabase)
-    }
+    if (!AuditLogger.instance) AuditLogger.instance = new AuditLogger()
     return AuditLogger.instance
   }
 
@@ -51,24 +71,20 @@ export class AuditLogger {
     try {
       const auditEntry: AuditLogEntry = {
         ...entry,
+        metadata: entry.metadata
+          ? (sanitizeAuditMetadata(entry.metadata) as Record<string, unknown>)
+          : undefined,
         timestamp: new Date().toISOString(),
       }
 
-      const { error } = await this.supabase
-        .from('audit_logs')
-        .insert(auditEntry)
+      const { error } = await createAdminClient().from('audit_logs').insert(auditEntry)
 
       if (error) {
-        // Only log to console, don't throw or cause server crash
-        if (error.code === 'PGRST204' || error.code === 'PGRST205') {
-          console.warn('[Audit] Skipping db log: table not found.')
-        } else {
-          console.error('[Audit] Database log error:', error)
-        }
-        console.log('[Audit Entry]', auditEntry)
+        // Never print metadata: only the action and an error code.
+        console.error('[Audit] Database log error:', error.code ?? 'unknown', auditEntry.action)
       }
-    } catch (error) {
-      console.error('[Audit] Unexpected error:', error)
+    } catch {
+      console.error('[Audit] Unexpected error while writing audit log')
     }
   }
 
@@ -121,9 +137,9 @@ export class AuditLogger {
       user_id: 'system',
       action: 'ERROR_OCCURRED',
       resource_type: 'system',
+      // Name only: messages and stacks can embed fragments of request payloads.
       metadata: {
-        error_message: error.message,
-        error_stack: error.stack,
+        error_name: error.name,
         ...context,
       },
       ip_address: this.getClientIP(request),

@@ -143,12 +143,14 @@ describe('Request Size Limits', () => {
       expect(auditLog.suspiciousActivity).toHaveBeenCalledWith(
         'File size limit exceeded',
         expect.objectContaining({
-          fileName: 'large.csv',
           fileSize: largeFile.size,
           maxFileSize: 10,
         }),
         request
       )
+      // CP-00 R1: filenames may identify patients/studies and must not be logged
+      const logged = vi.mocked(auditLog.suspiciousActivity).mock.calls[0][1]
+      expect(logged).not.toHaveProperty('fileName')
     })
 
     it('should check CSV row count for CSV files', async () => {
