@@ -2,7 +2,7 @@
 # Cloudflare gate drivers. Local servers only (wrangler dev --local); synthetic data; dummy secrets; no remote calls.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-SITE="$ROOT/experiments/cf01-static-site"; AUTH="$ROOT/experiments/cf01-auth-poc"
+WEB="$ROOT/apps/web"; SITE="$ROOT/experiments/cf01-static-site"; AUTH="$ROOT/experiments/cf01-auth-poc"
 pids=()
 cleanup(){ for p in "${pids[@]:-}"; do [ -n "$p" ] && kill "$p" 2>/dev/null || true; done; pkill -f "wrangler dev --local" 2>/dev/null || true; }
 trap cleanup EXIT
@@ -32,5 +32,15 @@ case "${1:?mode}" in
     (cd "$AUTH" && npx wrangler dev --local -c wrangler.test.jsonc --port 8790 >/tmp/cf-test.log 2>&1) &
     pids+=($!); wait_http http://localhost:8790/api/me
     (cd "$AUTH" && node test/contract.mjs http://localhost:8790) ;;
+  web-build)
+    install "$WEB"; (cd "$WEB" && node build.mjs)
+    n=$(find "$WEB/public" -type f | wc -l); echo "static files: $n"
+    [ "$n" -gt 10 ] && [ "$n" -lt 20000 ] ;;
+  web-site)
+    install "$WEB"; (cd "$WEB" && node build.mjs && npx wrangler dev --local --port 8793 >/tmp/cs-web.log 2>&1) &
+    pids+=($!); wait_http http://localhost:8793/en/
+    (cd "$WEB" && node test/site.mjs http://localhost:8793) ;;
+  web-prod)
+    install "$WEB"; (cd "$WEB" && node test/production-build.mjs && node build.mjs) ;;
   *) echo "unknown mode" >&2; exit 64 ;;
 esac

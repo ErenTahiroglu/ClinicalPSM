@@ -3,6 +3,7 @@
   "phases": [
     "BASE",
     "CF-01",
+    "CS-00",
     "CP-01",
     "CP-02",
     "CP-03",
@@ -98,6 +99,36 @@
       "id": "cf01.free-compat",
       "phase": "CF-01",
       "cmd": "node scripts/devtools/cf-free-compat.mjs"
+    },
+    {
+      "id": "cs00.web-build",
+      "phase": "CS-00",
+      "cmd": "bash scripts/devtools/run-cf-gates.sh web-build"
+    },
+    {
+      "id": "cs00.web-browser-tests",
+      "phase": "CS-00",
+      "cmd": "bash scripts/devtools/run-cf-gates.sh web-site",
+      "needs": "browser",
+      "note": "apps/web: EN/TR x 5 pages, axe, CSP/headers, Web Worker demo on synthetic data, no upload/forms/storage"
+    },
+    {
+      "id": "cs00.production-build",
+      "phase": "CS-00",
+      "cmd": "bash scripts/devtools/run-cf-gates.sh web-prod",
+      "note": "--production fails closed without operator identity; noindex/HSTS/sitemap/security.txt rules"
+    },
+    {
+      "id": "cs00.free-compat",
+      "phase": "CS-00",
+      "cmd": "node scripts/devtools/cf-free-compat.mjs --strict-web",
+      "note": "apps/web: assets-only, no bindings/vars/routes, observability off, asset limits"
+    },
+    {
+      "id": "cs00.dns-cutover-readonly-verifier",
+      "phase": "CS-00",
+      "cmd": "bash scripts/devtools/verify-cutover.sh --selftest",
+      "note": "verifier script syntax and parsing self-test, no network"
     },
     {
       "id": "cp01.no-clinical-upload-paths",

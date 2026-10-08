@@ -10,7 +10,7 @@ on:
   pull_request:
 
 env:
-  GATE_PHASE: CF-01
+  GATE_PHASE: CS-00
 
 jobs:
   base:
@@ -47,6 +47,10 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Cloudflare gates
         run: node scripts/devtools/gates.mjs --phase "$GATE_PHASE" --only cf01 --strict
+        env:
+          PW_EXECUTABLE: playwright
+      - name: Clean-slate static app gates (apps/web)
+        run: node scripts/devtools/gates.mjs --phase "$GATE_PHASE" --only cs00 --strict
         env:
           PW_EXECUTABLE: playwright
   future-gates:

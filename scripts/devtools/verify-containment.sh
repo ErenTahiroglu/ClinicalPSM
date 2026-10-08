@@ -11,10 +11,14 @@ echo "== 1. Vercel Deployment Protection must cover the PRODUCTION custom domain
 for h in $HOSTS; do
   loc="$(curl -s -o /dev/null -D - --max-time 20 "https://$h/en/pricing" | tr -d '\r' | awk 'tolower($1)=="location:"{print $2}' | head -1)"
   code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "https://$h/en/pricing")"
-  if [ "$code" = 302 ] && echo "$loc" | grep -q "vercel.com/sso-api"; then res PASS "$h -> $code SSO redirect (protected)"; else res FAIL "$h -> $code (public)"; fi
+  verr="$(curl -s -o /dev/null -D - --max-time 20 "https://$h/en/pricing" | tr -d '\r' | awk 'tolower($1)=="x-vercel-error:"{print $2}' | head -1)"
+  if [ "$code" = 404 ] && [ "$verr" = DEPLOYMENT_NOT_FOUND ]; then res PASS "$h -> 404 DEPLOYMENT_NOT_FOUND (project gone; DNS still points at Vercel: remove it, see cutover runbook)"
+  elif [ "$code" = 302 ] && echo "$loc" | grep -q "vercel.com/sso-api"; then res PASS "$h -> $code SSO redirect (protected)"; else res FAIL "$h -> $code (public)"; fi
 done
 
-if [ -z "$KEY" ]; then echo "== 2/3 skipped: set SUPABASE_PUBLISHABLE_KEY (public key) to check Supabase"; res UNKNOWN "Supabase checks need the public key"; else
+if ! getent hosts "$REF.supabase.co" >/dev/null 2>&1 && ! dig +short "$REF.supabase.co" 2>/dev/null | grep -q .; then
+echo "== 2/3 Supabase project host does not resolve"; res PASS "$REF.supabase.co does not resolve (project gone; NXDOMAIN alone is not proof of deletion: confirm in the dashboard)"
+elif [ -z "$KEY" ]; then echo "== 2/3 skipped: set SUPABASE_PUBLISHABLE_KEY (public key) to check Supabase"; res UNKNOWN "Supabase checks need the public key"; else
 echo "== 2. Supabase Auth: new sign-ups must be disabled"
 ds="$(curl -s --max-time 20 -H "apikey: $KEY" "https://$REF.supabase.co/auth/v1/settings" | python3 -c "import sys,json;print(json.load(sys.stdin).get('disable_signup'))" 2>/dev/null)"
 [ "$ds" = True ] && res PASS "disable_signup=true" || res FAIL "disable_signup=$ds (self-registration open)"

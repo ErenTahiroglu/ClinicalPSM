@@ -74,3 +74,9 @@ supabase/.temp/
 /.vscode/settings.json
 /.vscode/*.code-workspace
 /.vscode/sqltools*
+
+# CS-00: generated static site + deps
+/apps/*/public/
+/apps/*/node_modules/
+/apps/*/.wrangler/
+/apps/*/wrangler.*.local.jsonc

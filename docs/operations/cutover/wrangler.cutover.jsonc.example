@@ -1,0 +1,14 @@
+{
+  // TEMPLATE ONLY. Not read by any gate, build or deploy. Copy to apps/web/wrangler.cutover.local.jsonc (git-ignored) at cutover.
+  // Do NOT use until the owner has approved CLOUDFLARE-DOMAIN-CUTOVER.md step 3 in writing.
+  // Custom Domains cannot be created on a hostname that already has a DNS record: delete the old Vercel-pointing records first.
+  // The apex is NOT attached here: it redirects to www with a Single Redirect rule (dashboard), so only one hostname serves content.
+  "name": "clinicalpsm-web",
+  "compatibility_date": "2026-10-06",
+  "workers_dev": true,
+  "observability": { "enabled": false },
+  "routes": [
+    { "pattern": "www.clinicalpsm.com", "custom_domain": true }
+  ],
+  "assets": { "directory": "public", "not_found_handling": "404-page", "html_handling": "auto-trailing-slash" }
+}

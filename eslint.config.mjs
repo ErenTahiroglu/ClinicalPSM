@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     'next-env.d.ts',
     // Generated files:
     'coverage/**',
+    // Static Cloudflare app has its own build/tests (CS-00):
+    'apps/**',
     // CF-00 research branch: generated build output and disposable experiments (linted separately)
     'dist/**',
     '.wrangler/**',
