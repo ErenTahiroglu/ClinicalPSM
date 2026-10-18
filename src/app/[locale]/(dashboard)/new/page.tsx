@@ -5,6 +5,7 @@ import { PsmWizard } from '@/features/analysis/components/PsmWizard'
 import { ButtonLink } from '@/components/ui/button-link'
 import type { Profile } from '@/types/database'
 import { getCurrentUsage } from '@/lib/usage'
+import { CLINICAL_WRITES_ENABLED } from '@/lib/safety'
 
 export default async function NewAnalysisPage() {
   const locale = await getLocale()
@@ -15,6 +16,21 @@ export default async function NewAnalysisPage() {
   } = await supabase.auth.getUser()
 
   if (!user) redirect(`/${locale}/login`)
+
+  // CP-00: no new clinical analyses. Checked before any usage/quota query.
+  if (!CLINICAL_WRITES_ENABLED) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-20 text-center">
+        <h1 className="text-xl font-bold">{t('holdTitle')}</h1>
+        <p className="mt-2 text-muted-foreground">{t('holdBody')}</p>
+        <div className="mt-6 flex justify-center">
+          <ButtonLink href={`/${locale}/analyses`} variant="outline" size="sm">
+            {t('backToDashboard')}
+          </ButtonLink>
+        </div>
+      </div>
+    )
+  }
 
   const { data: profile } = await supabase
     .from('profiles')

@@ -10,6 +10,7 @@ import {
 } from '@/lib/errors'
 import { auditLog } from '@/lib/audit'
 import { getUsagePeriodStart } from '@/lib/usage'
+import { withClinicalWriteHold } from '@/lib/safety'
 import type { Analysis } from '@/types/database'
 
 async function handleCreateAnalysis(req: Request) {
@@ -73,5 +74,6 @@ async function handleCreateAnalysis(req: Request) {
   return NextResponse.json({ analysis }, { status: 201 })
 }
 
-export const POST = withCSRF(withErrorHandling(handleCreateAnalysis))
+// CP-00: no new analyses (the only purpose is a clinical upload that is suspended).
+export const POST = withClinicalWriteHold(withCSRF(withErrorHandling(handleCreateAnalysis)))
 

@@ -1,0 +1,257 @@
+{
+  "_comment": "Cumulative CI gate matrix. A gate applies once its phase is approved (--phase). Gates of later phases are reported NOT_APPLICABLE, never silently skipped. An approved-phase gate with cmd=null is a FAIL ('mandatory gate not implemented'). Never weaken a passing gate to obtain green.",
+  "phases": [
+    "BASE",
+    "CF-01",
+    "CS-00",
+    "CS-01",
+    "CS-02",
+    "CP-01",
+    "CP-02",
+    "CP-03",
+    "CP-04",
+    "CP-05",
+    "CP-06",
+    "CP-08"
+  ],
+  "gates": [
+    {
+      "id": "base.typecheck",
+      "phase": "BASE",
+      "cmd": "npx tsc --noEmit"
+    },
+    {
+      "id": "base.lint",
+      "phase": "BASE",
+      "cmd": "npm run lint"
+    },
+    {
+      "id": "base.unit-tests",
+      "phase": "BASE",
+      "cmd": "npm test"
+    },
+    {
+      "id": "base.build",
+      "phase": "BASE",
+      "cmd": "npm run build",
+      "env": {
+        "NEXT_PUBLIC_SUPABASE_URL": "https://dummy.supabase.co",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY": "dummy",
+        "SUPABASE_SERVICE_ROLE_KEY": "dummy"
+      }
+    },
+    {
+      "id": "base.gitleaks-history",
+      "phase": "BASE",
+      "cmd": "bash scripts/devtools/gitleaks.sh history",
+      "needs": "gitleaks"
+    },
+    {
+      "id": "base.gitleaks-current-tree",
+      "phase": "BASE",
+      "cmd": "bash scripts/devtools/gitleaks.sh current",
+      "needs": "gitleaks",
+      "note": "tracked tree, NO baseline: must contain zero live secrets"
+    },
+    {
+      "id": "base.gitleaks-selftest",
+      "phase": "BASE",
+      "cmd": "bash scripts/devtools/gitleaks.sh selftest",
+      "needs": "gitleaks"
+    },
+    {
+      "id": "base.git-diff-check",
+      "phase": "BASE",
+      "cmd": "git diff --check HEAD~1 HEAD"
+    },
+    {
+      "id": "base.dependency-inventory",
+      "phase": "BASE",
+      "cmd": "node scripts/devtools/dep-inventory.mjs"
+    },
+    {
+      "id": "base.ci-config",
+      "phase": "BASE",
+      "cmd": "node scripts/devtools/verify-ci.mjs"
+    },
+    {
+      "id": "cf01.static-build",
+      "phase": "CF-01",
+      "cmd": "bash scripts/devtools/run-cf-gates.sh static-build"
+    },
+    {
+      "id": "cf01.site-browser-tests",
+      "phase": "CF-01",
+      "cmd": "bash scripts/devtools/run-cf-gates.sh site",
+      "needs": "browser",
+      "note": "EN/TR routing, axe a11y, headers, browser Web Worker on synthetic data, no upload"
+    },
+    {
+      "id": "cf01.diagnostic-exposure",
+      "phase": "CF-01",
+      "cmd": "bash scripts/devtools/run-cf-gates.sh exposure",
+      "note": "artifact inspection + negative HTTP tests on the deployable entry"
+    },
+    {
+      "id": "cf01.auth-contract",
+      "phase": "CF-01",
+      "cmd": "bash scripts/devtools/run-cf-gates.sh contract"
+    },
+    {
+      "id": "cf01.free-compat",
+      "phase": "CF-01",
+      "cmd": "node scripts/devtools/cf-free-compat.mjs"
+    },
+    {
+      "id": "cs00.web-build",
+      "phase": "CS-00",
+      "cmd": "bash scripts/devtools/run-cf-gates.sh web-build"
+    },
+    {
+      "id": "cs00.web-browser-tests",
+      "phase": "CS-00",
+      "cmd": "bash scripts/devtools/run-cf-gates.sh web-site",
+      "needs": "browser",
+      "note": "apps/web: EN/TR x 5 pages, axe, CSP/headers, Web Worker demo on synthetic data, no upload/forms/storage"
+    },
+    {
+      "id": "cs00.production-build",
+      "phase": "CS-00",
+      "cmd": "bash scripts/devtools/run-cf-gates.sh web-prod",
+      "note": "--production fails closed without operator identity; noindex/HSTS/sitemap/security.txt rules"
+    },
+    {
+      "id": "cs00.free-compat",
+      "phase": "CS-00",
+      "cmd": "node scripts/devtools/cf-free-compat.mjs --strict-web",
+      "note": "apps/web: assets-only, no bindings/vars/routes, observability off, asset limits"
+    },
+    {
+      "id": "cs00.dns-cutover-readonly-verifier",
+      "phase": "CS-00",
+      "cmd": "bash scripts/devtools/verify-cutover.sh --selftest",
+      "note": "verifier script syntax and parsing self-test, no network"
+    },
+    {
+      "id": "cs02.redirect-chain-tests",
+      "phase": "CS-02",
+      "cmd": "node scripts/devtools/cutover-redirects.test.mjs",
+      "note": "24 synthetic redirect/HTTPS chains incl. negatives: http never upgraded, query/path dropped, wrong host, off-domain, loop, too long, non-200, TLS error, open-redirect probes"
+    },
+    {
+      "id": "cp01.no-clinical-upload-paths",
+      "phase": "CP-01",
+      "cmd": null
+    },
+    {
+      "id": "cp01.trust-boundary",
+      "phase": "CP-01",
+      "cmd": null
+    },
+    {
+      "id": "cp01.local-only-results",
+      "phase": "CP-01",
+      "cmd": null
+    },
+    {
+      "id": "cp01.negative-persistence",
+      "phase": "CP-01",
+      "cmd": null
+    },
+    {
+      "id": "cp02.r-reference-pinned",
+      "phase": "CP-02",
+      "cmd": null
+    },
+    {
+      "id": "cp03.matching-equivalence",
+      "phase": "CP-03",
+      "cmd": null
+    },
+    {
+      "id": "cp03.numerical-tolerances",
+      "phase": "CP-03",
+      "cmd": null
+    },
+    {
+      "id": "cp03.missing-values-and-errors",
+      "phase": "CP-03",
+      "cmd": null
+    },
+    {
+      "id": "cp04.balance-diagnostics",
+      "phase": "CP-04",
+      "cmd": null
+    },
+    {
+      "id": "cp04.weights-subclass",
+      "phase": "CP-04",
+      "cmd": null
+    },
+    {
+      "id": "cp04.reporting-consistency",
+      "phase": "CP-04",
+      "cmd": null
+    },
+    {
+      "id": "cp05.bundle-artifacts",
+      "phase": "CP-05",
+      "cmd": null
+    },
+    {
+      "id": "cp05.document-schema",
+      "phase": "CP-05",
+      "cmd": null
+    },
+    {
+      "id": "cp05.reproducibility",
+      "phase": "CP-05",
+      "cmd": null
+    },
+    {
+      "id": "cp06.signed-webhooks",
+      "phase": "CP-06",
+      "cmd": null
+    },
+    {
+      "id": "cp06.replay-ordering",
+      "phase": "CP-06",
+      "cmd": null
+    },
+    {
+      "id": "cp06.entitlement-isolation",
+      "phase": "CP-06",
+      "cmd": null
+    },
+    {
+      "id": "cp06.refund-reversal",
+      "phase": "CP-06",
+      "cmd": null
+    },
+    {
+      "id": "cp06.secure-checkout",
+      "phase": "CP-06",
+      "cmd": null
+    },
+    {
+      "id": "cp08.accessibility",
+      "phase": "CP-08",
+      "cmd": null
+    },
+    {
+      "id": "cp08.responsive",
+      "phase": "CP-08",
+      "cmd": null
+    },
+    {
+      "id": "cp08.user-journeys",
+      "phase": "CP-08",
+      "cmd": null
+    },
+    {
+      "id": "cp08.ui-regression",
+      "phase": "CP-08",
+      "cmd": null
+    }
+  ]
+}

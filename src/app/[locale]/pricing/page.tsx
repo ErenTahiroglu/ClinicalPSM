@@ -10,7 +10,8 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { ButtonLink } from '@/components/ui/button-link'
-import { buildPolarCheckoutUrl } from '@/lib/polar'
+import { getCheckoutUrl } from '@/lib/polar'
+import { NEW_PURCHASES_ENABLED } from '@/lib/safety'
 import type { Profile } from '@/types/database'
 
 export default async function PricingPage() {
@@ -40,6 +41,14 @@ export default async function PricingPage() {
         <div className="mb-12 text-center">
           <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="mt-3 text-muted-foreground">{t('subtitle')}</p>
+          {!NEW_PURCHASES_ENABLED && (
+            <p
+              role="status"
+              className="mx-auto mt-6 max-w-2xl rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+            >
+              {t('holdNotice')}
+            </p>
+          )}
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
@@ -127,12 +136,21 @@ export default async function PricingPage() {
                     >
                       {t('currentPlan')}
                     </button>
+                  ) : !NEW_PURCHASES_ENABLED ? (
+                    <button
+                      disabled
+                      className="w-full cursor-not-allowed rounded-md border px-4 py-2 text-sm text-muted-foreground"
+                    >
+                      {t('purchasesPaused')}
+                    </button>
                   ) : user ? (
                     <ButtonLink
-                      href={buildPolarCheckoutUrl(key as 'plus' | 'pro', {
-                        email: user.email,
-                        userId: user.id,
-                      })}
+                      href={
+                        getCheckoutUrl(key as 'plus' | 'pro', {
+                          email: user.email,
+                          userId: user.id,
+                        }) ?? `/${locale}/pricing`
+                      }
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full justify-center"

@@ -1,0 +1,11 @@
+{
+  // clinicalpsm-web: Cloudflare Workers Static Assets ONLY (no Worker script, no bindings, no vars, no secrets, no routes).
+  // Project-specific name: does not collide with `erentahiroglu`, `gelir-gider-api` or any `cf01-throwaway-*` resource.
+  // Attaching clinicalpsm.com / www.clinicalpsm.com is a SEPARATE, owner-approved cutover step (see
+  // docs/operations/CLOUDFLARE-DOMAIN-CUTOVER.md); this file never contains routes or custom domains.
+  "name": "clinicalpsm-web",
+  "compatibility_date": "2026-10-06",
+  "workers_dev": true,
+  "observability": { "enabled": false },
+  "assets": { "directory": "public", "not_found_handling": "404-page", "html_handling": "auto-trailing-slash" }
+}

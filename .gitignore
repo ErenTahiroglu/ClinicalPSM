@@ -52,8 +52,31 @@ next-env.d.ts
 # Supabase
 supabase/.branches/
 supabase/.temp/
+/dist/
+.vinext/
+.cloudflare/
+/.wrangler/
+.dev.vars
+/experiments/**/node_modules/
+/experiments/**/.wrangler/
+/experiments/**/dist-prod/
+/experiments/cf01-static-site/public/
+
+# Dev toolchain (DEVTOOLS-00): generated graphs, indexes and scanner reports stay local
+/graphify-out/
+/.cbm/
+/.gitleaks-report*
+/.tools/
+/experiments/**/wrangler.deploy.local.jsonc
+.gates-report.json
 
 # SEC-00: editor connection settings (SQL clients store credentials here); never track
 /.vscode/settings.json
 /.vscode/*.code-workspace
 /.vscode/sqltools*
+
+# CS-00: generated static site + deps
+/apps/*/public/
+/apps/*/node_modules/
+/apps/*/.wrangler/
+/apps/*/wrangler.*.local.jsonc

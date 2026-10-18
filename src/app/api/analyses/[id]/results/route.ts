@@ -1,8 +1,9 @@
 import type { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import type { PsmConfig, PsmResult } from '@/lib/psm/types'
+import { withClinicalWriteHold } from '@/lib/safety'
 
-export async function POST(
+async function handleSaveResults(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -62,3 +63,6 @@ export async function POST(
     return Response.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+// CP-00: row-level results (propensity scores, matched pairs) must not be persisted.
+export const POST = withClinicalWriteHold(handleSaveResults)

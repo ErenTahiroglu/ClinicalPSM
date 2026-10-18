@@ -1,0 +1,8 @@
+# Gitleaks configuration. Extends the maintained default ruleset. No directory-wide suppressions.
+title = "ClinicalPSM gitleaks config"
+
+[extend]
+useDefault = true
+
+# Narrow, documented false-positive exceptions go here, each with a path AND a regex, and a reason.
+# (none required at DEVTOOLS-00: the only finding is a REAL credential, tracked in .gitleaks-baseline.json)

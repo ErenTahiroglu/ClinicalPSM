@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit, rateLimitKey } from '@/lib/rate-limit'
 import { withFileUploadLimit } from '@/lib/request-limits'
 import { auditLog } from '@/lib/audit'
+import { withClinicalWriteHold } from '@/lib/safety'
 
 async function handleUpload(
   request: NextRequest,
@@ -100,7 +101,6 @@ async function handleUpload(
       user.id,
       upload.id,
       { 
-        fileName: file.name,
         fileSize: file.size,
         rowCount,
         analysisId 
@@ -119,7 +119,10 @@ async function handleUpload(
   }
 }
 
-export const POST = withFileUploadLimit(handleUpload, {
-  maxFileSize: 5 * 1024 * 1024, // 5MB
-  maxRows: 500, // Free tier limit
-})
+// CP-00: hold check is outermost so it runs before the multipart body is read.
+export const POST = withClinicalWriteHold(
+  withFileUploadLimit(handleUpload, {
+    maxFileSize: 5 * 1024 * 1024, // 5MB
+    maxRows: 500, // Free tier limit
+  })
+)
