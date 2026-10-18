@@ -34,11 +34,7 @@
       "id": "base.build",
       "phase": "BASE",
       "cmd": "npm run build",
-      "env": {
-        "NEXT_PUBLIC_SUPABASE_URL": "https://dummy.supabase.co",
-        "NEXT_PUBLIC_SUPABASE_ANON_KEY": "dummy",
-        "SUPABASE_SERVICE_ROLE_KEY": "dummy"
-      }
+      "note": "canonical active application build (apps/web static assets, zero backend/database dependencies)"
     },
     {
       "id": "base.gitleaks-history",

@@ -84,7 +84,7 @@ WebR must be tested against the exact same four golden benchmark datasets used t
 
 **Required Numerical Concordance:**
 - Propensity score agreement: $|\text{PS}_{\text{WebR}} - \text{PS}_{\text{Docker R}}| < 1.0 \times 10^{-7}$.
-- Matched pair indices: **100% exact match** (identical donor assignments across all pairs).
+- Matched pair indices: **100% exact match** on unique closest candidates; where identical-distance ties exist, tie-breaker resolution must match R MatchIt's deterministic C++ index order.
 - Standardized Mean Differences: $|\text{SMD}_{\text{WebR}} - \text{SMD}_{\text{Docker R}}| < 1.0 \times 10^{-4}$.
 
 ### 2.5 Cloudflare Free Compatibility

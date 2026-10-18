@@ -38,13 +38,13 @@ Academic Biostatistician / Methodologist (Audits R Parity & Reproducibility)
 
 ### 2.1 Primary User: Clinician-Investigator with Methodological Oversight
 - **Profile:** Junior attending physicians, surgical subspecialists, clinical fellows, and dedicated research assistants conducting retrospective cohort studies on hospital EHR or registry datasets ($n = 200$ to $n = 25,000$).
-- **Context:** Has an approved IRB protocol and research question; has defined exposure and baseline confounders with a departmental statistician or senior PI; experiences extreme friction converting raw data into publication-ready tables and defending against statistical peer review.
-- **Core Need:** A fast, verified, local tool that eliminates 15–20 hours of manual Word table formatting and produces an auditable method package that institutional statisticians can instantly review and approve.
+- **Context:** Has an approved IRB protocol and research question; has defined exposure and baseline confounders with a departmental statistician or senior PI; experiences friction converting raw data into publication-ready tables and defending against statistical peer review.
+- **Core Need:** A fast, verified, local tool that reduces manual Table 1 assembly overhead and produces an auditable method package that institutional statisticians can review and approve.
 
 ### 2.2 Secondary User: Institutional Biostatistician (The Gatekeeper)
-- **Profile:** PhD/MS biostatistician supporting 15–30 academic projects simultaneously across a medical center.
-- **Context:** Overwhelmed by low-level data formatting requests; resistant to black-box web tools; requires transparent formulas, exact package versions, and runnable R code.
-- **Core Need:** An auditable Method Manifest and executable R script mirroring R `MatchIt` and `cobalt` that allows them to verify the clinician's matching configuration in 30 seconds.
+- **Profile:** PhD/MS biostatistician supporting multiple academic observational projects simultaneously across a medical center.
+- **Context:** Overwhelmed by repetitive data formatting requests; resistant to black-box web tools; requires transparent formulas, exact package versions, and runnable R code.
+- **Core Need:** An auditable Method Manifest and executable R script mirroring R `MatchIt` and `cobalt` that allows them to inspect and verify the clinician's matching configuration.
 
 ### 2.3 Explicitly Excluded Initial Segment: Unassisted Novice Residents
 - **Policy:** Medical residents working entirely alone without statistical oversight or epidemiological mentorship are excluded from the initial target segment. Observational causal inference is fraught with confounding traps (colliders, unmeasured confounding, immortal time bias); providing a push-button GUI to unassisted novices creates severe risk of publishing invalid medical claims.
@@ -121,7 +121,7 @@ The user interface follows a **6-Step Progressive Disclosure Wizard** structured
   - Matching Ratio: 1:1 fixed ratio.
   - Replacement: Without replacement (`replace = FALSE`).
   - Matching Order: Descending propensity score (`m.order = "largest"`).
-  - Caliper: Austin logit standard ($0.20 \times \sigma_{\text{logit}(e), \text{treated}}$).
+  - Caliper: Default `NULL` (unconstrained) or optional Austin standard profile ($0.20 \times s_{\text{distance, undiscarded}}$).
 - Advanced drawer allows parameter tuning (caliper width, random seed for tie-breaking) with explicit notes on methodological implications.
 
 ### Step 5: Covariate Balance Inspection
@@ -140,12 +140,12 @@ The user interface follows a **6-Step Progressive Disclosure Wizard** structured
 
 | Functional Capability | MVP (Free Scientific Preview) | Commercial Release (Publication Bundle) | Post-1.0 Future Releases |
 | :--- | :--- | :--- | :--- |
-| **Statistical Engine** | 1:1 Nearest Neighbor; logit GLM; Austin caliper; complete-case filtering. | Same verified engine + Firth's penalized likelihood for quasi-separation. | Optimal full matching; machine learning PS via WebR WASM. |
+| **Statistical Engine** | 1:1 Nearest Neighbor; logit GLM; optional Austin caliper; complete-case filtering. | Same verified engine + Firth's penalized likelihood for quasi-separation. | Optimal full matching; machine learning PS via WebR WASM. |
 | **Balance Diagnostics** | Interactive Love plot; pre/post balance table; Rubin B/R summary. | MVP diagnostics + high-resolution SVG/PDF export + variance ratios. | eCDF distribution curves; Kolmogorov-Smirnov statistics. |
 | **Data Export** | Download matched CSV with pair IDs and propensity scores. | Matched CSV + complete raw audit log + excluded case ledger. | Electronic data capture (REDCap) integration. |
 | **Manuscript Deliverables** | On-screen HTML balance table and basic plain text summary. | **Core Value:** Fully styled, editable `.docx` Table 1 + vector SVG/PDF figures + STROBE Methods prose. | LaTeX / Quarto manuscript notebook templates. |
 | **Reproducibility** | Basic parameter list. | **Core Value:** Executable `.R` replication script reproducing run in RStudio + SHA-256 Manifest. | Interactive WebR live re-run in browser. |
-| **Monetization** | 100% Free; no accounts; no payment barriers. | **$49–$99 USD One-Off Per Manuscript** (Polar.sh) or annual lab license. | Multi-seat enterprise hospital site licenses. |
+| **Monetization** | 100% Free; no accounts; no payment barriers. | **Unestablished Hypothesis:** Potential one-off fee or lab license (payments inactive; pricing unvalidated). | Multi-seat enterprise hospital site licenses. |
 
 ---
 

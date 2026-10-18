@@ -28,16 +28,16 @@ The propensity score $e(X_i) = P(Z_i = 1 | X_i)$ is estimated using a binomial G
 $$\text{logit}(e_i) = \ln\left(\frac{e_i}{1 - e_i}\right) = \eta_i = \beta_0 + \sum_{j=1}^p \beta_j X_{ij} = X_i \beta$$
 where $Z_i \in \{0, 1\}$ is the treatment indicator, and $X_i$ is the vector of baseline confounders.
 
-#### Convergence & Optimization Standards
-The coefficient vector $\beta$ must be estimated via Iteratively Reweighted Least Squares (IRLS) matching `stats::glm` behavior:
-- **Convergence Criterion:** Relative deviance reduction between successive iterations must fall below $10^{-8}$:
+#### Proposed Optimization Standards (Subject to CP-WEBR-00 Benchmark)
+The coefficient vector $\beta$ is targeted for estimation via Iteratively Reweighted Least Squares (IRLS) matching `stats::glm` behavior:
+- **Target Convergence Criterion (Proposed):** Relative deviance reduction between successive iterations targeted below $10^{-8}$:
   $$\frac{|D^{(t)} - D^{(t-1)}|}{0.1 + |D^{(t)}|} < 1.0 \times 10^{-8}$$
-- **Maximum Iterations:** 25 iterations by default.
-- **Step-Halving Line Search:** If an iteration results in deviance increase or extreme parameter explosion ($|\beta_j| > 15$), step-halving must be applied to arrest divergence.
-- **Separation Detection:** If complete or quasi-complete separation is detected (e.g., standard error of any coefficient $> 50$ or $|\beta_j| > 10$), the solver must emit a high-priority `QUASI_COMPLETE_SEPARATION` warning and halt or switch to a penalized solver (Firth's logistic regression).
+- **Maximum Iterations (Proposed):** 25 iterations by default.
+- **Step-Halving Line Search (Proposed):** If an iteration results in deviance increase or extreme parameter explosion ($|\beta_j| > 15$), step-halving is applied to arrest divergence.
+- **Separation Detection (Proposed Heuristic):** If complete or quasi-complete separation is detected (e.g., standard error of any coefficient $> 50$ or $|\beta_j| > 10$), the solver emits a `QUASI_COMPLETE_SEPARATION` warning. The engine must not claim automated Firth penalized regression equivalence without version-specific implementation.
 
-#### Design Matrix Construction
-- **Categorical Contrast Coding:** Categorical variables must be converted to full-rank dummy matrices following R's default `contr.treatment` standard: factor levels are sorted alphabetically, and the first level is dropped as the reference baseline.
+#### Design Matrix Construction & Encoding Policy
+- **Categorical Contrast Coding (Proposed Policy):** Categorical variables are converted to full-rank dummy matrices following R's default `contr.treatment` standard: factor levels are sorted alphabetically, and the first level is dropped as the reference baseline. This policy is classified as **PROPOSED**: full numerical equivalence with R `model.matrix` requires verification against R's exact NA handling and factor level contrasts in CP-WEBR-00.
 - **Zero-Variance Filter:** Covariates with zero variance (identical values across all units) must be rejected prior to model fitting with an explicit explanatory error.
 
 ---
@@ -53,7 +53,7 @@ In MatchIt, specifying `distance = "glm", link = "logit"` defines how the propen
 
 **Contract Specification:**
 1. ClinicalPSM must explicitly expose the distance metric in the configuration schema.
-2. The default distance metric for 1:1 Nearest Neighbor matching in ClinicalPSM is locked to **`linear.logit`** (matching on the linear logit scale), as recommended by Rosenbaum & Rubin (1985) and Austin (2011) to avoid variance compression at extreme probabilities.
+2. The default distance metric for 1:1 Nearest Neighbor matching in ClinicalPSM defaults to **`linear.logit`** (matching on the linear logit scale), as recommended by Rosenbaum & Rubin (1985) and Austin (2011) to avoid variance compression at extreme probabilities.
 
 ---
 
@@ -64,33 +64,40 @@ In MatchIt, specifying `distance = "glm", link = "logit"` defines how the propen
 - **Matching Ratio:** Fixed 1:1 (`ratio = 1`).
 - **Replacement Policy:** Without replacement (`replace = FALSE`). Each control unit is assigned to at most one treated unit.
 - **Matching Order (`m.order`):** Descending distance (`m.order = "largest"`). Treated units with the highest linear logit propensity scores are matched first, prioritizing units with the most restricted donor pools.
-- **Tie-Breaking Rule:** When candidate control units have identical absolute distance to a treated unit, ties must be resolved deterministically by choosing the control unit with the lowest original dataset row index (matching MatchIt's C++ deterministic pointer behavior).
+- **Tie-Breaking Rule (Proposed Behavior):** When candidate control units have identical absolute distance to a treated unit, ties are proposed to be resolved deterministically by choosing the control unit with the lowest original dataset row index. This is classified as **PROPOSED ALGORITHMIC BEHAVIOR**: MatchIt's C++ nearest-neighbor matcher resolves ties based on internal pointer and sorting traversal order, which must be empirically verified for exact parity in CP-WEBR-00.
 
 ---
 
-### 2.4 Caliper Specifications & Austin Standard
+### 2.4 Caliper Specifications & Disambiguation
 
-#### Caliper Scale & Width Disambiguation
-- **Default Caliper:** In canonical MatchIt, the default caliper is **`NULL`** (no caliper enforced).
-- **Austin Standard Caliper Profile:** When the Austin caliper profile is selected by the user, it enforces:
-  $$\text{caliper width} = 0.20 \times s_{\text{logit}(e), \text{treated, unadjusted}}$$
+#### Caliper Defaults & Profiles
+- **Canonical Default Caliper:** In canonical MatchIt, the default caliper is **`caliper = NULL`** (no caliper enforced; all treated units within common support are matched). ClinicalPSM maintains `caliper = NULL` as its baseline default.
+- **Austin Standard Caliper Profile (Optional Preset):** When the optional Austin profile is explicitly selected by the user, it enforces:
+  $$\text{caliper width} = 0.20 \times s_{\text{distance}}$$
   evaluated strictly on the linear logit scale (`distance = "linear.logit"`).
 
-#### Standardization Denominator Base under ATT
-When targeting the Average Treatment Effect on the Treated (ATT) with `std.caliper = TRUE`:
-$$s_{\text{logit}(e), \text{treated}} = \sqrt{\frac{1}{n_{1,\text{unadjusted}} - 1} \sum_{i \in T} (\eta_i - \bar{\eta}_{1,\text{unadjusted}})^2}$$
-- **Prohibition:** Caliper scaling must never use the pooled sample standard deviation across treated and control groups. Scaling must be locked strictly to the unadjusted treated cohort sample variance.
+#### Critical Mathematical Disambiguation: Caliper Standardization vs. Cobalt Balance Denominator
+A critical distinction must be maintained between how MatchIt standardizes calipers and how cobalt standardizes balance metrics:
+1. **MatchIt Caliper Standardization (`process.caliper`, `std.caliper = TRUE`):**
+   In canonical MatchIt, when `std.caliper = TRUE`, the caliper width is converted to raw distance units using the sample standard deviation of the distance measure across **all undiscarded units in the dataset (both treated and control pooled)**:
+   $$s_{\text{distance, undiscarded}} = \sqrt{\frac{1}{n_{\text{undiscarded}} - 1} \sum_{i \in \text{all undiscarded}} (d_i - \bar{d}_{\text{undiscarded}})^2}$$
+   $$\text{caliper width}_{\text{raw}} = \text{caliper} \times s_{\text{distance, undiscarded}}$$
+   MatchIt's internal `process.caliper` does NOT scale the caliper by the treated group variance alone.
+2. **Cobalt ATT Balance Standardization (`cobalt::bal.tab(..., s.d.denom = "treated")`):**
+   In contrast, when reporting baseline covariate balance (Standardized Mean Differences) under the ATT estimand, `cobalt` standardizes continuous covariate differences strictly by the unadjusted sample standard deviation of the **treated cohort** ($s_{1,\text{unadjusted}}$).
+3. **Governing Rule:** The software must never equate MatchIt's pooled distance caliper standardization with cobalt's treated-only covariate balance standardization. These are distinct mathematical operations with different target populations.
 
-#### Caliper Attrition & Estimand Transition
-- Any treated unit that has no candidate control unit within distance $\le \text{caliper width}$ remains unmatched and is discarded.
-- If discarded treated units $> 0$, the target estimand shifts from **ATT** to **ATM (Average Treatment Effect on the Matched Sample)**.
-- If $> 10\%$ of treated units are discarded, the UI must trigger a mandatory `CRITICAL_CALIPER_ATTRITION` alert informing the researcher that the analyzed sample has systematically diverged from the original treated clinical cohort.
+#### Caliper Attrition & Sample Accounting (No Universal Threshold)
+- Any treated unit that has no candidate control unit within distance $\le \text{caliper width}$ remains unmatched and is excluded from the matched cohort.
+- **No Automated Estimand Conversion:** The software must **never assert that a universal numerical threshold (such as $> 0$ or $> 10\%$ dropped units) automatically converts the estimand from ATT to ATM**.
+- **Methodological Reality:** When treated units are dropped by a caliper or common support restrictions, the matched sample represents an incomplete subpopulation of the original treated cohort. Whether this constitutes an acceptable approximation of the ATT or a distinct matched subpopulation estimand (ATM) is an interpretive methodological judgment requiring epidemiological and clinical context.
+- **Reporting Requirement:** ClinicalPSM must report exact, objective sample accounting ($n_{\text{treated, total}}$, $n_{\text{treated, matched}}$, $n_{\text{treated, dropped}}$, percentage retained) accompanied by a neutral methodological advisory explaining the potential generalizability implications of treated-cohort attrition.
 
 ---
 
 ### 2.5 Covariate Balance Diagnostics
 
-Balance diagnostics evaluate the degree to which matching eliminates observed baseline confounding.
+Balance diagnostics evaluate the degree to which matching reduces observed baseline confounding.
 
 #### Continuous Covariates: Standardized Mean Difference (SMD)
 Under the ATT estimand, continuous balance must be standardized exclusively by the unadjusted treated baseline sample standard deviation ($s_{1,\text{unadjusted}}$), matching `cobalt::bal.tab(..., s.d.denom = "treated")`:
@@ -107,23 +114,21 @@ $$\Delta p = p_{1,\text{matched}} - p_{0,\text{matched}}$$
 #### Continuous Covariates: Variance Ratios (VR)
 Variance ratios must be reported for all continuous baseline confounders:
 $$\text{VR} = \frac{s^2_{1,\text{matched}}}{s^2_{0,\text{matched}}}$$
-- **Reference Standard:** Values close to $1.0$ indicate optimal balance. Values outside $[0.5, 2.0]$ indicate severe residual variance inequality (Rubin 2001).
+- **Proposed Reference Guidelines:** Values close to $1.0$ indicate similar spread. Values outside $[0.5, 2.0]$ indicate residual variance disparity (Rubin 2001). These boundaries are heuristic guidelines, not proof of invalidity.
 
 #### Diagnostic Threshold Governance
 - **No Universal Threshold:** The software must never state that an SMD $< 0.10$ "proves balance" or "proves study validity."
-- **Reference Guidelines:** The UI must display standard reference threshold lines at $|SMD| = 0.10$ and $|SMD| = 0.05$ accompanied by educational tooltips explaining that thresholds are diagnostic heuristics requiring clinical judgment.
+- **Reference Guidelines:** The UI may display standard reference threshold guide-lines at $|SMD| = 0.10$ and $|SMD| = 0.05$ accompanied by educational tooltips explaining that thresholds are diagnostic heuristics requiring clinical judgment.
 
 ---
 
-### 2.6 Post-Matching Outcome Inference Restrictions
+### 2.6 Strict Outcome-Blinded Matching Design
 
-#### Separation of Design from Inference
-In this initial release (v0.3 baseline), ClinicalPSM restricts its computational scope to **design and balance diagnostics**. Outcome modeling and treatment effect estimation are intentionally decoupled.
-
-#### Guidance for Post-Match Inference
-When users export matched datasets for downstream analysis in R, Stata, or SAS, exported documentation must mandate:
-1. **Clustering Structure Accounting:** Matched pair units are not independent. Analyses must employ paired difference tests (e.g., paired t-test, McNemar test) or cluster-robust standard errors (`vcov = ~subclass` or generalized estimating equations).
-2. **Prohibition of Crude Tests:** Unadjusted, independent two-sample Student's t-tests violate the intra-pair correlation induced by matching and artificially deflate standard errors, inflating Type I error rates (Austin 2014).
+#### Separation of Design from Outcome Analysis
+In strict accordance with causal inference principles (Rubin 2007, Stuart 2010), matching design must be conducted **entirely blinded to outcome variables**:
+1. **Outcome Exclusion from Matching:** Outcome variables must never be included in the propensity score specification, caliper tuning, or balance evaluation.
+2. **Outcome-Free Balance Review:** Balance diagnostics must be fully evaluated and locked before any outcome data are inspected or analyzed. Tuning matching algorithms or selecting calipers based on observed outcome effect sizes is scientifically invalid (p-hacking/specification searching).
+3. **Downstream Analysis Guidance:** ClinicalPSM produces matched cohorts and balance diagnostics only. Downstream outcome modeling must account for matched-pair clustering using paired tests or cluster-robust standard errors (`vcov = ~subclass`). Independent two-sample tests are methodologically invalid for matched pairs.
 
 ---
 

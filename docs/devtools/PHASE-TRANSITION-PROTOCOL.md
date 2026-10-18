@@ -37,3 +37,15 @@ PHASE=<phase being closed> BASE_REF=<previous-phase-sha> bash scripts/devtools/p
 - Generated graphs, databases, logs, reports and `.tools/` stay out of Git (`.gitignore` entries).
 - If a real credential is found: stop exposure, report category/location/severity only (never the value), recommend rotation, do not rewrite history or delete files automatically.
 - Never use `git clean` or `git reset --hard`.
+
+## Multi-Agent Development Coordination (Claude Code & Antigravity)
+1. **Permanent Branches:** Exactly two permanent remote branches: `main` (production release baseline) and `development` (active integration branch).
+2. **Role Boundaries:**
+   - **Claude Code:** Core statistical architecture, scientific reference testing, security scanners, cumulative CI gates, and reproducible export generation.
+   - **Antigravity:** Researcher-focused UX, frontend interface in `apps/web/`, accessibility (WCAG 2.2 AA), responsive design, and user-flow styling.
+   - **ChatGPT:** Independent Red Team authority, scientific/methodological decisions, phase acceptance, and deployment authorization.
+3. **Concurrency Isolation:**
+   - Claude and Antigravity must never modify the same files concurrently.
+   - For parallel investigations, agents must use isolated local worktrees (`git worktree add`).
+   - All commits integrate into `development` through clean sequential commits after full gate verification (`node scripts/devtools/gates.mjs --strict`).
+   - Neither agent may delete remote branches or push directly to `main`.
