@@ -24,7 +24,7 @@ CLEAN-SLATE-03 executes two critical milestones:
 | **Main Branch (`main`)** | `dfa475b7b95fec1ba95e4e892cfa7fc498dbe39f` | `53fb05e7c8d9b77b46c4a5d8b7c9cc041345f6a6` | Updated via PR #1 & PR #2 |
 | **PR #1 (Node 24 CI)** | `2c1b405fba7c7f70b7410eb6774a004eb7c2f026` | `25447760b781213cc01de2b58ef9937e7d319163` | Merged to `main` |
 | **PR #2 (Untrack .vscode)** | `fe7f5e71b2d9199e6e6fb180eb4c19360e7d3785` | `53fb05e7c8d9b77b46c4a5d8b7c9cc041345f6a6` | Merged to `main` |
-| **Phase Branch** | `phase/clean-slate-02-cutover-readiness` | `phase/clean-slate-03-security-dns` | Created from baseline `dacd7d6` |
+| **Phase Branch** | `phase/clean-slate-02-cutover-readiness` (`dacd7d6`) | `phase/clean-slate-03-security-dns` (`9ac0523`) | `9ac0523ce1b1ffcc833fa7a9bb5f7b494ba648e8` |
 
 ---
 
@@ -87,6 +87,15 @@ Both PRs were prepared in order, inspected, CI-verified, and merged into `main` 
 ---
 
 ## E. Secret-Scanning and CI Results
+
+## E. Secret-Scanning and CI Results
+
+### Phase Branch (`phase/clean-slate-03-security-dns`) Remote CI Results:
+- **Security (gitleaks):** Run [39114665073](https://github.com/ErenTahiroglu/ClinicalPSM/actions/runs/39114665073) -> **SUCCESS** (0 secrets found)
+- **Cumulative gates:** Run [39114665047](https://github.com/ErenTahiroglu/ClinicalPSM/actions/runs/39114665047) -> **SUCCESS**
+  - Base gates: PASS (1m 42s)
+  - Cloudflare gates: PASS (1m 29s)
+  - Future gates: PASS (7s)
 
 Verification performed on post-merge `main` (`53fb05e`):
 
