@@ -1,0 +1,11 @@
+n,k,treatment_ratio,is_stress,data_gen_ms,glm_match_ms,cobalt_ms,total_pipeline_ms,matched_pairs,peak_heap_mb,status
+250,5,0.35,false,1.8,18.1,31.2,52.2,90,8.3,SUCCESS
+1000,5,0.35,false,1.4,11.5,26.0,39.7,335,8.4,SUCCESS
+1000,10,0.35,false,1.5,12.5,29.8,44.6,335,8.4,SUCCESS
+1000,20,0.5,false,1.9,18.3,42.1,63.1,473,8.6,SUCCESS
+5000,5,0.35,false,3.3,26.5,39.7,70.4,1792,8.7,SUCCESS
+5000,10,0.35,false,4.0,29.2,50.2,84.2,1792,8.8,SUCCESS
+10000,5,0.35,false,5.5,43.7,58.0,107.9,3507,8.9,SUCCESS
+10000,10,0.35,false,7.1,52.0,73.5,133.4,3507,9.0,SUCCESS
+25000,5,0.35,false,13.6,102.6,163.8,281.2,8720,8.2,SUCCESS
+50000,5,0.35,true,27.0,202.9,237.7,468.5,17584,8.3,SUCCESS

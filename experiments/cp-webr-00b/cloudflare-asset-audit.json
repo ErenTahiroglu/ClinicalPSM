@@ -1,0 +1,1529 @@
+{
+  "audited_at": "2026-10-18T22:03:51.340Z",
+  "target_tier": "Cloudflare Workers Static Assets (Free Tier)",
+  "limits": {
+    "max_single_asset_bytes": 26214400,
+    "max_files_per_version": 20000
+  },
+  "metrics": {
+    "total_files_count": 188,
+    "total_raw_bytes": 72440527,
+    "total_raw_mb": "69.08",
+    "largest_asset_path": "assets/webr/R.wasm",
+    "largest_asset_bytes": 18062845,
+    "largest_asset_mb": "17.23",
+    "assets_exceeding_25mib": 0
+  },
+  "required_headers_for_shared_array_buffer": {
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "Cross-Origin-Embedder-Policy": "require-corp",
+    "application/wasm": "Strict MIME type for .wasm binaries"
+  },
+  "verdict": "PASS",
+  "inventory": [
+    {
+      "path": "assets/webr/R.js",
+      "source": "webr-runtime",
+      "bytes": 785875,
+      "sha256": "162adb529111d739b37ef1b9f889eb7afbe4fb3288f8a58166cd6d0b04fd7376",
+      "mime_type": "text/javascript; charset=utf-8",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/R.wasm",
+      "source": "webr-runtime",
+      "bytes": 18062845,
+      "sha256": "5df459fb222d332e358cf08e4019c0e114398579ed8c62242bfcceeda81222ba",
+      "mime_type": "application/wasm",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/esbuild.d.ts",
+      "source": "webr-runtime",
+      "bytes": 11,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/libRblas.so",
+      "source": "webr-runtime",
+      "bytes": 198205,
+      "sha256": "d831496cc1d1e2748519439a0ea509ba966b56db10d13132db52331a270aac74",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/libRlapack.so",
+      "source": "webr-runtime",
+      "bytes": 1769888,
+      "sha256": "df8ca333754f0dd95715df437f6e6d633e4ffbff0176bcb11c15fe3e5dd4e387",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/repl/App.d.ts",
+      "source": "webr-runtime",
+      "bytes": 993,
+      "sha256": "6c13a876db26fc752be8b94ddd6d700ac3b4d9d14ea40a178d82b5a2b54f84a3",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/repl/components/Editor.d.ts",
+      "source": "webr-runtime",
+      "bytes": 1521,
+      "sha256": "8dcdde5cf4ba5513e06372ac26d5cb90c240923f81c9872b2a63f9cbad9f4efc",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/repl/components/Files.d.ts",
+      "source": "webr-runtime",
+      "bytes": 612,
+      "sha256": "6c770175da127d19e393bdf3d42331bacb4a9a92910d3ed92d014ce6a7c5ca3f",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/repl/components/Plot.d.ts",
+      "source": "webr-runtime",
+      "bytes": 346,
+      "sha256": "2ca2417c4bf85835d5c05cdbe2a8acc1441e84a6ff0d3cba8938022008f34ebd",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/repl/components/Share.d.ts",
+      "source": "webr-runtime",
+      "bytes": 2779,
+      "sha256": "f629b84f7471ba9dabfa46c10288d10c8e5509c2177cda8f200017e501db4c20",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/repl/components/Terminal.d.ts",
+      "source": "webr-runtime",
+      "bytes": 378,
+      "sha256": "614efbb888c9ed437988a5035a3f9c403454658e0d1c95efd54c6e0d91f30c17",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/repl/components/utils.d.ts",
+      "source": "webr-runtime",
+      "bytes": 619,
+      "sha256": "05ee9ef8e10f0b8084d86bf5c714ff9dc3492ced0e7b23d986cd2b423c23a4eb",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/tests/packages/webr.test.d.ts",
+      "source": "webr-runtime",
+      "bytes": 11,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/tests/webR/chan/channel-postmessage.test.d.ts",
+      "source": "webr-runtime",
+      "bytes": 11,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/tests/webR/chan/proxy-websocket.test.d.ts",
+      "source": "webr-runtime",
+      "bytes": 11,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/tests/webR/chan/proxy-worker.test.d.ts",
+      "source": "webr-runtime",
+      "bytes": 11,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/tests/webR/console.test.d.ts",
+      "source": "webr-runtime",
+      "bytes": 11,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/tests/webR/error.test.d.ts",
+      "source": "webr-runtime",
+      "bytes": 11,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/tests/webR/mount.test.d.ts",
+      "source": "webr-runtime",
+      "bytes": 11,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/tests/webR/proxy.test.d.ts",
+      "source": "webr-runtime",
+      "bytes": 11,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/tests/webR/robj.test.d.ts",
+      "source": "webr-runtime",
+      "bytes": 11,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/tests/webR/utils.test.d.ts",
+      "source": "webr-runtime",
+      "bytes": 11,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/tests/webR/webr-main.test.d.ts",
+      "source": "webr-runtime",
+      "bytes": 11,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/tests/webR/webr-r.test.d.ts",
+      "source": "webr-runtime",
+      "bytes": 11,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/tests/webR/webr-worker.test.d.ts",
+      "source": "webr-runtime",
+      "bytes": 11,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/etc/fonts/fonts.conf",
+      "source": "webr-runtime",
+      "bytes": 1089,
+      "sha256": "a93efbf9eec83d72a463f1d52f54043a8afa6ae7cc05609deda73232525e7bc0",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/etc/ssl/cert.pem",
+      "source": "webr-runtime",
+      "bytes": 189462,
+      "sha256": "86a1f3366afac7c6f8ae9f3c779ac221129328c43f0ab2b8817eb2f362a5025c",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/doc.data.gz",
+      "source": "webr-runtime",
+      "bytes": 4000106,
+      "sha256": "03ad1b51acd51665a5ad8e4b1a3ffa570434ca0f2a51d432b294e4b5500ea90f",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/doc.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 8701,
+      "sha256": "fa7537b51ccab64e17407933e926211d706f7e87ecc7db018e44e663c07d93a2",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/base/demo.data.gz",
+      "source": "webr-runtime",
+      "bytes": 4460,
+      "sha256": "5dc1fc84cb1d61e4d5311b8e01458014dab1c434c2b6d93deca3eaa9b50752e2",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/base/demo.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 263,
+      "sha256": "bfc597e88f9b97b8eec9fd36227ef0d079fdf1c32e8bea84c3b1e77fb7a6b05c",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/base/help.data.gz",
+      "source": "webr-runtime",
+      "bytes": 2633853,
+      "sha256": "7c5dec2357f9e36fa4d348a8fef8477994cd56089009247e5908d918a6fb1a09",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/base/help.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 318,
+      "sha256": "a4cc3075fc1bd2bdd4826ee04efa616d569cd7e07886b8c98531a23406fc0a25",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/base/html.data.gz",
+      "source": "webr-runtime",
+      "bytes": 20906,
+      "sha256": "1f4e82a2633bf1cc134d3dbc6222003492de2fe207ddecccd6e3ab5d4f46f30c",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/base/html.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 155,
+      "sha256": "4826bdd7ba15568d7ab5226c92b1d742bcd3f4ce853300f55bf205a5f8e22d02",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/compiler/help.data.gz",
+      "source": "webr-runtime",
+      "bytes": 10128,
+      "sha256": "c8e850b5b5e1a04aaf29ef42d50f805473f56c988abcf60ffcb375195f7bcddc",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/compiler/help.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 304,
+      "sha256": "1afd086c4166f184ec0db0943352c4c5885a33e1b8fb70e537241da712288534",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/compiler/html.data.gz",
+      "source": "webr-runtime",
+      "bytes": 1227,
+      "sha256": "6d157ac6c76a2f2b15a989ffdbc8c1a465b91811a654aa6fb1573d783109e30c",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/compiler/html.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 147,
+      "sha256": "98d18997c393881d285172dcb2414da928192520af6aba215667f0a93b0da54d",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/datasets/help.data.gz",
+      "source": "webr-runtime",
+      "bytes": 277806,
+      "sha256": "de58c6303b01b5fe83fca73a5d205e7448ffa16a56cf0a1086d776fdc60bb4dd",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/datasets/help.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 316,
+      "sha256": "a5cb9f65838dad1ad72e662675d28dafb75b8769c02d9537fac7569a295b7c16",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/datasets/html.data.gz",
+      "source": "webr-runtime",
+      "bytes": 4458,
+      "sha256": "6f1eb6811cd3432e9764e75b0d418e3ed2455835a58f725ba18d0b2b8e1ed94d",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/datasets/html.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 151,
+      "sha256": "c9c5e5bafee1c03be04d2867f44923e0fa74791bbc51ccbb8d3ff5579bb5e211",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grDevices/afm.data.gz",
+      "source": "webr-runtime",
+      "bytes": 953823,
+      "sha256": "bb0d88c8492ba397470152d6d90d82e055092dad73e1e864fe6b2ebf0b2bd52a",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grDevices/afm.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 6816,
+      "sha256": "3e88061dfecc14c6cd1386be85d4fef59fe1f964312db41903e471ed74e7cf02",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grDevices/demo.data.gz",
+      "source": "webr-runtime",
+      "bytes": 2513,
+      "sha256": "89433796693b081e65e8ae3214f4b8823c564a2fe8bf0f900956adf55fb16f2c",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grDevices/demo.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 149,
+      "sha256": "2a51924eaee18cbe41bfe8f11ae70f083748d97ef5cbbb77bd3c3a133eaad471",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grDevices/enc.data.gz",
+      "source": "webr-runtime",
+      "bytes": 4263,
+      "sha256": "73fcd21310a54e033f151f6c887001c55d348ff26e2e4d32a0be0ad48c3a4fd7",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grDevices/enc.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 960,
+      "sha256": "fd6fb479b499da19fe442318ac147bdda2557a087ff19acda5a220fbe6686617",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grDevices/fonts.data.gz",
+      "source": "webr-runtime",
+      "bytes": 273155,
+      "sha256": "4dca57d1a4a8b8ab530fa67b019193e6b3457d4066506a67284179f58bb50a72",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grDevices/fonts.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 352,
+      "sha256": "a59f1e81fa5a21f6b6fb91b6a51ad9944cff3283d5891c9427a3702573b6d65c",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grDevices/help.data.gz",
+      "source": "webr-runtime",
+      "bytes": 447385,
+      "sha256": "cd5bb1d9e3da614ecfd34d493b5370c98e3e3e93dd625fac1f753c6c6a67d3a0",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grDevices/help.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 318,
+      "sha256": "c639cb7c72cac13497dc29f0147f311a5206c9dc249885b0e2d11daa44e00106",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grDevices/html.data.gz",
+      "source": "webr-runtime",
+      "bytes": 4188,
+      "sha256": "de1205804774e7d7db07966467a2d0ea66734550583ad4549935d4356cffd9bb",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grDevices/html.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 151,
+      "sha256": "3a2b36bad1509df1912e194322e133c7f362ae7cade8c178e9fbfe88da0a0c83",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grDevices/libs.data.gz",
+      "source": "webr-runtime",
+      "bytes": 1643930,
+      "sha256": "558a09f14c830848510b6279c1141802d392fe2d0aaf66eca174faa03dc7bb1d",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grDevices/libs.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 103,
+      "sha256": "f4b2da4dd2f93011eaa259f8dddc23c63dd144fecc8322fab7885341952e2b7b",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/graphics/demo.data.gz",
+      "source": "webr-runtime",
+      "bytes": 13086,
+      "sha256": "3e60f0210cb48d0c40a8c56436af980e2a71f0016ea66b7d95f1932ffea24762",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/graphics/demo.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 359,
+      "sha256": "1128fef779f40452d0dd2b27b3974175fb4a341c3418d953d8b33540575117fd",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/graphics/help.data.gz",
+      "source": "webr-runtime",
+      "bytes": 562908,
+      "sha256": "8522582e2b3a3577c24f174bcccc7d75bebb9128131157d7b3712d28255baf71",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/graphics/help.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 720,
+      "sha256": "f389834ad81b4db9bb4e8e89c254bb8c886da36b5c458cd661a1a4d5710809f1",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/graphics/html.data.gz",
+      "source": "webr-runtime",
+      "bytes": 2982,
+      "sha256": "99d1c6a3224b704237d427057549a1a9b863033bbf2e8c086fc6e200553621bb",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/graphics/html.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 151,
+      "sha256": "bb82dd2024e800abf3d390c3f21f44e189ebe3df567a0de974e95206f7edef7d",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grid/doc.data.gz",
+      "source": "webr-runtime",
+      "bytes": 584214,
+      "sha256": "c40b85e70ad49170e7aca3041bd518a1f7ce5c5510f5f46b49807a4c4715d869",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grid/doc.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 896,
+      "sha256": "14924ac9389ed973b16d0f3e5cb30e49b6629db3f2f4c8e0ab36908bec1bac0b",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grid/help.data.gz",
+      "source": "webr-runtime",
+      "bytes": 341560,
+      "sha256": "3d8a87877c069f47a6ffc590043975e26d26b112addd7bcabdcab576f7a9c74e",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grid/help.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 308,
+      "sha256": "66a56f27efa45f11c3fe20b63215761527a18014531159bc7d1af159d9bf0a87",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grid/html.data.gz",
+      "source": "webr-runtime",
+      "bytes": 4928,
+      "sha256": "8ab236a697ca624dd74b1fce1eab0852e8d6fcab4e441ec09fe57e56849b77d1",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/grid/html.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 151,
+      "sha256": "3d28487a22ea049d3c6329a9cebb0d310e3d4206647a517cb40ab21bc5662e1d",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/methods/help.data.gz",
+      "source": "webr-runtime",
+      "bytes": 559755,
+      "sha256": "d727dc6b7422dedf18caf153144c78b6e2966d7a5a42c4c9f6f6cf16a8a0683e",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/methods/help.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 318,
+      "sha256": "f8803bd5a9ceffbdf2857cba27d965f380a97801f97b51d300ac39ee239c5056",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/methods/html.data.gz",
+      "source": "webr-runtime",
+      "bytes": 5267,
+      "sha256": "12cbbb4eb9d878d130a0713e1ad24a4a5a1dbe5b623347a838c4d9d7f334b0bd",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/methods/html.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 151,
+      "sha256": "a63e96038c66042226f488d3ac8f54cbea74bda22febf593965e2bede552c73a",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/parallel.data.gz",
+      "source": "webr-runtime",
+      "bytes": 349042,
+      "sha256": "25256757440bb6dd77b2cbdd5668b85aed5d2b8ebae58d039408f1d8b4fe5b95",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/parallel.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 1238,
+      "sha256": "82f79a072159d48f4c9d2b984ee7660c7c15327d14534d9e89b3271268b0a768",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/splines/help.data.gz",
+      "source": "webr-runtime",
+      "bytes": 44264,
+      "sha256": "019301cba92c42cb85448f37a081e09f13684a2d62bc28122b6d2832a8666da5",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/splines/help.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 302,
+      "sha256": "6c6e828305347cb9bc7c1cba42a2d4a60509f95f4375919b8d7143b602b4e862",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/splines/html.data.gz",
+      "source": "webr-runtime",
+      "bytes": 1550,
+      "sha256": "1f35815050129826f06bb9c71377ef98745648e028702ed326d56dee2288c2df",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/splines/html.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 147,
+      "sha256": "55921a910bdb3d7cb2d2db24dff9e57ddbe4d5670fc54c3ce0c70da6112d6cef",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/stats/demo.data.gz",
+      "source": "webr-runtime",
+      "bytes": 4061,
+      "sha256": "761adcd4b49ca859057e1a96774308a5fd3b6f35e00d2dac6d17731ee91f5050",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/stats/demo.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 241,
+      "sha256": "7e537450a6855a02f5491cf22f48abed526bb1d4d2fd15d3e34725ab3667db5f",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/stats/doc.data.gz",
+      "source": "webr-runtime",
+      "bytes": 50057,
+      "sha256": "d24e1da1a4da7cf531f9d963a5fbfb42fab39270ef182283c23d88d666a607cf",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/stats/doc.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 102,
+      "sha256": "671b514c960e5f91023a8003a690918ae84ac97a4c3bc123f391e51b582c0c66",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/stats/help.data.gz",
+      "source": "webr-runtime",
+      "bytes": 1843548,
+      "sha256": "8fa48d1e3803dd508e24bde959313a24fa91ebe73f779272c6aca31ed6134a33",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/stats/help.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 316,
+      "sha256": "84619108c7ab023343c1e5e95d5979fccf426e43080c7fd90672f44ab3653ea0",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/stats/html.data.gz",
+      "source": "webr-runtime",
+      "bytes": 11358,
+      "sha256": "4e14ef0067001e22cb25167c7f51cf665ce89f16fe6d80c1c4121075bff5520a",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/stats/html.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 151,
+      "sha256": "9ea60d805483f4ebfb197957da1c7c360a00c92d4b33fcc7fda42f9ee626cd7d",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/stats4/help.data.gz",
+      "source": "webr-runtime",
+      "bytes": 37560,
+      "sha256": "8a18b51cbfe3991f3f33be831bc7a7b2676f62c4a012bff73450afde182b159f",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/stats4/help.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 304,
+      "sha256": "a03f6116d3f6703f88f9209864709946362e51cbf328c14d3c9c7e3d39a40d4e",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/stats4/html.data.gz",
+      "source": "webr-runtime",
+      "bytes": 1522,
+      "sha256": "eab7a939a8d57c5792e98a13b94222d29b43f2fbc4e0b4d449e6fad96f401da5",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/stats4/html.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 147,
+      "sha256": "c34ccf9f0de1ad19d6aea15b3f56e6f65c8967bd8c9a9e39461788daa5c1d15e",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/tcltk.data.gz",
+      "source": "webr-runtime",
+      "bytes": 132160,
+      "sha256": "fd62d4cf44534ca784cbc0ab26e65eb1c6f882269709fced5a1ac459f8550026",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/tcltk.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 2019,
+      "sha256": "785dc003a43233094a6845f5804fa097fb680ccae0c0aad6fd0784e9582f0ab9",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/tools/help.data.gz",
+      "source": "webr-runtime",
+      "bytes": 324132,
+      "sha256": "4ad0e607507c22a91860857865192a7b560270168f3be8c75d9394c5689364d8",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/tools/help.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 306,
+      "sha256": "761f3e2cd8ecc194410a039da7fa7565a68b17c8b271306e927c0f8b4d0eef27",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/tools/html.data.gz",
+      "source": "webr-runtime",
+      "bytes": 4307,
+      "sha256": "13242d7e18ab7412609925428c651e07615146a78137e1bc7f117d1add62e47f",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/tools/html.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 151,
+      "sha256": "d93471df33f8c83582f3c217fdaad9c0947996bc87c19e2261828e01bcb668c3",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/tools/misc.data.gz",
+      "source": "webr-runtime",
+      "bytes": 3724,
+      "sha256": "7042f04844026fbc281f4789abf8ac5bf0751d1ce70bb602a8db8d60f2ac68cf",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/tools/misc.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 142,
+      "sha256": "5c6bd36201d2f620052f3ba437224496ea98919a8a05dcee6b44aa99547eb5a6",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/translations/DESCRIPTION",
+      "source": "webr-runtime",
+      "bytes": 238,
+      "sha256": "ba7da3ac60466f5f466c4f706f50bcafbb924f94b0888d333bb410451b41afd2",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/translations.data.gz",
+      "source": "webr-runtime",
+      "bytes": 3061528,
+      "sha256": "c8cac5071b8691cb1c960389b370b5007c5b8df752d98a5860bce505c234b9c2",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/translations.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 35184,
+      "sha256": "f62b1fa37f7cdff9aa0c9b7046366254411b7df6bb35d2017cbb531fd6ee3d4a",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/utils/doc.data.gz",
+      "source": "webr-runtime",
+      "bytes": 216941,
+      "sha256": "4018e722537fa83c70d5f031d4aa391ed68dc00b63a9888aef565899c789caf9",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/utils/doc.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 103,
+      "sha256": "189fd98b3cda5d4a11c7da6780649ddecce9a5fd5b9d472a075f49909a6956c3",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/utils/help.data.gz",
+      "source": "webr-runtime",
+      "bytes": 894372,
+      "sha256": "be06c8a1d69d4b0b82b09afc24ade14fe0afd68053c19f87af1f6d17d9842cbf",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/utils/help.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 310,
+      "sha256": "7bbdaa8dd24135fa73ec05ef1120e94f50bca25fcef31244a3ba3d51dd0c4478",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/utils/html.data.gz",
+      "source": "webr-runtime",
+      "bytes": 7240,
+      "sha256": "33f6fe57dad92319af190f3ea06ee79104e850c86043cc45c11c7513de9cc066",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/utils/html.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 151,
+      "sha256": "9237b38d0bb9cd04c6f305f9b69b7d06b2dcaf982050e3d3e374e6cdfe0706a1",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/utils/misc.data.gz",
+      "source": "webr-runtime",
+      "bytes": 161,
+      "sha256": "33ddc6d1a7b594c7d0824dc12aa15cfce859b66b9d7134c228ee349b48027b56",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/utils/misc.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 142,
+      "sha256": "7e248a6c0ce276772fe22eb83d49128393be9e674e322ab0ce57905e83e6709b",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/webr/help.data.gz",
+      "source": "webr-runtime",
+      "bytes": 57381,
+      "sha256": "13f814b4ca4b8ad4ae07f43a5e09ed90274233d8758a3c5ec0e6dac3ba56799c",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/webr/help.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 357,
+      "sha256": "bbec147dbb13908d360940507e158e7507cda52f169f365821dcdc3414513794",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/webr/html.data.gz",
+      "source": "webr-runtime",
+      "bytes": 1696,
+      "sha256": "e16b557a8417ec2bfb11c3a03ab8b28638464217877ad6bdd26f45263a14cb79",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/library/webr/html.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 147,
+      "sha256": "820fc44428d2f719881725341ba13650436e989c53191e2d6da1f2493f7ea131",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/share.data.gz",
+      "source": "webr-runtime",
+      "bytes": 380353,
+      "sha256": "79258e504395be06aefa3d9ed482bcd9c26efb27791a243f851ead183ac28d41",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/lib/R/share.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 46073,
+      "sha256": "3ccaab3b787ae8e377bb56fad19764772e6f1ddf90d47f10fbaef58921c7e9e2",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/share/fonts/NotoSans-Bold.ttf",
+      "source": "webr-runtime",
+      "bytes": 432376,
+      "sha256": "87cb2d84472a7d66da659ee47b6cdb9552326e8c128245231f191b6ac72529d9",
+      "mime_type": "font/ttf",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/share/fonts/NotoSans-BoldItalic.ttf",
+      "source": "webr-runtime",
+      "bytes": 441936,
+      "sha256": "3d367743f371f28671d2764e911a53d7c20ec9b6aa8791d059e7090389fc52a5",
+      "mime_type": "font/ttf",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/share/fonts/NotoSans-Italic.ttf",
+      "source": "webr-runtime",
+      "bytes": 446880,
+      "sha256": "678288f868807d4d64a6f3b51466871d117d915780381ce9d0ed4b3bcbd06d37",
+      "mime_type": "font/ttf",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/share/fonts/NotoSans-Regular.ttf",
+      "source": "webr-runtime",
+      "bytes": 431364,
+      "sha256": "f3961a9cde016d41a4879aecda1474d3a36d6bf54fa0e4643de029cc2248b0e8",
+      "mime_type": "font/ttf",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/share/fonts/NotoSansMono-Bold.ttf",
+      "source": "webr-runtime",
+      "bytes": 387484,
+      "sha256": "1100772b2f79c102402a1011df5e2226517d0f40ac553a25fb12fdbad8c11b85",
+      "mime_type": "font/ttf",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/share/fonts/NotoSansMono-Regular.ttf",
+      "source": "webr-runtime",
+      "bytes": 388660,
+      "sha256": "87f8ce0522a6c99b743ee5fc75b4073cfdd575639119672828b7b9944b65b4f4",
+      "mime_type": "font/ttf",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/share/fonts/NotoSerif-Bold.ttf",
+      "source": "webr-runtime",
+      "bytes": 481892,
+      "sha256": "24ad531e6b05ddad8c3d89572d2c93eb86a6b74e652ce7ee3c3e171de68e84c3",
+      "mime_type": "font/ttf",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/share/fonts/NotoSerif-BoldItalic.ttf",
+      "source": "webr-runtime",
+      "bytes": 513280,
+      "sha256": "1bc4f86502eaa368718f6192bee022ea9a703d5af1c18b7d291212657b63074a",
+      "mime_type": "font/ttf",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/share/fonts/NotoSerif-Italic.ttf",
+      "source": "webr-runtime",
+      "bytes": 513428,
+      "sha256": "c4b3c971741ecdb40f5a443bce754e8fe91efe761b6ea10c92be7c3597cdadc4",
+      "mime_type": "font/ttf",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/share/fonts/NotoSerif-Regular.ttf",
+      "source": "webr-runtime",
+      "bytes": 482540,
+      "sha256": "a15cfbbc1539d707115111d672d590a3d70d4f74b4c0a315956da20ae19a14e1",
+      "mime_type": "font/ttf",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/share/gdal.data.gz",
+      "source": "webr-runtime",
+      "bytes": 348461,
+      "sha256": "8adcaf12f15dabb964cb3363defa02bdc9e730a17b10460946944885bcf699af",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/share/gdal.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 10206,
+      "sha256": "de403ded38013ab57931a862d14bcdc33b09997c70de1587ec6719f94360ab25",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/share/proj.data.gz",
+      "source": "webr-runtime",
+      "bytes": 1705325,
+      "sha256": "14e3893991c408324d43605abbe6c4cae18607fe27655e78654bec4565799e13",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/share/proj.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 857,
+      "sha256": "adc4c33a8c963b5059402a2132c59811016cc9c48286b6bd43e68b347a5f4c0c",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/share/udunits.data.gz",
+      "source": "webr-runtime",
+      "bytes": 16775,
+      "sha256": "fc1de0c9cb5c827fef22ed148ffc28eab70a99d3cc9aa9990e37aaf38e5c1757",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/usr/share/udunits.js.metadata",
+      "source": "webr-runtime",
+      "bytes": 424,
+      "sha256": "9f8ac349f1d68c23e4d2a4790e328ab3ecc38cd84ef993592170b7d19ef1b6a6",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/var/cache/fontconfig/3830d5c3ddfd5cd38a049b759396e72e-le32d8.cache-9",
+      "source": "webr-runtime",
+      "bytes": 16008,
+      "sha256": "48cd35d8c3d7a4456f05bbf3c10bac83de082d354b2ec02c8a80e325ac3f0839",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/vfs/var/cache/fontconfig/CACHEDIR.TAG",
+      "source": "webr-runtime",
+      "bytes": 200,
+      "sha256": "05e7633fb31bf1f6f8d89020c16b9f24587fdf7638e951c9745b192f5fc3b682",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/chan/channel-common.d.ts",
+      "source": "webr-runtime",
+      "bytes": 867,
+      "sha256": "f2ee63f6828cb489cc735125d2242ded3e75bfdf28b2aaab07aeb9809bb956ed",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/chan/channel-postmessage.d.ts",
+      "source": "webr-runtime",
+      "bytes": 1440,
+      "sha256": "0763b4a0e7dfdb5ce52da4064e66f618169f46cba2470fd3b70c45be39be7a8e",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/chan/channel-shared.d.ts",
+      "source": "webr-runtime",
+      "bytes": 1289,
+      "sha256": "1fee2f7883c7b6f0ee9b68dc604ee273a1d2d98de1d576ea888924b7af271b90",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/chan/channel.d.ts",
+      "source": "webr-runtime",
+      "bytes": 1961,
+      "sha256": "2fd2ea93253687de8fadd847f02e3901fc180a040a67725f8f716694fcfd36f1",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/chan/message.d.ts",
+      "source": "webr-runtime",
+      "bytes": 4460,
+      "sha256": "ef08138a86e8d02fd86bc426ffdc5e3e4eb13da30ef53bf2534336509c65b5c8",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/chan/proxy-websocket.d.ts",
+      "source": "webr-runtime",
+      "bytes": 841,
+      "sha256": "0b0615220c3445839a5cee0e70a64b2f183136f5640134ade6d5f61ab2df6f3b",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/chan/proxy-worker.d.ts",
+      "source": "webr-runtime",
+      "bytes": 697,
+      "sha256": "e065ab34da44d53e9e85f9eb1199a154585ac15ca490d4a2bec5d45fae586fd3",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/chan/queue.d.ts",
+      "source": "webr-runtime",
+      "bytes": 378,
+      "sha256": "0b776ce8c5637fb95afbb06ef75e68628e67e2183984f83e5384f2c32c98f858",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/chan/task-common.d.ts",
+      "source": "webr-runtime",
+      "bytes": 824,
+      "sha256": "8df0fdff9cbe1a5d2c904cacb93cd27bcec087035a1d4624988d56c1ff8279e6",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/chan/task-main.d.ts",
+      "source": "webr-runtime",
+      "bytes": 871,
+      "sha256": "de8fac98dbb86003863f4fd9a3070503a2d0eaf522e3391ef4d379dba3daa10f",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/chan/task-worker.d.ts",
+      "source": "webr-runtime",
+      "bytes": 1347,
+      "sha256": "538680ded341f537401fd7cbc68647058bab47c07732ad48a96889e3d30ea8e9",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/compat.d.ts",
+      "source": "webr-runtime",
+      "bytes": 102,
+      "sha256": "93636980f60870f6cb24c8c9a665df73c78c8aaada866c629731b290c2f9dfc2",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/config.d.ts",
+      "source": "webr-runtime",
+      "bytes": 189,
+      "sha256": "46e463b99d28c3364a9fb79b92b8a877620f647e4fc7304a82e83a254c422354",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/console.d.ts",
+      "source": "webr-runtime",
+      "bytes": 2651,
+      "sha256": "babd993f7ffea8a7a37128a5a5a755060f2bfa1de60b7ad89a6db92339c52d2b",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/emscripten.d.ts",
+      "source": "webr-runtime",
+      "bytes": 6397,
+      "sha256": "92c15599eb3b9a127f06aab3cca5d4f2a63c4d0fc9250f0a9597b93e7d623169",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/error.d.ts",
+      "source": "webr-runtime",
+      "bytes": 661,
+      "sha256": "26f7830d9782e5e50ff8a764367ec6e93867df2223e408feb70da142e0ac8e41",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/mount.d.ts",
+      "source": "webr-runtime",
+      "bytes": 928,
+      "sha256": "1bc45221b03c23ca189a526d8dbd93321db9aa55b23a99ea72587fe9edf13d76",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/payload.d.ts",
+      "source": "webr-runtime",
+      "bytes": 1524,
+      "sha256": "3b043fb1901c7c602f7ffc1c6113e21a8d2ea436721b9bc1b1bfb1955378b847",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/proxy.d.ts",
+      "source": "webr-runtime",
+      "bytes": 5351,
+      "sha256": "76569e5080c500d3030094ff78135d2f6e9384082c73123dc9b9e49994f43911",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/robj-main.d.ts",
+      "source": "webr-runtime",
+      "bytes": 4455,
+      "sha256": "ca43bd95e910e0db4e17ff18f690c5d8adbc0499c2fe0e8b1ee662bd530a891b",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/robj-worker.d.ts",
+      "source": "webr-runtime",
+      "bytes": 9154,
+      "sha256": "977d9c834b00fdb5ca29f7a58384b6e37ebaca79725d4ee27dd2957777c3c321",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/robj.d.ts",
+      "source": "webr-runtime",
+      "bytes": 3965,
+      "sha256": "14642f39544d7cf5cd4e184eeb0e64a4b16f28997b8f516083d6e5417cb8cbd0",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/utils-r.d.ts",
+      "source": "webr-runtime",
+      "bytes": 918,
+      "sha256": "c74619bae3847200112b0d0e7ac450c6684379b4e4342a09d33ccc7ea4461fdf",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/utils.d.ts",
+      "source": "webr-runtime",
+      "bytes": 1180,
+      "sha256": "b9ff3f103d1a11b2f9167770b0477975ec07bfd4be36e7702675732b024a11ba",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/webr-chan.d.ts",
+      "source": "webr-runtime",
+      "bytes": 6233,
+      "sha256": "2e58b42f9944ce015b735886426e8e874069665469f30d220d380d9d19f70746",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/webr-main.d.ts",
+      "source": "webr-runtime",
+      "bytes": 16132,
+      "sha256": "36aaee5440c033f6ddffccf0ae61deaa79c25052bab6b4b8066bb578b59d95d5",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webR/webr-worker.d.ts",
+      "source": "webr-runtime",
+      "bytes": 11,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "mime_type": "application/octet-stream",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webr-worker.js",
+      "source": "webr-runtime",
+      "bytes": 134029,
+      "sha256": "c64282f5e15b51ef473e26548203313f868208c8988b2c7bdfc22c5730de418b",
+      "mime_type": "text/javascript; charset=utf-8",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webr.cjs",
+      "source": "webr-runtime",
+      "bytes": 66438,
+      "sha256": "a8bdbf110511668a4c3321a0298a5f5eefabfae3a6f92b05d4158cb21e4705d5",
+      "mime_type": "text/javascript; charset=utf-8",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webr.cjs.map",
+      "source": "webr-runtime",
+      "bytes": 320985,
+      "sha256": "5caaaa0053401f54a4ddbeb8fecf249ed0144afc4bc91b8062123918edc13856",
+      "mime_type": "application/json",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webr.js",
+      "source": "webr-runtime",
+      "bytes": 66672,
+      "sha256": "4c04d3240de6cd3e7f59e081756168faa8566f8a8b97251400770939815c344a",
+      "mime_type": "text/javascript; charset=utf-8",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webr.mjs",
+      "source": "webr-runtime",
+      "bytes": 66586,
+      "sha256": "09e640176e49ef4ae084f83fee18979c6700eb32d4dfb2cafb5f189a903ada75",
+      "mime_type": "text/javascript; charset=utf-8",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/webr.mjs.map",
+      "source": "webr-runtime",
+      "bytes": 320318,
+      "sha256": "ef432b4093fa3295f700fa4d1b6393efc49d12cdae0b436e1569620aec474298",
+      "mime_type": "application/json",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/rlang_1.3.0.tgz",
+      "source": "r-wasm-package",
+      "bytes": 1140560,
+      "sha256": "c5562dc07b5d3c62fb85ee856a670b83105ba7793c778a30c1d9512d914e208a",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/cli_3.6.6.tgz",
+      "source": "r-wasm-package",
+      "bytes": 967089,
+      "sha256": "efa9c2b12c2da09cccb0a27d2e7a079ebd4c38fc1d03560d599f7634eb7f9932",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/arg_0.2.1.tgz",
+      "source": "r-wasm-package",
+      "bytes": 207515,
+      "sha256": "e0c585a046a225787c205990a5e69058a08d40731034494559b9cc5c06125955",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/Rcpp_1.1.2.tgz",
+      "source": "r-wasm-package",
+      "bytes": 2087828,
+      "sha256": "87746dcb2b15bb70f944a9585287d5e2876fc7dcb120473d2cb27b9a2ed410b4",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/glue_1.8.1.tgz",
+      "source": "r-wasm-package",
+      "bytes": 152905,
+      "sha256": "3b025aa5fd067ad9b87fecd219e561d4537d488b33581af8beabe2b06024d44d",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/lifecycle_1.0.5.tgz",
+      "source": "r-wasm-package",
+      "bytes": 102893,
+      "sha256": "c2f8c5905f58b4526c3b68c6163f891b9a12f81d7e50347ad49a70b1f6592527",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/gtable_0.3.6.tgz",
+      "source": "r-wasm-package",
+      "bytes": 184798,
+      "sha256": "dae6408ed2ed1d759e50c5fb7e45f81348ff3f4f914cb418ac12bdeaae2ee80b",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/isoband_0.3.0.tgz",
+      "source": "r-wasm-package",
+      "bytes": 1627614,
+      "sha256": "bc7494f286084e8861331256df0f6ab27e519e1797e807ec100db1116d3e7a8e",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/S7_0.2.2.tgz",
+      "source": "r-wasm-package",
+      "bytes": 225283,
+      "sha256": "76b7d1dcbab977c592a2d951a07336f509243c34fa0d56f6c2c56f2b71c3aec4",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/farver_2.1.2.tgz",
+      "source": "r-wasm-package",
+      "bytes": 1317442,
+      "sha256": "f7555f2c1926f88d431ff1919c81cff48ff6eadc09de4471610312695be6cea8",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/labeling_0.4.3.tgz",
+      "source": "r-wasm-package",
+      "bytes": 42861,
+      "sha256": "1d89f92c8b15aee3b4f9c8c6c0e7697f79c515558c274279fddfd03a34a6d63d",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/R6_2.6.1.tgz",
+      "source": "r-wasm-package",
+      "bytes": 67949,
+      "sha256": "134d30277b1c64afe9ae31a4a52857822bc21d32db46479eb3ea2f3a7397c8d6",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/RColorBrewer_1.1-3.tgz",
+      "source": "r-wasm-package",
+      "bytes": 26996,
+      "sha256": "cf5564fee1b54d547dd5656afbea17e34d48f74ef97b376e495dd4e223ecafc9",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/viridisLite_0.4.3.tgz",
+      "source": "r-wasm-package",
+      "bytes": 1295884,
+      "sha256": "cbb327d9e0efe61bfa40ba89c9af3dc05fc5bd76ea69fc485ef3f64fe1785983",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/scales_1.4.0.tgz",
+      "source": "r-wasm-package",
+      "bytes": 620880,
+      "sha256": "1e3fd9c44c6bba3ea2911ee8a2ee9a8cf5a47013a2ca6db8862cb10a1512ba96",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/vctrs_0.7.3.tgz",
+      "source": "r-wasm-package",
+      "bytes": 1433335,
+      "sha256": "42cc19d325e7de2160490273d97099049f261e8b6c3e6736391d96e43923798d",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/withr_3.0.3.tgz",
+      "source": "r-wasm-package",
+      "bytes": 185986,
+      "sha256": "65530833ac1e34d41a8e991aab69713aae1a24500af11257b637256af7cc2195",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/ggplot2_4.0.3.tgz",
+      "source": "r-wasm-package",
+      "bytes": 7481119,
+      "sha256": "1a299608d88c92d5741666229c1125848e4c210b0624ebd0012af97957976ae6",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/gridExtra_2.3.1.tgz",
+      "source": "r-wasm-package",
+      "bytes": 504576,
+      "sha256": "d9421e0fd97f89d1893d770fdca2fb9ac5c4a9ac71a762f6776f1b518aaba048",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/MatchIt_4.8.1.tgz",
+      "source": "r-wasm-package",
+      "bytes": 1573147,
+      "sha256": "ef2f1439b64037e0acdcfd7699ba641765d5dd16bd46cad0dd13c58305b9b6dc",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    },
+    {
+      "path": "assets/webr/packages/cobalt_5.0.0.tgz",
+      "source": "r-wasm-package",
+      "bytes": 2616764,
+      "sha256": "b63bfabf563304dfe7ffafd4c21e9b580b817c5d0df155d390fc6c42440b0218",
+      "mime_type": "application/gzip",
+      "exceeds_25mib_limit": false
+    }
+  ]
+}

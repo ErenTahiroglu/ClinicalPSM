@@ -1,0 +1,36 @@
+{
+  "audited_at": "2026-10-18T22:03:16.933Z",
+  "pipeline_runtime": "WebR 0.6.0 (wasm32-unknown-emscripten)",
+  "negative_control_validation": {
+    "interceptor_blocks_prohibited_egress": true,
+    "interceptor_detects_sentinel_leakage": true
+  },
+  "offline_analysis_phase": {
+    "network_disabled": true,
+    "requests_attempted_during_analysis": 0,
+    "zero_egress_verified": true,
+    "analysis_completed_offline": true,
+    "matched_pairs": 72
+  },
+  "sentinel_leakage_audit": {
+    "sentinels_tested": {
+      "id": "SENTINEL_PAT_ID_9F8E7D6C5B4A3210",
+      "category": "SENTINEL_CAT_VAL_MALIGNANT_XYZ_888",
+      "col_name": "SENTINEL_COL_GENE_MUT_MARKER_99",
+      "malformed": "SENTINEL_MALFORMED_SPECIAL_CHARS_<>&$!@#"
+    },
+    "sentinel_leakage_detected": false,
+    "leakage_verdict": "PASS_ZERO_LEAKAGE"
+  },
+  "storage_persistence_audit": {
+    "webr_vfs_tmp_files": [
+      "RtmpCchMaI"
+    ],
+    "browser_local_storage": "NOT_ACCESSED_BY_WORKER",
+    "browser_indexed_db": "NOT_ACCESSED_BY_WORKER",
+    "browser_cache_storage": "READ_ONLY_PACKAGE_CACHE_IF_CONFIGURED",
+    "data_persistence_claim": "NO_PERSISTENT_DATA_RETAINED",
+    "disclaimer": "No forensic memory-erasure or legal HIPAA/GDPR/KVKK compliance claims made."
+  },
+  "final_privacy_verdict": "PASS"
+}

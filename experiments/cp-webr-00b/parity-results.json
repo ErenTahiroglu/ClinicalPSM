@@ -1,0 +1,474 @@
+{
+  "evaluated_at": "2026-10-18T22:01:50.350Z",
+  "total_fixtures": 24,
+  "semantic_pass_count": 24,
+  "numeric_pass_count": 23,
+  "all_fixtures_pass": false,
+  "tolerances_used": {
+    "coefficients": 0.000001,
+    "distance": 1e-7,
+    "cobalt_diff": 0.000001,
+    "cobalt_v_ratio": 0.000001
+  },
+  "fixture_details": {
+    "fix_01_well_conditioned": {
+      "id": "fix_01_well_conditioned",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_02_mixed_types": {
+      "id": "fix_02_mixed_types",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_03_ref_level_change": {
+      "id": "fix_03_ref_level_change",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_04_input_row_order": {
+      "id": "fix_04_input_row_order",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_05_exact_distance_ties": {
+      "id": "fix_05_exact_distance_ties",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 8.923800000000001e-16,
+        "distance": 6.3639e-16,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_06_no_caliper_nearest": {
+      "id": "fix_06_no_caliper_nearest",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_07_prob_scale_caliper": {
+      "id": "fix_07_prob_scale_caliper",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_08_linear_logit_caliper": {
+      "id": "fix_08_linear_logit_caliper",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_09_standardized_caliper": {
+      "id": "fix_09_standardized_caliper",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_10_whole_vs_pooled_sd": {
+      "id": "fix_10_whole_vs_pooled_sd",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_11_pre_match_discard": {
+      "id": "fix_11_pre_match_discard",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_12_caliper_unmatched": {
+      "id": "fix_12_caliper_unmatched",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_13_more_treated_than_control": {
+      "id": "fix_13_more_treated_than_control",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_14_more_controls_than_treated": {
+      "id": "fix_14_more_controls_than_treated",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_15_quasi_separation": {
+      "id": "fix_15_quasi_separation",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_16_complete_separation": {
+      "id": "fix_16_complete_separation",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": false,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0.00000230956,
+        "distance": 0,
+        "cobalt_diff_un": 1.9875,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [
+        "Coefficient max diff 2.310e-6 exceeds tolerance 0.000001",
+        "Cobalt Diff.Un max diff 1.988e+0 exceeds tolerance 0.000001"
+      ],
+      "semantic_mismatches": []
+    },
+    "fix_17_rank_deficient": {
+      "id": "fix_17_rank_deficient",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_18_zero_variance": {
+      "id": "fix_18_zero_variance",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_19_missing_values": {
+      "id": "fix_19_missing_values",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_20_malformed_category": {
+      "id": "fix_20_malformed_category",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_21_extreme_propensities": {
+      "id": "fix_21_extreme_propensities",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_22_small_sample": {
+      "id": "fix_22_small_sample",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_23_no_eligible_match": {
+      "id": "fix_23_no_eligible_match",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    },
+    "fix_24_duplicate_ids": {
+      "id": "fix_24_duplicate_ids",
+      "status_match": true,
+      "semantic_parity": true,
+      "numeric_parity": true,
+      "pair_identities_exact": true,
+      "weights_exact": true,
+      "subclasses_exact": true,
+      "discarded_exact": true,
+      "max_diffs": {
+        "coefficients": 0,
+        "distance": 0,
+        "cobalt_diff_un": 0,
+        "cobalt_diff_adj": 0,
+        "cobalt_v_ratio": 0
+      },
+      "tolerance_violations": [],
+      "semantic_mismatches": []
+    }
+  }
+}

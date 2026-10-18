@@ -1,0 +1,42 @@
+{
+  "experiment_id": "CP-WEBR-00B",
+  "generated_at": "2026-10-19T00:55:00Z",
+  "hardware": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "cpu": "Apple M4",
+    "memory_bytes": 17179869184,
+    "kernel": "Darwin Kernel Version 27.0.0: Tue Aug 11 21:02:57 PDT 2026; root:xnu-13432.1.9~1/RELEASE_ARM64_T8132"
+  },
+  "host_toolchain": {
+    "node": "v26.12.0",
+    "npm": "11.20.0"
+  },
+  "native_r_oracle": {
+    "installed": true,
+    "r_version": "4.6.0",
+    "release_date": "2026-04-24",
+    "nickname": "Because it was There",
+    "platform": "aarch64-apple-darwin23",
+    "origin": "CRAN macOS sonoma-arm64 (R-4.6.0-arm64.pkg)",
+    "matchit_version": "4.8.1",
+    "cobalt_version": "5.0.0"
+  },
+  "webr_runtime": {
+    "webr_npm": "0.6.0",
+    "embedded_r_version": "4.6.0",
+    "embedded_r_date": "2026-04-24",
+    "platform": "wasm32-unknown-emscripten",
+    "matchit_version": "4.8.1",
+    "cobalt_version": "5.0.0",
+    "package_repository": "https://repo.r-wasm.org/bin/emscripten/contrib/4.6"
+  },
+  "emscripten_provenance_audit": {
+    "status": "DISCREPANCY_IDENTIFIED_AND_DOCUMENTED",
+    "news_md_claim": "Emscripten v4.0.8",
+    "pr_and_commit_evidence": "PR #603 and commit 7e1e376f9f0bf29f4992b809f459932af3a36a7a headline: 'Updates for R 4.6.0 and Emscripten 5.0.7'",
+    "flang_wasm_dockerfile": "ARG EMSCRIPTEN_VERSION=5.0.7 in tools/flang (commit 06752ed1241600d6f45b59b4dd2ed5869e814e55)",
+    "posit_announcement": "Identifies Emscripten 5.0.7",
+    "conclusion": "The release notes entry in NEWS.md claiming 4.0.8 was a documentation copy-paste erratum by the maintainer; active build manifests, Dockerfiles, and PR metadata consistently pin Emscripten 5.0.7. Marked TOOLCHAIN_PROVENANCE_DOCUMENTED_WITH_ERRATUM."
+  }
+}

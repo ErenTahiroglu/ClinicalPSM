@@ -61,6 +61,11 @@ supabase/.temp/
 /experiments/**/.wrangler/
 /experiments/**/dist-prod/
 /experiments/cf01-static-site/public/
+/experiments/cp-webr-00b/.cache/
+/experiments/cp-webr-00b/downloads/
+/experiments/cp-webr-00b/**/*.wasm
+/experiments/cp-webr-00b/**/*.tgz
+/experiments/cp-webr-00b/**/*.tar.gz
 
 # Dev toolchain (DEVTOOLS-00): generated graphs, indexes and scanner reports stay local
 /graphify-out/
