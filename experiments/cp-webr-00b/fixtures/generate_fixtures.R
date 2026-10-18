@@ -33,11 +33,11 @@ save_fixture <- function(id, name, desc, data, formula_str, distance, link, cali
     n_control = sum(data$treat == 0, na.rm = TRUE),
     data = as.data.frame(data)
   )
-  
+
   # Write CSV for transparent inspection
   csv_file <- file.path(base_dir, paste0(id, ".csv"))
   write.csv(data, csv_file, row.names = FALSE, na = "NA")
-  
+
   # Save JSON spec
   json_file <- file.path(base_dir, paste0(id, ".json"))
   # Use simple JSON serialization

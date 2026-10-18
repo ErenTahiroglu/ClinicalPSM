@@ -1,10 +1,10 @@
 # CP-WEBR-00B Experiment Contract & Preregistration
 
-**Repository:** `ErenTahiroglu/ClinicalPSM`  
-**Phase:** `CP-WEBR-00B — Isolated WebR / MatchIt / cobalt Executable Qualification`  
-**Date:** 19 October 2026  
-**Status:** PREREGISTERED & FROZEN  
-**Independent Authority:** ChatGPT (Red Team)  
+**Repository:** `ErenTahiroglu/ClinicalPSM`
+**Phase:** `CP-WEBR-00B — Isolated WebR / MatchIt / cobalt Executable Qualification`
+**Date:** 19 October 2026
+**Status:** PREREGISTERED & FROZEN
+**Independent Authority:** ChatGPT (Red Team)
 
 ---
 

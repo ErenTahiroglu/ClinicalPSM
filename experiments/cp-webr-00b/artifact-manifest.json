@@ -1,22 +1,22 @@
 {
   "experiment_id": "CP-WEBR-00B",
-  "generated_at": "2026-10-18T22:05:04.998Z",
+  "generated_at": "2026-10-18T22:14:10.832Z",
   "file_count": 42,
   "artifacts": [
     {
       "file": "CP-WEBR-00B-RESULT.md",
-      "bytes": 12853,
-      "sha256": "3da04471afe9bb2a483aa002e776d41dadd22a57989b589d7fc769f90f0717f6"
+      "bytes": 12841,
+      "sha256": "2fe85433b5d8d5cd211fc248abc3e12d4aaad731f032cf8ba56d74407eefcfe9"
     },
     {
       "file": "benchmark-results.csv",
-      "bytes": 667,
-      "sha256": "02d13c7157e742c731c516193312dee74b07b11569561f0163240b2c13de073c"
+      "bytes": 668,
+      "sha256": "d4ff406379a344fbf98176b5418aafce7dacc3db66ceb4a345097b4adbb560e0"
     },
     {
       "file": "cloudflare-asset-audit.json",
-      "bytes": 55661,
-      "sha256": "b872bbf994355d932fddea7fe8bbf8610b1189c8ac3c26208806e73467977fa0"
+      "bytes": 55662,
+      "sha256": "859d9e3b80a8b79d247f11f2f2a49511350d50586dbd11c46ac08d52dad89d89"
     },
     {
       "file": "dependency-lock.json",
@@ -30,8 +30,8 @@
     },
     {
       "file": "experiment-contract.md",
-      "bytes": 7386,
-      "sha256": "727e81c489c5c21487222154210462fa5b557566f5045c1dda3df5c91130cbb1"
+      "bytes": 7376,
+      "sha256": "a9f7d59b44137963b0b4205669405bcee70d95abb3f1fdf8d8de8555b1439c06"
     },
     {
       "file": "fixtures/fix_01_well_conditioned.csv",
@@ -155,8 +155,8 @@
     },
     {
       "file": "fixtures/generate_fixtures.R",
-      "bytes": 11857,
-      "sha256": "7948f0ed3e42bd3dc53127e6ea3ad3eafa5d1974399dbcab3077ae0e5d32a9c5"
+      "bytes": 11853,
+      "sha256": "24a2c34738978533e7f9c52dbb81d42f94ac875d5157f61bcf16dfc9217b1759"
     },
     {
       "file": "harness/audit_cloudflare_assets.mjs",
@@ -180,8 +180,8 @@
     },
     {
       "file": "licenses-and-sbom.md",
-      "bytes": 4638,
-      "sha256": "0d5a046b8cc2dedb34a2044223ad733e26198a60e7b62f987aec2dc63fd85cf7"
+      "bytes": 4627,
+      "sha256": "e8be7d7c6a04c81523f9c85f6ca54f24db56f28fc2951845bf38878443d7694b"
     },
     {
       "file": "native-reference/native_results.json",
@@ -190,18 +190,18 @@
     },
     {
       "file": "native-reference/run_native.R",
-      "bytes": 7723,
-      "sha256": "1c1f6cd526be19756a89cc34556bb35e72b3ac9aa617fac226b0231298f7b13c"
+      "bytes": 7689,
+      "sha256": "ff9a39213b27f42a8bec17360a6806a2bf2abd405a623acd9beb0861a83aa36d"
     },
     {
       "file": "parity-results.json",
-      "bytes": 13294,
-      "sha256": "93cc578c7be5c27085626322f3318dcf93a56319221b55df3cee832cdd37dcff"
+      "bytes": 13295,
+      "sha256": "c335d0c5e47495e26c83c01aaca48c26e5c3a3c5f9b1f7a05667feb2c0b6cf8f"
     },
     {
       "file": "privacy-audit.json",
-      "bytes": 1288,
-      "sha256": "aec3c0a2447f00177dff5f11dd1c9d3f6a32d7184550f434a60e054ca13cf8d2"
+      "bytes": 1289,
+      "sha256": "c5096676870e447b8452ff758dd0b9e5216a18b2aeda4604c9eac486339852f3"
     },
     {
       "file": "webr-results/run_webr.mjs",
@@ -210,8 +210,8 @@
     },
     {
       "file": "webr-results/webr_results.json",
-      "bytes": 443241,
-      "sha256": "621ce1ca35114a7886038a595cccf96b40ecc06341e74562e1ee839f9e2b925b"
+      "bytes": 443242,
+      "sha256": "40b74286c52dedea25183220daed15b15c3c830196866f17dd3f234996c349aa"
     }
   ]
 }

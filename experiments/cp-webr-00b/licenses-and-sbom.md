@@ -1,9 +1,9 @@
 # Software Bill of Materials (SBOM) & Licensing Risk Analysis
 
-**Artifact:** `experiments/cp-webr-00b/licenses-and-sbom.md`  
-**Phase:** `CP-WEBR-00B`  
-**Date:** 19 October 2026  
-**Auditor:** Independent Technical & Legal Provenance Assessment  
+**Artifact:** `experiments/cp-webr-00b/licenses-and-sbom.md`
+**Phase:** `CP-WEBR-00B`
+**Date:** 19 October 2026
+**Auditor:** Independent Technical & Legal Provenance Assessment
 
 ---
 
@@ -61,9 +61,9 @@
 ## 3. Legal & Distribution Risk Analysis
 
 > [!WARNING]
-> **UNRESOLVED LICENSING PRODUCTION BLOCKER**  
+> **UNRESOLVED LICENSING PRODUCTION BLOCKER**
 > Serving `MatchIt`, `cobalt`, and `Rcpp` WebAssembly binaries from ClinicalPSM web servers constitutes **distribution of object code** under GPL v2 Section 3 and GPL v3 Section 6.
-> 
+>
 > While a Web Worker boundary with JSON `postMessage` messaging physically isolates the address space between the browser UI and the Wasm runtime:
 > 1. It is an **unsettled legal question** whether dynamic browser loading of GPL WebAssembly modules makes a proprietary companion frontend a derivative or combined work.
 > 2. ClinicalPSM **must** host and provide access to the exact corresponding source code of the distributed WebR, R 4.6.0, MatchIt, cobalt, Rcpp, and arg packages.

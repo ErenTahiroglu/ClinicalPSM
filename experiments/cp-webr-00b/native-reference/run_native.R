@@ -53,7 +53,7 @@ for (spec in fixture_specs) {
     warnings = character(0),
     error = NULL
   )
-  
+
   # Policy check for duplicate IDs
   if (anyDuplicated(df$id)) {
     res$status <- "CLINICALPSM_POLICY_REJECT"
@@ -61,14 +61,14 @@ for (spec in fixture_specs) {
     all_results[[fid]] <- res
     next
   }
-  
+
   rownames(df) <- df$id
-  
+
   warnings_captured <- character(0)
-  
+
   m_out <- NULL
   err_msg <- NULL
-  
+
   withCallingHandlers({
     tryCatch({
       m_out <- MatchIt::matchit(
@@ -92,18 +92,18 @@ for (spec in fixture_specs) {
     warnings_captured <<- c(warnings_captured, conditionMessage(w))
     invokeRestart("muffleWarning")
   })
-  
+
   res$warnings <- warnings_captured
-  
+
   if (!is.null(err_msg)) {
     res$status <- "ERROR"
     res$error <- err_msg
     all_results[[fid]] <- res
     next
   }
-  
+
   res$status <- "SUCCESS"
-  
+
   # Extract MatchIt model & results
   mm <- m_out$match.matrix
   treated_units <- rownames(mm)
@@ -114,18 +114,18 @@ for (spec in fixture_specs) {
       matched_pairs[[t_id]] <- c_id
     }
   }
-  
+
   discarded_units <- names(m_out$discarded)[m_out$discarded]
   if (is.null(discarded_units)) discarded_units <- character(0)
-  
+
   weights_map <- as.list(m_out$weights)
   subclass_map <- as.list(ifelse(is.na(m_out$subclass), "UNMATCHED", as.character(m_out$subclass)))
-  
+
   # Model extraction
   glm_mod <- m_out$model
   coefs <- if (!is.null(glm_mod)) as.list(coef(glm_mod)) else list()
   converged <- if (!is.null(glm_mod)) glm_mod$converged else NA
-  
+
   res$matching <- list(
     converged = converged,
     coefficients = coefs,
@@ -139,13 +139,13 @@ for (spec in fixture_specs) {
     n_matched_pairs = length(matched_pairs),
     n_discarded = length(discarded_units)
   )
-  
+
   # Cobalt balance diagnostics
   if (res$matching$n_matched_pairs > 0) {
     bal <- tryCatch({
       cobalt::bal.tab(m_out, un = TRUE, binary = "raw", s.d.denom = "treated")
     }, error = function(e) NULL)
-    
+
     if (!is.null(bal) && !is.null(bal$Balance)) {
       b_df <- as.data.frame(bal$Balance)
       res$cobalt_balance <- list(
@@ -160,7 +160,7 @@ for (spec in fixture_specs) {
   } else {
     res$cobalt_balance <- list(note = "Zero matched pairs; cobalt bal.tab skipped")
   }
-  
+
   all_results[[fid]] <- res
 }
 
