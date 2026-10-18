@@ -27,6 +27,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: cd apps/web && npm ci
       - run: bash scripts/devtools/install-gitleaks.sh
       - name: Base gates
         run: node scripts/devtools/gates.mjs --phase "$GATE_PHASE" --only base --strict
@@ -43,6 +44,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: cd apps/web && npm ci
       - name: Browser for the site tests
         run: npx playwright install --with-deps chromium
       - name: Cloudflare gates

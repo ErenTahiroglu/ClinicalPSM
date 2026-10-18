@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cd apps/web && node build.mjs && npx wrangler dev --local --port 8793",
-    "build": "cd apps/web && node build.mjs",
-    "build:prod": "cd apps/web && node build.mjs --production",
+    "dev": "cd apps/web && ([ -d node_modules ] || npm ci --silent --no-audit --no-fund) && node build.mjs && npx wrangler dev --local --port 8793",
+    "build": "cd apps/web && ([ -d node_modules ] || npm ci --silent --no-audit --no-fund) && node build.mjs",
+    "build:prod": "cd apps/web && ([ -d node_modules ] || npm ci --silent --no-audit --no-fund) && node build.mjs --production",
     "build:legacy-next": "next build",
     "dev:legacy-next": "next dev",
     "start": "cd apps/web && npx wrangler dev --local --port 8793",

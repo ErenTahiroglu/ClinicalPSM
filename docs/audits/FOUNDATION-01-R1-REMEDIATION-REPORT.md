@@ -151,6 +151,12 @@ PASS=21 FAIL=0 BLOCKED=0 NOT_APPLICABLE=23
 - 18 static files generated, largest file 5 KiB (well below 25 MiB Cloudflare limit).
 - Strict CSP: `frame-ancestors 'none'`, zero unsafe-inline / unsafe-eval in static HTML.
 
+### 5.4 CI Clean-Checkout Resilience
+- In clean CI checkouts (where only root `npm ci` was executed), `apps/web` had not installed its own local dependencies (`esbuild`, etc.).
+- Updated `.github/workflows/gates.yml` (`base` & `cloudflare` jobs) and `.github/workflows/ci.yml` to run `cd apps/web && npm ci`.
+- Updated root `package.json` `build` / `build:prod` / `dev` scripts to defensively run `([ -d node_modules ] || npm ci --silent --no-audit --no-fund)` when run standalone.
+- Stripped unnecessary Supabase environment variables from the `ci.yml` build production step.
+
 ---
 
 ## 6. Remaining Blockers & Next Phase Transition
