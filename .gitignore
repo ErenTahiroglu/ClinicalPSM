@@ -52,3 +52,8 @@ next-env.d.ts
 # Supabase
 supabase/.branches/
 supabase/.temp/
+
+# SEC-00: editor connection settings (SQL clients store credentials here); never track
+/.vscode/settings.json
+/.vscode/*.code-workspace
+/.vscode/sqltools*
