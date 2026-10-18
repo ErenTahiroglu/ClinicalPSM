@@ -1,9 +1,9 @@
 # FOUNDATION-01 Consolidation Report: Two-Branch Consolidation, Clean Active Architecture & Research Contract
 
-**Phase Identifier:** `FOUNDATION-01`  
-**Repository:** `ErenTahiroglu/ClinicalPSM`  
-**Date Context:** 18 October 2026  
-**Independent Red Team Authority:** ChatGPT  
+**Phase Identifier:** `FOUNDATION-01`
+**Repository:** `ErenTahiroglu/ClinicalPSM`
+**Date Context:** 18 October 2026
+**Independent Red Team Authority:** ChatGPT
 **Baseline Commits Verified:**
 - Latest `origin/main`: `53fb05e7c8d9b77b46c4a5d8b7c9cc041345f6a6`
 - Latest Cloudflare Source (`phase/clean-slate-03-security-dns`): `826725baaaf511803ff1f784b44cf527b9633e29`
@@ -152,7 +152,7 @@ As mandated by Section 3, all 15 branch tips, complete histories, and tags were 
    - Plaintext SHA-256 Checksum: `49734e294e8a7da34d3168aeb5cc33565bb4a4b9d95e031e618d79d158bc4077`
 2. **Cryptographic Encryption:**
    - Encrypted using AES-256-CBC with PBKDF2 (100,000 iterations, random 32-byte key, random 16-byte IV).
-   - Encrypted Archive Path:  
+   - Encrypted Archive Path:
      `/Users/eren/.gemini/antigravity-ide/brain/bde2c483-da90-4bd7-8519-833214691e68/scratch/archive/clinicalpsm-branches-archive-20261018.bundle.enc`
    - Encrypted Size: 1,016,560 bytes.
    - Encrypted SHA-256 Checksum: `9e3208230ae210da6e0370f17792ddeb96dbd4888e1065e8289f29be4f5a67fd`

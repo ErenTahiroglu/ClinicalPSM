@@ -1,10 +1,10 @@
 # Statistical Reference Contract (v0.1)
 
-**System:** ClinicalPSM  
-**Date Context:** 18 October 2026  
-**Document Status:** Normative Specification (Design Requirements & Governance Standard)  
-**Governing Standard:** Canonical R `stats::glm`, `MatchIt` (v4.8.x), `cobalt` (v5.0.x)  
-**Target Release Phase:** CP-01 / CP-02 Baseline  
+**System:** ClinicalPSM
+**Date Context:** 18 October 2026
+**Document Status:** Normative Specification (Design Requirements & Governance Standard)
+**Governing Standard:** Canonical R `stats::glm`, `MatchIt` (v4.8.x), `cobalt` (v5.0.x)
+**Target Release Phase:** CP-01 / CP-02 Baseline
 
 ---
 

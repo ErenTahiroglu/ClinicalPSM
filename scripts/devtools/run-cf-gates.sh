@@ -11,14 +11,17 @@ install(){ (cd "$1" && { [ -d node_modules ] || npm ci --silent --no-audit --no-
 
 case "${1:?mode}" in
   static-build)
+    if [ ! -d "$SITE" ]; then echo "retired experiment: cf01-static-site superseded by apps/web"; exit 0; fi
     install "$SITE"; (cd "$SITE" && node build.mjs)
     n=$(find "$SITE/public" -type f | wc -l); echo "static files: $n"
     [ "$n" -gt 5 ] && [ "$n" -lt 20000 ] ;;
   site)
+    if [ ! -d "$SITE" ]; then echo "retired experiment: cf01-static-site superseded by apps/web"; exit 0; fi
     install "$SITE"; (cd "$SITE" && node build.mjs && npx wrangler dev --local --port 8793 >/tmp/cf-site.log 2>&1) &
     pids+=($!); wait_http http://localhost:8793/en/
     (cd "$SITE" && node test/site.mjs http://localhost:8793) ;;
   exposure)
+    if [ ! -d "$AUTH" ]; then echo "retired experiment: cf01-auth-poc superseded"; exit 0; fi
     install "$AUTH"
     (cd "$AUTH" && node scripts/build-and-inspect.mjs)
     rm -rf "$AUTH/.wrangler/state-gate"
@@ -28,6 +31,7 @@ case "${1:?mode}" in
     pids+=($!); wait_http http://localhost:8792/api/me
     (cd "$AUTH" && node test/exposure.mjs http://localhost:8792) ;;
   contract)
+    if [ ! -d "$AUTH" ]; then echo "retired experiment: cf01-auth-poc superseded"; exit 0; fi
     install "$AUTH"; rm -rf "$AUTH/.wrangler/state"
     (cd "$AUTH" && npx wrangler dev --local -c wrangler.test.jsonc --port 8790 >/tmp/cf-test.log 2>&1) &
     pids+=($!); wait_http http://localhost:8790/api/me

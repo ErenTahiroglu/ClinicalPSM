@@ -1,9 +1,9 @@
 # Research Decision Ledger: Synthesis of Three Independent Studies
 
-**Project:** ClinicalPSM  
-**Date:** 18 October 2026  
-**Status:** Canonical Product Baseline  
-**Governing Authority:** Independent Red Team (ChatGPT)  
+**Project:** ClinicalPSM
+**Date:** 18 October 2026
+**Status:** Canonical Product Baseline
+**Governing Authority:** Independent Red Team (ChatGPT)
 
 ---
 

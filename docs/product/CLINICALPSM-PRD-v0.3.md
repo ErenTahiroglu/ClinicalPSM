@@ -1,11 +1,11 @@
 # ClinicalPSM Product Requirements Document (PRD v0.3)
 
-**Product Name:** ClinicalPSM  
-**Version:** 0.3.0 (Clean-Slate Baseline)  
-**Date Context:** 18 October 2026  
-**Document Owner:** ClinicalPSM Product & Methodological Strategy  
-**Implementation Authority:** Claude Code & Antigravity  
-**Independent Red Team:** ChatGPT  
+**Product Name:** ClinicalPSM
+**Version:** 0.3.0 (Clean-Slate Baseline)
+**Date Context:** 18 October 2026
+**Document Owner:** ClinicalPSM Product & Methodological Strategy
+**Implementation Authority:** Claude Code & Antigravity
+**Independent Red Team:** ChatGPT
 
 ---
 
@@ -53,7 +53,7 @@ Academic Biostatistician / Methodologist (Audits R Parity & Reproducibility)
 
 ## 3. Jobs-to-be-Done (JTBD)
 
-> **Core JTBD:**  
+> **Core JTBD:**
 > *"When my observational clinical study requires propensity-score matching, help our research team execute an approved matching design, rigorously assess whether acceptable covariate balance was achieved, and export an auditable, editable Publication Bundle without transferring patient data to an application server."*
 
 ### 3.1 Functional Job Requirements

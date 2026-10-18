@@ -1,10 +1,10 @@
 # CP-WEBR-00 Experimental Contract: Browser-R Feasibility & Reference Parity
 
-**Phase Identifier:** `CP-WEBR-00`  
-**System:** ClinicalPSM  
-**Date Context:** 18 October 2026  
-**Document Status:** Research & Evaluation Contract (Not Approved for Production)  
-**Governing Authority:** Independent Red Team (ChatGPT)  
+**Phase Identifier:** `CP-WEBR-00`
+**System:** ClinicalPSM
+**Date Context:** 18 October 2026
+**Document Status:** Research & Evaluation Contract (Not Approved for Production)
+**Governing Authority:** Independent Red Team (ChatGPT)
 
 ---
 

@@ -3,7 +3,7 @@ import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 const strip = s => s.replace(/\/\/.*$/gm, '')
 const strictWeb = process.argv.includes('--strict-web')
-const configs = ['apps/web/wrangler.jsonc', 'experiments/cf01-static-site/wrangler.jsonc', 'experiments/cf01-auth-poc/wrangler.jsonc', 'experiments/cf02-cpu-probe/wrangler.jsonc']
+const configs = ['apps/web/wrangler.jsonc', 'experiments/cf01-static-site/wrangler.jsonc', 'experiments/cf01-auth-poc/wrangler.jsonc', 'experiments/cf02-cpu-probe/wrangler.jsonc'].filter(existsSync)
 // bindings/features that need a paid plan or add recurring cost
 const PAID = ['"queues"', '"containers"', '"hyperdrive"', '"vectorize"', '"send_email"', '"browser"', '"ai"', '"durable_objects"', '"analytics_engine_datasets"', '"workflows"', '"r2_buckets"', '"images"', '"routes"', '"route"']
 let bad = 0
