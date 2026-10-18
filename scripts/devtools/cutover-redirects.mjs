@@ -6,20 +6,58 @@ import { pathToFileURL } from 'node:url'
 
 export const REDIRECT = new Set([301, 302, 303, 307, 308])
 
-// Follow redirects manually. Returns { hops: [{url,status,location}], end: 'final'|'loop'|'limit'|'error'|'bad-location', error? }
-export async function walk(start, fetchFn, maxHops = 8) {
+// Follow redirects manually. Returns { hops: [{url,status,location}], end: 'final'|'loop'|'limit'|'error'|'bad-location'|'off-domain', error? }
+// Enforces allowed domain set BEFORE making the next network request to prevent untrusted off-domain traversal.
+export async function walk(start, fetchFn, maxHopsOrOpts = 8, allowedHosts = null) {
+  let maxHops = 8
+  let allowed = Array.isArray(allowedHosts) ? allowedHosts : null
+  if (typeof maxHopsOrOpts === 'object' && maxHopsOrOpts !== null) {
+    maxHops = maxHopsOrOpts.maxHops ?? 8
+    allowed = maxHopsOrOpts.allowed ?? allowed
+  } else if (typeof maxHopsOrOpts === 'number') {
+    maxHops = maxHopsOrOpts
+  }
+
   const hops = [], seen = new Set()
   let url = start
+
+  // Enforce permitted domain set on initial request
+  if (allowed) {
+    try {
+      const startHost = new URL(url).host
+      if (!allowed.includes(startHost)) {
+        return { hops, end: 'off-domain' }
+      }
+    } catch {
+      return { hops, end: 'bad-location' }
+    }
+  }
+
   for (let i = 0; i <= maxHops; i++) {
     if (seen.has(url)) return { hops, end: 'loop' }
     seen.add(url)
     let r
-    try { r = await fetchFn(url) } catch (e) { hops.push({ url, status: 0, location: null }); return { hops, end: 'error', error: String(e?.cause?.code ?? e?.message ?? e) } }
+    try {
+      r = await fetchFn(url)
+    } catch (e) {
+      hops.push({ url, status: 0, location: null })
+      return { hops, end: 'error', error: String(e?.cause?.code ?? e?.message ?? e) }
+    }
     const location = r.location ?? null
     hops.push({ url, status: r.status, location })
     if (!REDIRECT.has(r.status)) return { hops, end: 'final' }
     if (!location) return { hops, end: 'bad-location' }
-    try { url = new URL(location, url).href } catch { return { hops, end: 'bad-location' } }
+    let nextUrl
+    try {
+      nextUrl = new URL(location, url)
+    } catch {
+      return { hops, end: 'bad-location' }
+    }
+    // Enforce permitted domain set BEFORE making the next network request
+    if (allowed && !allowed.includes(nextUrl.host)) {
+      return { hops, end: 'off-domain' }
+    }
+    url = nextUrl.href
   }
   return { hops, end: 'limit' }
 }
@@ -37,10 +75,17 @@ export function evaluate(result, expect) {
   add('no fetch/TLS error', end !== 'error', result.error ?? '')
   add('every Location is valid', end !== 'bad-location')
   const off = hosts.filter(h => !expect.allowed.includes(h))
-  add('no off-domain hop', off.length === 0, off.join(','))
+  add('no off-domain hop', end !== 'off-domain' && off.length === 0, off.join(',') || (end === 'off-domain' ? 'destination host rejected before fetch' : ''))
   // a Location that points off-domain is a failure even if the walker stopped before fetching it
   const lastLoc = hops.at(-1)?.location
-  if (lastLoc) { try { const h = new URL(lastLoc, hops.at(-1).url).host; add('last Location stays on allowed hosts', expect.allowed.includes(h), h) } catch { /* covered by bad-location */ } }
+  if (lastLoc) {
+    try {
+      const h = new URL(lastLoc, hops.at(-1).url).host
+      add('last Location stays on allowed hosts', expect.allowed.includes(h), h)
+    } catch {
+      /* covered by bad-location */
+    }
+  }
   if (expect.probe) return out
   const last = hops.at(-1)
   const fin = last ? new URL(last.url) : null
@@ -82,7 +127,7 @@ async function main() {
   const permanent = process.argv.includes('--permanent'), maxRedirects = Number(process.env.MAX_HOPS ?? 4)
   let bad = 0
   for (const k of cases(apex, www)) {
-    const res = evaluate(await walk(k.start, liveFetch), { ...k.expect, permanent, maxRedirects: k.expect.maxRedirects ?? maxRedirects })
+    const res = evaluate(await walk(k.start, liveFetch, { maxHops: k.expect.maxRedirects ?? maxRedirects, allowed: k.expect.allowed }), { ...k.expect, permanent, maxRedirects: k.expect.maxRedirects ?? maxRedirects })
     const f = res.filter(r => !r.ok)
     console.log(`${f.length ? 'FAIL' : 'PASS'}   ${k.name}${f.length ? ' :: ' + f.map(x => `${x.id} [${x.detail}]`).join('; ') : ''}`)
     bad += f.length

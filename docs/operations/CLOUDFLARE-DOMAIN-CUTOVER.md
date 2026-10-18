@@ -30,7 +30,7 @@ Before starting: screenshot the full DNS table of `clinicalpsm.com` and confirm 
 | W1 | (automatic) | | `www` | created by Cloudflare when the Custom Domain is added | **do not add manually** | |
 | — | | MX/TXT/CAA/other | | | **leave** | none are known; do not add email records unless a mailbox is introduced |
 
-D1 and D2 may be done early (C3) (they are safe on their own: the site is already down and removal ends the takeover risk). D4 (C8) and W1 (C7) happen at cutover.
+D1 and D2 deletion was explicitly approved by the owner in CLEAN-SLATE-03. Because the API token cannot edit DNS, removal is executed by the owner via the Cloudflare dashboard (C3). D4 (C8) and W1 (C7) happen at cutover.
 
 ## 2. Authorization map
 
@@ -67,7 +67,7 @@ Later, each needs separate approval and is **not part of the first release**: HS
 
 **Redirect chains:** Always Use HTTPS may add a hop (`http://apex` → `https://apex` → `https://www`). The verifier accepts up to 4 redirects and checks the *outcome*: final scheme https, final host `www.clinicalpsm.com`, path and query unchanged, final status 200, no loop, no host outside the apex/www pair, every redirect status in 301/302/307/308 (301/308 only with `REQUIRE_PERMANENT=1`). A plain-HTTP answer without upgrade is a **FAIL**. Off-domain probes (`//evil.example/`, `?next=https://evil.example`, `/%2f%2fevil.example`, `/\evil.example`) are run against apex and www on both schemes.
 
-**Local proof of the evaluator before cutover:** `node scripts/devtools/cutover-redirects.test.mjs` (24 synthetic chains, including the failure modes above). Run live against staging with `CUTOVER_APEX=<staging host> CUTOVER_WWW=<staging host> node scripts/devtools/cutover-redirects.mjs`, it correctly FAILs the three plain-HTTP cases, because `workers.dev` answers 200 on `http://`.
+**Local proof of the evaluator before cutover:** `node scripts/devtools/cutover-redirects.test.mjs` (25 synthetic chains, including pre-fetch off-domain rejection and the failure modes above). Run live against staging with `CUTOVER_APEX=<staging host> CUTOVER_WWW=<staging host> node scripts/devtools/cutover-redirects.mjs`, it correctly FAILs the three plain-HTTP cases, because `workers.dev` answers 200 on `http://`.
 
 ## 4. Minimal DNS checklist (print and tick)
 

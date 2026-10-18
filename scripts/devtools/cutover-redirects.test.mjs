@@ -7,7 +7,7 @@ const to = (loc, status = 301) => ({ status, location: loc })
 const good = { host: W, allowed, path: '/en/pricing/', search: '?a=1&b=two' }
 const results = []
 const t = async (name, routes, start, expect, wantFail) => {
-  const res = evaluate(await walk(start, site(routes)), expect)
+  const res = evaluate(await walk(start, site(routes), { maxHops: expect?.maxRedirects ?? 8, allowed: expect?.allowed }), expect)
   const failed = res.filter(r => !r.ok).map(r => r.id)
   const pass = wantFail ? failed.some(f => f.includes(wantFail)) : failed.length === 0
   results.push(pass); console.log(`${pass ? 'PASS' : 'FAIL'}  ${name}${pass ? '' : '  :: ' + JSON.stringify({ failed, wantFail })}`)
@@ -37,8 +37,25 @@ await t('NEG redirect without Location', { [S]: { status: 301, location: null } 
 await t('NEG permanent mode rejects a 302', { [S]: to('https://www.clinicalpsm.com/en/pricing/?a=1&b=two', 302), 'https://www.clinicalpsm.com/en/pricing/?a=1&b=two': ok() }, S, { ...good, permanent: true }, 'permanent')
 await t('NEG unknown URL answers 404', { }, S, good, 'final response')
 { // thrown fetch error
-  const res = evaluate(await walk(S, async () => { throw Object.assign(new Error('x'), { cause: { code: 'CERT_HAS_EXPIRED' } }) }), good)
+  const res = evaluate(await walk(S, async () => { throw Object.assign(new Error('x'), { cause: { code: 'CERT_HAS_EXPIRED' } }) }, { allowed }), good)
   const p = res.some(r => r.id === 'no fetch/TLS error' && !r.ok && /CERT_HAS_EXPIRED/.test(r.detail)); results.push(p); console.log(`${p ? 'PASS' : 'FAIL'}  NEG TLS failure surfaces the error code`)
+}
+{
+  // Negative synthetic test: off-domain Location is rejected BEFORE destination is fetched
+  let offDomainFetched = false
+  const fakeFetch = async url => {
+    if (url.includes('evil.example')) {
+      offDomainFetched = true
+      throw new Error('SECURITY VIOLATION: off-domain destination was fetched!')
+    }
+    return to('https://evil.example/phish')
+  }
+  const walkRes = await walk(S, fakeFetch, { allowed })
+  const evalRes = evaluate(walkRes, good)
+  const failedIds = evalRes.filter(r => !r.ok).map(r => r.id)
+  const p = !offDomainFetched && walkRes.end === 'off-domain' && failedIds.includes('no off-domain hop')
+  results.push(p)
+  console.log(`${p ? 'PASS' : 'FAIL'}  NEG off-domain Location header rejected before destination is fetched`)
 }
 // open-redirect probes
 const P = 'https://clinicalpsm.com//evil.example/'
