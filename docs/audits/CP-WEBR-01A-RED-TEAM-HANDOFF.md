@@ -5,7 +5,7 @@
 **Branch:** `development`
 **Required Baseline SHA:** `759aab6de739deaa27f160aee1afde9a107385c0`
 **Authority:** Independent Red Team (ChatGPT)
-**Status:** R1 Correction Submitted — Awaiting Red Team Re-Approval
+**Status:** R1.1 Final Consistency Remediation Submitted — Awaiting Independent Red Team Review
 
 ---
 
@@ -37,16 +37,15 @@ This phase is **strictly design-only**. No production code (`clinicalpsm/src/` o
 ### 2.2 Secure Parameter Binding (Zero String Interpolation)
 - **Problem in Prototypes:** R commands were previously generated using JavaScript string interpolation (e.g. `evalR(\`matchit(\${formula})\`)`).
 - **Production Contract:** Prohibits string interpolation. Ingestion enforces:
-  1. Strict lexical allowlist for column names: `^[a-zA-Z_][a-zA-Z0-9._]{0,63}$` (disallowing all R reserved keywords).
-  2. Structured binary buffer transfer via Transferable `postMessage` objects.
-  3. Pre-compiled immutable R templates with parameters passed via the verified WebR 0.6.0 `REnvironment` API: `new webR.REnvironment()` → `env.bind(name, robj)` → `webR.evalR(code, { env })`.
-  - **Note:** `webr.objs.setData()` does not exist in WebR 0.6.0 and must not appear in any production contract or prototype.
+  1. Reversible bidirectional symbol mapping: original clinical headers (max 256 code points, UTF-8, case-sensitive) mapped deterministically to internal safe aliases (`cov_01`, `trt_01`); categorical cell values passed as R string vectors without regex filtering.
+  2. Defensive-copy boundary contract via Structured Clone `postMessage`; no shared mutable buffers; unshared JSON-serializable primitives (`number[]`) across worker boundary.
+  3. Pre-compiled R templates with parameters passed via verified WebR 0.6.0 `REnvironment` API: `new webR.REnvironment()` → `env.bind(name, robj)` → `webR.evalR(code, { env })` (smoke test required in CP-WEBR-01B prior to production integration; legacy helper APIs prohibited).
 
 ### 2.3 Scientific Separation Policy
 - **Empirical Finding:** R's `glm()` optimization terminates with `converged: true` under complete separation because relative deviance reduction drops below $10^{-8}$, even though parameter estimates diverge to $\pm\infty$ with astronomical standard errors ($SE > 39,000$).
 - **Production Contract:**
   1. Algorithmic convergence (`converged == TRUE`) is never presented as proof that separation is absent.
-  2. Observable symptoms of separation (fitted probabilities collapsing to 0.0/1.0, extreme coefficient SEs in the thousands, or IRLS divergence) trigger `WARN_SUSPECTED_SEPARATION` and the run is classified as **`REJECT_FOR_PUBLICATION`**.
+  2. Observable symptoms of separation (fitted probabilities collapsing to 0.0/1.0, extreme coefficient SEs in the thousands, or IRLS divergence) trigger `WARN_SUSPECTED_SEPARATION` and the run is classified as **`OUTPUT_GENERATION_RESTRICTED`**.
   3. **The candidate heuristics `|beta_j| > 10.0` and `SE(beta_j) > 50.0` are not validated universal separation diagnostics.** They have been removed from this contract per R1 P0 corrections. Definitive automated separation detection is an explicit blocker for Phase `CP-STAT-02` (`SEPARATION_DETECTOR = NOT_IMPLEMENTED`, `AUTOMATED_SEPARATION_SAFETY = BLOCKED`).
   4. No automated Firth penalized likelihood fallback is permitted in the initial baseline.
 
@@ -56,7 +55,7 @@ This phase is **strictly design-only**. No production code (`clinicalpsm/src/` o
 
 ### 2.5 GPL Distribution Compliance & Gate Status
 - **Redistribution Reality:** Serving pre-compiled WebAssembly archives over HTTP constitutes binary distribution under GPL v2/v3, triggering Corresponding Source and notice requirements.
-- **`LICENSING_INVENTORY = PASS`:** 21-package dependency SBOM locked with exact licenses.
+- **`R_PACKAGE_LOCK_ALIGNMENT = PASS` & `FULL_DISTRIBUTION_SBOM = PASS`:** 21-package dependency SBOM reconciled against `dependency-lock.json` with exact versions, SHA-256 hashes, and verified WebR GPL-3.0 binary / MIT client license separation.
 - **`PRODUCTION_LICENSING_CLEARANCE = BLOCKED`:** Production deployment remains blocked until formal intellectual property legal counsel reviews the distribution mechanism and combined-work boundaries.
 
 ---
@@ -86,6 +85,6 @@ Upon approval of this architecture contract by the Independent Red Team (ChatGPT
 **`CP-WEBR-01B — Security, Privacy & Falsification Release Gates`**
 - Implement automated two-pass falsification tests in Playwright.
 - Implement deep binary inspection of `emscripten_filesystem` IndexedDB object stores across lifecycle checkpoints T1–T5.
-- Confirm zero-egress and zero-residue guarantees before touching production source code.
+- Verify zero-egress architectural objective via automated test suite and evaluate residual IndexedDB lifecycle evidence before touching production source code.
 
 **Design-only phase complete. STOP. Awaiting ChatGPT Independent Red Team review.**

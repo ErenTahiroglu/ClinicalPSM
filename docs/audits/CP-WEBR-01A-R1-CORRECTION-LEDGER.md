@@ -54,7 +54,9 @@ Source of truth: `node_modules/webr/dist/webR/webr-main.d.ts`.
 
 | Field | Value |
 | :--- | :--- |
-| **Severity** | P0 — SBOM Fabricated; Not Derived from Locked Source |
+| **Severity** | P0 — Incomplete Inventory & Licensing Mappings in R1; Remediated in R1.1 |
+| **Status in R1** | **PARTIALLY INCOMPLETE** (WebR binary incorrectly labeled GPL-2; SPDX inferences from lockfile labels unseparated from CRAN declarations) |
+| **Remediation in R1.1** | **REMEDIATED** (Exact 21-package lock reconciliation, SHA-256 hashes, WebR binary GPLv3 vs client MIT separation) |
 | **Affected Document** | `docs/architecture/CP-WEBR-01-LICENSING-AND-DISTRIBUTION.md` |
 
 Prior table had 26 rows with stale versions and fabricated packages. Replaced with exact 21-package inventory from `experiments/cp-webr-00b/dependency-lock.json`.
@@ -71,10 +73,23 @@ Key version corrections: `rlang` 1.1.5→1.3.0, `cli` 3.6.5→3.6.6, `glue` 1.8.
 
 | Field | Value |
 | :--- | :--- |
-| **Severity** | P1 — Missing Normative Immutability Constraint |
-| **Affected Document** | `docs/science/CP-WEBR-01-CANONICAL-RESULT-CONTRACT.md` |
+| **Severity** | P1 — Defective Immutability Semantics in R1; Remediated in R1.1 |
+| **Status in R1** | **INCOMPLETE / DEFECTIVE** (Falsely claimed `Object.freeze()` resolves deep immutability) |
+| **Remediation in R1.1** | **REMEDIATED** via Defensive-Copy Boundary Contract |
+| **Affected Documents** | `docs/architecture/CP-WEBR-01-PRODUCTION-ARCHITECTURE.md` (§4.4), `docs/science/CP-WEBR-01-CANONICAL-RESULT-CONTRACT.md` (§4) |
 
-Section 4 header updated to explicitly state: result frozen with `Object.freeze()` upon creation; no downstream consumer may mutate any field; all publication artifacts must reference the frozen snapshot directly.
+**Audit Finding (R1 Review):**
+The R1 claim that `Object.freeze()` provides deep immutability was technically false. `Object.freeze()` is shallow and cannot freeze nonempty `TypedArray` views backed by mutable `ArrayBuffer`s.
+
+**R1.1 Remediation:**
+Replaced with an implementable API-level defensive-copy boundary contract:
+- Worker-to-UI boundary defensive copying via Structured Clone (`postMessage()`).
+- No writable buffer sharing after finalization.
+- Conversion of internal TypedArrays to standard `number[]` primitives across the boundary.
+- Encapsulated read-only UI store with accessor views.
+- Cryptographic SHA-256 fingerprint verification of canonical result.
+- Clean worker lifecycle disposal (`webR.destroy()` / `worker.terminate()`).
+- All publication artifacts derive from the single finalized canonical result.
 
 ---
 
@@ -82,7 +97,9 @@ Section 4 header updated to explicitly state: result frozen with `Object.freeze(
 
 | Field | Value |
 | :--- | :--- |
-| **Severity** | P1 — Misleading / Underspecified Field Documentation |
+| **Severity** | P1 — Underspecified Scale & Units in R1; Remediated in R1.1 |
+| **Status in R1** | **INCOMPLETE** (Omitted propensity score scale, unit conversions, null handling on zero denominator) |
+| **Remediation in R1.1** | **REMEDIATED** (Source-backed Rubin 2001 linear logit definitions, proportion vs percentage conversion, zero-denominator null handling) |
 | **Affected Document** | `docs/science/CP-WEBR-01-CANONICAL-RESULT-CONTRACT.md` |
 
 `rubinB` and `rubinR` fields now carry precise mathematical semantics:
@@ -97,8 +114,10 @@ Section 4 header updated to explicitly state: result frozen with `Object.freeze(
 
 | Field | Value |
 | :--- | :--- |
-| **Severity** | P1 — Underspecified Security Constraint |
-| **Affected Document** | `docs/security/CP-WEBR-01-SECURITY-AND-PRIVACY-GATES.md` |
+| **Severity** | P1 — Identifier Contradiction & Zero-Egress Overclaims in R1; Remediated in R1.1 |
+| **Status in R1** | **INCOMPLETE / CONTRADICTORY** (Security contract retained R-identifier regex on columns; zero-egress overclaimed without automated evidence) |
+| **Remediation in R1.1** | **REMEDIATED** (Eliminated regex on clinical headers/categories, structured two-tier ingestion, zero-egress reframed as verified architectural objective) |
+| **Affected Document** | `docs/security/CP-WEBR-01-SECURITY-AND-PRIVACY-GATES.md`, `docs/architecture/CP-WEBR-01-PRODUCTION-ARCHITECTURE.md` |
 
 (a) `connect-src 'self'` clarified: “(permits same-origin requests only — zero external origins)”.
 
@@ -152,8 +171,9 @@ Section 4 header updated to explicitly state: result frozen with `Object.freeze(
 
 ## 5. Formal Disposition
 
-**R1 Correction Status:** `COMPLETE — AWAITING RED TEAM RE-REVIEW`
+**R1 Status:** `SUPERSEDED BY R1.1 TARGETED REMEDIATION`
+**R1.1 Status:** `COMPLETE — SUBMITTED FOR INDEPENDENT RED TEAM REVIEW`
 
-All seven deficiencies addressed. No production code modified. No numerical results altered.
+Deficiencies identified in R1 review (shallow `Object.freeze()` claim, WebR binary license mapping, lockfile shorthand inferences, header regex contradictions, zero-egress overclaims, and Rubin metric units) are fully and honestly remediated in R1.1. No production application code was modified. See `docs/audits/CP-WEBR-01A-R1.1-FINAL-CONTRACT-AUDIT.md` for complete cross-document audit.
 
 **Ready for:** CP-WEBR-01A R1 Independent Red Team Re-Approval → proceed to `CP-WEBR-01B`.

@@ -1,7 +1,7 @@
 # CP-WEBR-01 — Canonical Scientific Result Contract & Data Model
 
 **Repository:** `ErenTahiroglu/ClinicalPSM`
-**Phase:** `CP-WEBR-01A — Scientific Data Model`
+**Phase:** `CP-WEBR-01A R1.1 — Final Scientific Data Model Consistency Closure`
 **Governing Standard:** Canonical R `stats::glm`, `MatchIt` 4.8.1, `cobalt` 5.0.0
 **Status:** Normative Specification (Design Contract — Zero Algorithmic Modifications in Current Phase)
 
@@ -82,6 +82,8 @@ Variance ratios are evaluated as:
 $$\text{VR} = \frac{s^2_{1,\text{matched}}}{s^2_{0,\text{matched}}}$$
 Values within $[0.5, 2.0]$ represent acceptable heuristic spread; values outside this interval are flagged as residual variance disparity.
 
+**Null Handling:** When $s^2_{0,\text{matched}} = 0$ (e.g. binary covariate with 100% prevalence in matched controls), VR is undefined. The stored value must be `null`. Zero denominator must **never** yield `Infinity` or `NaN` in the exported schema.
+
 #### D. Prohibition on P-Values in Balance Tables
 In accordance with modern clinical epidemiology (Imai, King & Stuart 2008; Austin 2009), **hypothesis test p-values (e.g., t-tests, chi-square tests) must never be displayed in covariate balance tables**. Propensity score matching is a sample-adjustment procedure, not a randomized hypothesis test; p-values conflate balance with sample size.
 
@@ -107,7 +109,7 @@ To protect clinical research integrity without making unsupported claims, Clinic
 [ Model Fitting (stats::glm) ]
               │
               ├── 1. Optimizer Failure (max iterations reached without convergence)
-              │      └── Status: NUMERICAL_FAILURE (Fail Closed)
+              │      └── Status: COMPUTATION_FAILED (Fail Closed)
               │
               ├── 2. Suspected Separation (Observable Symptoms — NOT definitive heuristics)
               │      Symptoms (any combination):
@@ -115,24 +117,24 @@ To protect clinical research integrity without making unsupported claims, Clinic
               │        - One or more coefficient SEs exceed ~1,000 (experiment: SE > 39,000)
               │        - Coefficient estimates diverging across IRLS iterations
               │      Classification: WARN_QUASI_SEPARATION advisory
-              │      Gate: REJECT_FOR_PUBLICATION (Fail Closed)
+              │      Gate: OUTPUT_GENERATION_RESTRICTED (Fail Closed)
               │      NOTE: No universal numeric threshold (|beta|>10, SE>50) is validated.
               │            Definitive detection requires Phase CP-STAT-02 implementation.
               │
               ├── 3. Rank Deficiency / Collinearity
               │      Condition: rank(X) < ncol(X) OR any NA coefficient
-              │      └── Status: REJECT_FOR_PUBLICATION (Fail Closed)
+              │      └── Status: OUTPUT_GENERATION_RESTRICTED (Fail Closed)
               │
               ├── 4. Zero Eligible Matches / Off-Support
               │      Condition: Caliper too tight OR zero overlap
               │      └── Status: EXPECTED_REFERENCE_ERROR (Fail Closed)
               │
               └── 5. Valid Model Estimation
-                     └── Status: PUBLICATION_ELIGIBLE
+                     └── Status: OUTPUT_READY
 ```
 
 ### 3.3 Explicit Blocker Disclosure
-- **SEPARATION_DETECTOR = NOT_IMPLEMENTED:** The feasibility experiment (`CP-WEBR-00B`) relied on fixture metadata for the `REJECT_FOR_PUBLICATION` classification of `fix_16`. No runtime separation detector exists.
+- **SEPARATION_DETECTOR = NOT_IMPLEMENTED:** The feasibility experiment (`CP-WEBR-00B`) relied on fixture metadata for the `OUTPUT_GENERATION_RESTRICTED` classification of `fix_16`. No runtime separation detector exists.
 - **Numeric Threshold Prohibition:** The candidate heuristics `|beta_j| > 10.0` and `SE(beta_j) > 50.0` are **not validated universal separation diagnostics** and must not be embedded as definitive classification criteria in production code. They have been removed from this contract.
 - **AUTOMATED_SEPARATION_SAFETY = BLOCKED:** A general-purpose runtime separation detector (evaluating observable symptoms: boundary probabilities, SE magnitude relative to coefficient scale, and IRLS iteration divergence) must be implemented and independently validated against the 25 golden fixtures during Phase `CP-STAT-02` before any claim of automated separation safety can be made.
 
@@ -140,13 +142,13 @@ To protect clinical research integrity without making unsupported claims, Clinic
 
 ## 4. Canonical Scientific Result TypeScript Schema
 
-Every execution of the matching engine produces an **immutable** result snapshot adhering strictly to the following TypeScript interface. The result object is immediately frozen with `Object.freeze()` upon creation; no downstream consumer may mutate any field. All publication artifacts must reference the frozen snapshot directly.
+Every execution of the matching engine produces a **finalized, read-only** result snapshot adhering strictly to the following TypeScript interface. Immutability is enforced through a defensive-copy boundary pattern across the Web Worker boundary (see Production Architecture §4.4). Neither TypeScript `readonly` nor `Object.freeze()` is presented as runtime deep immutability. All publication artifacts must derive their statistical values from the same finalized canonical result.
 
 ```typescript
 /**
- * CanonicalPsmResult — The single authoritative scientific snapshot for ClinicalPSM.
- * Produced by Dedicated Worker via WebR; frozen with Object.freeze().
- * All downstream publication artifacts (DOCX, SVG, CSV, Methods) must reference this snapshot.
+ * CanonicalPsmResult — The authoritative scientific snapshot for ClinicalPSM.
+ * Produced by Dedicated Worker via WebR; boundary-transferred via defensive Structured Clone.
+ * All downstream publication artifacts (DOCX, SVG, CSV, Methods) derive from this snapshot.
  */
 export interface CanonicalPsmResult {
   // 1. Run Identification & Provenance
@@ -165,6 +167,7 @@ export interface CanonicalPsmResult {
   // 2. Input Schema Fingerprint
   inputFingerprint: {
     datasetSha256: string;
+    canonicalResultSha256: string; // SHA-256 over serialized result
     totalRows: number;
     completeCases: number;
     excludedRows: number;
@@ -182,6 +185,7 @@ export interface CanonicalPsmResult {
   };
 
   // 4. Effective MatchIt Configuration
+  // Authoritative Producer: MatchIt::matchit() call arguments
   matchingConfiguration: {
     treatmentVariable: string;
     covariates: string[];
@@ -196,37 +200,50 @@ export interface CanonicalPsmResult {
     caliperScaleDescription: string;
   };
 
-  // 5. Factor & Reference-Level Configuration
+  // 5. Factor & Symbol Provenance Mapping
+  // Authoritative Producer: Ingestion parser & R factor() configuration
   factorConfiguration: Record<string, {
+    originalHeader: string; // Exact user CSV header (e.g. "HbA1c > 8.0%")
+    internalAlias: string;  // R-safe symbol (e.g. "cov_01")
+    displayName: string;    // Sanitized display label
     inferredType: 'continuous' | 'binary' | 'categorical';
-    levels: string[];
-    referenceLevel: string;
-    droppedLevel: string;
+    levels: string[];       // Explicit factor levels
+    referenceLevel: string | null;
+    droppedLevel: string | null;
   }>;
 
   // 6. Unit-Level Propensity Score Output
+  // Authoritative Producer: stats::glm() & predict(..., type = "link")
   propensityScores: {
     unitIds: string[];
-    treatment: Uint8Array; // 1 = treated, 0 = control
-    propensityScores: Float64Array; // Probability scale [0, 1]
-    linearLogits: Float64Array; // Linear scale (-Inf, +Inf)
+    treatment: number[]; // 1 = treated, 0 = control (number[] post-boundary)
+    propensityScores: number[]; // Probability scale [0, 1] (number[] post-boundary)
+    linearLogits: (number | null)[]; // Linear logit scale (-Inf, +Inf); null if non-finite
   };
 
-  // 7. Match Matrix & Matched Unit Identities
+  // 7. Match Matrix & Matched Unit Accounting
+  // Authoritative Producer: MatchIt::matchit()$match.matrix
   matchMatrix: {
     treatedIds: string[];
     matchedControlIds: (string | null)[]; // null if discarded by caliper
     pairDistances: (number | null)[];
   };
+  matchedUnits: {
+    matchedTreatedIds: string[];
+    matchedControlIds: string[];
+    totalMatchedPairs: number;
+  };
 
   // 8. Weights & Subclass Assignments
+  // Authoritative Producer: MatchIt::matchit()$weights & $subclass
   matchingWeights: {
     unitIds: string[];
-    weights: Float64Array; // 1.0 for matched treated & matched control, 0.0 for unmatched
+    weights: number[]; // 1.0 for matched treated & control, 0.0 for unmatched
     subclass: (number | null)[]; // 1..N for matched pairs, null for unmatched
   };
 
-  // 9. Discarded & Unmatched Unit Ledgers
+  // 9. Sample Accounting Ledger
+  // Authoritative Producer: MatchIt::matchit() sample summary & base R counts
   sampleAccounting: {
     importedTotal: number;
     completeCases: number;
@@ -241,64 +258,70 @@ export interface CanonicalPsmResult {
     treatedRetentionRate: number; // matchedTreatedCount / treatedTotal
   };
 
-  // 10. cobalt Baseline Balance Statistics
+  // 10. Balance Table & Table 1 Summaries
+  // Authoritative Producers:
+  // - Balance Diagnostics (SMD, VR): cobalt::bal.tab(..., s.d.denom = "treated")
+  // - Descriptive Statistics (Means, SDs, Counts, %): Base R sample aggregations
   balanceTable: Array<{
-    covariateName: string;
+    covariateName: string; // Internal alias
+    originalHeader: string; // Original clinical header
     displayName: string;
     type: 'continuous' | 'binary' | 'categorical_level';
     // Baseline (Unadjusted)
-    unadjustedTreatedMean: number;
-    unadjustedTreatedSd: number;
-    unadjustedControlMean: number;
-    unadjustedControlSd: number;
-    unadjustedSmd: number;
+    unadjustedTreatedMean: number | null;
+    unadjustedTreatedSd: number | null;
+    unadjustedControlMean: number | null;
+    unadjustedControlSd: number | null;
+    unadjustedSmd: number | null; // null if baseline treated SD is zero
+    rawDifferenceUnadjusted: number | null; // For binary: p1 - p0
     // Matched (Adjusted)
-    matchedTreatedMean: number;
-    matchedTreatedSd: number;
-    matchedControlMean: number;
-    matchedControlSd: number;
-    matchedSmd: number;
-    smdReductionPercent: number;
+    matchedTreatedMean: number | null;
+    matchedTreatedSd: number | null;
+    matchedControlMean: number | null;
+    matchedControlSd: number | null;
+    matchedSmd: number | null; // null if baseline treated SD is zero or zero matches
+    rawDifferenceMatched: number | null; // For binary: p1 - p0
+    smdReductionPercent: number | null; // null if unadjustedSmd is 0 or null
     // Variance Diagnostics
-    unadjustedVarianceRatio: number | null;
-    matchedVarianceRatio: number | null;
-    // Heuristic Threshold Status
+    unadjustedVarianceRatio: number | null; // null if zero denominator or binary
+    matchedVarianceRatio: number | null;   // null if zero denominator or binary
+    // Diagnostic Advisory Status
     heuristicStatus: 'balanced_smd_and_vr' | 'borderline_smd' | 'imbalanced_smd' | 'residual_variance_disparity';
   }>;
 
   // 11. Convergence & Numerical Diagnostics
+  // Authoritative Producer: stats::glm() model summary & linear logit formulas
   numericalDiagnostics: {
     glmConvergence: boolean;
     glmIterations: number;
-    glmNullDeviance: number;
-    glmResidualDeviance: number;
-    maxAbsoluteCoefficient: number;
-    maxCoefficientStandardError: number;
+    glmNullDeviance: number | null;
+    glmResidualDeviance: number | null;
+    maxAbsoluteCoefficient: number | null;
+    maxCoefficientStandardError: number | null;
     coefficientTable: Array<{
       term: string;
-      estimate: number;
-      standardError: number;
-      zValue: number;
-      pValue: number;
+      estimate: number | null;      // null if non-finite or aliased
+      standardError: number | null; // null if non-finite or aliased
+      zValue: number | null;        // null if SE is null/zero/non-finite
+      pValue: number | null;        // null if zValue is null
+      aliased: boolean;             // true if dropped due to rank deficiency
     }>;
-    rubinB: number;
-    // Rubin's B: absolute standardized difference of propensity score MEANS
-    // between matched treated and matched control, standardized by the pooled
-    // unadjusted (pre-match) propensity score standard deviation.
-    // Rubin (2001) heuristic guidance: B < 25 suggests adequate balance (informational only).
-    rubinR: number;
-    // Rubin's R: ratio of matched treated propensity score variance to
-    // matched control propensity score variance.
-    // Rubin (2001) heuristic guidance: 0.5 < R < 2 suggests adequate variance overlap (informational only).
-    // Both B and R are reported as informational diagnostics; they do not override SMD-based balance.
+    rubinB: number | null;
+    // Rubin's B: stored as DIMENSIONLESS PROPORTION (e.g. 0.25 === 25% SD).
+    // Formula: |mean(lp_T_matched) - mean(lp_C_matched)| / sqrt((var(lp_T_unadj) + var(lp_C_unadj)) / 2)
+    // Scale: LINEAR LOGIT scale (predict(glm, type = "link")).
+    // null when variance is undefined or < 2 units per group.
+    // INFORMATIONAL ONLY. Does not override SMD. Not proof of causal validity.
+    rubinR: number | null;
+    // Rubin's R: ratio of matched treated variance to matched control variance.
+    // Formula: var(lp_T_matched) / var(lp_C_matched) on LINEAR LOGIT scale.
+    // null when matched control variance is zero or undefined.
+    // INFORMATIONAL ONLY. Heuristic 0.5 < R < 2.0. Not proof of causal validity.
   };
 
   // 12. Warnings & Scientific Advisory Ledger
   warnings: Array<{
     code: 'WARN_SUSPECTED_SEPARATION' | 'WARN_OFF_SUPPORT' | 'WARN_CALIPER_ATTRITION' | 'WARN_RANK_DEFICIENT' | 'WARN_MISSING_EXCLUSION';
-    // WARN_SUSPECTED_SEPARATION: one or more observable symptoms of complete or quasi-complete
-    // separation detected (boundary probabilities, extreme SE, or IRLS divergence).
-    // Definitive classification blocked pending CP-STAT-02 automated detector.
     message: string;
     severity: 'informational' | 'warning' | 'fatal';
     impactDescription: string;
@@ -312,11 +335,18 @@ export interface CanonicalPsmResult {
     citationBibtexCobalt: string;
   };
 
-  // 14. Publication Output Eligibility Gate
+  // 14. Technical Output Readiness State
   publicationStatus: {
-    verdict: 'PUBLICATION_ELIGIBLE' | 'REJECT_FOR_PUBLICATION' | 'NUMERICAL_FAILURE';
+    verdict: 'OUTPUT_READY' | 'OUTPUT_GENERATION_RESTRICTED' | 'COMPUTATION_FAILED';
+    // OUTPUT_READY: numerical computation completed, balance diagnostics computable.
+    //   Outputs (tables, plots, export files) may be generated.
+    //   DISCLAIMER: OUTPUT_READY is an engineering technical readiness state.
+    //   It does NOT certify journal acceptance, clinical plausibility, or causal validity.
+    // OUTPUT_GENERATION_RESTRICTED: computation finished but severe defect detected
+    //   (separation symptoms, rank deficiency, zero matches). Artifact generation blocked.
+    // COMPUTATION_FAILED: R engine aborted or threw an unhandled exception.
     reasons: string[];
-    exportArtifactsAllowed: boolean;
+    outputGenerationAllowed: boolean; // true only when verdict === 'OUTPUT_READY'
   };
 }
 ```

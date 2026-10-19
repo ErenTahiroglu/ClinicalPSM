@@ -1,7 +1,7 @@
 # CP-WEBR-01 — Security Architecture & Privacy Release Gates
 
 **Repository:** `ErenTahiroglu/ClinicalPSM`
-**Phase:** `CP-WEBR-01A — Security Contract`
+**Phase:** `CP-WEBR-01A R1.1 — Final Security Contract Consistency Closure`
 **Governing Standard:** Zero-Trust Browser-Local Client Architecture
 **Status:** Normative Security Gate Specification (Design-Only — Executable Gates Target Phase CP-WEBR-01B)
 
@@ -72,13 +72,34 @@ Pass 2: Interception Disabled (Falsification)
 
 ## 3. R Injection Prevention Architecture & Parameter Binding
 
-### 3.1 Strict Identifier Lexical Allowlist
-User-supplied CSV column names and factor category labels must undergo lexical validation before interacting with the statistical worker:
-- **Character Constraint:** `^[a-zA-Z_][a-zA-Z0-9._]{0,63}$`
-- **Length Constraint:** Minimum 1 character, maximum 64 characters.
-- **Prohibited Tokens (R Reserved Keywords):**
-  `if`, `else`, `repeat`, `while`, `function`, `for`, `in`, `next`, `break`, `TRUE`, `FALSE`, `NULL`, `Inf`, `NaN`, `NA`, `NA_integer_`, `NA_real_`, `NA_complex_`, `NA_character_`
-- **Handling of Invalid Headers:** Column names failing lexical validation must be rejected at the client ingestion boundary with a clear UI advisory requesting the user rename the column, rather than attempting automated silent escaping.
+### 3.1 Identifier Handling — Original Headers, Factor Values & Internal Aliases
+
+> [!IMPORTANT]
+> The R-identifier regex `^[a-zA-Z_][a-zA-Z0-9._]{0,63}$` must **never** be applied to original CSV column headers or categorical cell values. Legitimate clinical naming conventions include spaces, units, hyphens, parentheses, and Unicode characters (e.g. `"HbA1c > 8%"`, `"Stage IV (Metastatic)"`, `"Yaş (yıl)"`). Rejecting these at ingestion is inappropriate.
+
+**Tier 1 — Original Header Structural Safety Checks (applied at CSV ingestion):**
+- **Maximum length:** 256 Unicode code points per header.
+- **Minimum length:** 1 non-whitespace character.
+- **Uniqueness:** Duplicate column names rejected (case-sensitive).
+- **Encoding:** Must be valid UTF-8. Null bytes (`\x00`) rejected.
+- **Factor category values:** Categorical cell values undergo the same structural checks. Passed to R as explicit string vectors (R factor levels) — never interpolated into R code.
+
+**Tier 2 — Reversible Internal Symbol Mapping (before any R interaction):**
+- Every accepted original header mapped to a guaranteed R-safe internal alias: `^[a-z]+_[0-9]{2,4}$` (e.g. `cov_01`, `trt_01`).
+- Bidirectional mapping table (`originalHeader ↔ internalAlias`) maintained in TypeScript memory.
+- Only internal aliases appear in R formula strings, `data.frame()` column names, and `env.bind()` calls.
+- Original header is **never interpolated into any R code string**.
+- Mapping is lossless and invertible. All user-visible outputs display the original header.
+
+**Collision Detection & Edge Cases:**
+- If two headers would produce the same alias, a counter suffix is appended (`cov_01a`, `cov_01b`).
+- Case sensitivity: `"Age"` and `"age"` are distinct originals with distinct aliases.
+- NFC Unicode normalization applied before uniqueness checking.
+
+**What remains prohibited (injection prevention intact):**
+- String interpolation of any user-supplied value into executable R code.
+- Factor level values in R code (passed as R string vectors, not interpolated).
+- Numeric or boolean values constructed into R formula syntax.
 
 ### 3.2 Parameterized Execution via WebR Object API
 To eliminate command injection, the application must never construct executable R strings via JavaScript interpolation:
@@ -112,7 +133,7 @@ await webR.evalR(`
     std.caliper   = TRUE
   )
 `, { env });
-// NOTE: webr.objs.setData() does NOT exist in WebR 0.6.0.
+// NOTE: Fictitious legacy helper APIs do not exist in WebR 0.6.0.
 // The authoritative binding API is new webR.REnvironment() / env.bind() / evalR(..., { env }).
 ```
 
@@ -125,17 +146,19 @@ await webR.evalR(`
 2. **Zero Persistent Browser Storage by Default:** Patient datasets exist solely in ephemeral JavaScript and WebAssembly memory during the active browser session.
 3. **Optional Project Export:** If users choose to save their analysis, it is exported as an encrypted local file (`.cpsm`) downloaded directly to their local filesystem via the browser's native file picker API.
 
-### 4.3 Symbol Mapping Language Requirements
-1. **Reversible Symbol Mapping:** If any column-name sanitization or aliasing is performed (e.g., replacing spaces with underscores to satisfy the `^[a-zA-Z_][a-zA-Z0-9._]{0,63}$` lexical allowlist), the mapping must be **bidirectional and lossless**. The original user-supplied display names must be recoverable and shown in all user-visible outputs (balance tables, exports, method text) without permanent transformation.
-2. **No Irreversible Escaping:** Symbol normalization must never permanently overwrite the user's original column name in the stored result snapshot (`CanonicalPsmResult.factorConfiguration`). The original name is preserved; the sanitized name is an internal-only runtime alias.
-
-### 4.2 Realistic Memory & Compliance Disclosures
+### 4.2 Realistic Memory & Privacy Disclosures
 1. **No Guaranteed Instant RAM Erasure:**
-   Calling `worker.terminate()` drops user-space object references, but operating system memory deallocation and RAM overwriting are governed by the browser engine (Chromium V8, Gecko, JavaScriptCore) and the underlying OS memory manager. The software must **never claim guaranteed cryptographic RAM wiping**.
-2. **Strict Regulatory Compliance Honesty:**
-   - ClinicalPSM is client-side, zero-egress statistical software.
-   - The software does **not** store, transmit, or process Protected Health Information (PHI) on servers.
+   Calling `worker.terminate()` drops user-space object references, but operating system memory deallocation and RAM overwriting are governed by the browser engine (Chromium V8, Gecko, JavaScriptCore) and the underlying OS memory manager. The software must **never claim guaranteed cryptographic RAM wiping** or zero residual memory in RAM.
+2. **Zero-Egress Objective vs. Pre-Implementation Claims:**
+   Zero-egress is an **architectural objective** subject to automated two-pass verification in Phase `CP-WEBR-01B`. The absence of server API routes does not prevent a browser from attempting to transmit data in same-origin URLs or bodies; true zero-egress requires continuous route interception and deep IndexedDB record inspection.
+3. **Strict Regulatory Compliance Honesty:**
+   - ClinicalPSM is client-side statistical software designed for local data processing.
+   - The software does **not** store, transmit, or process Protected Health Information (PHI) on external servers.
    - However, the software must **never claim formal certification under HIPAA, GDPR, KVKK, or HITRUST**. Such certifications apply to legal entities, covered health systems, and managed cloud environments, not client-side browser open-source utilities. All marketing and technical documentation must accurately state: *"Architecturally designed for zero-egress clinical data privacy; organizational HIPAA/GDPR compliance remains the responsibility of the institutional user."*
+
+### 4.3 Reversible Symbol Mapping Requirements
+1. **Bidirectional and Lossless Mapping:** Original user-supplied CSV column headers (including whitespace, punctuation, comparator symbols, units, and Unicode characters) and categorical cell values must be preserved exactly. The internal alias (e.g., `cov_01`, `trt_01`) is an execution artifact used exclusively inside the R environment.
+2. **Display and Export Fidelity:** All user-visible outputs (covariate balance tables, DOCX manuscript summaries, SVG Love plots, and Methods narratives) must render the user's original display names. Symbol aliasing must never permanently overwrite original headers in the canonical result snapshot.
 
 ---
 
@@ -159,9 +182,10 @@ Before any WebR code is merged into `apps/web`, the following automated security
                                     │
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│ SEC-GATE-03: R Injection Prevention & Lexical Allowlist                │
+│ SEC-GATE-03: R Injection Prevention & Structural Parameterization Gate  │
 │ - 20 automated mutation attack vectors (semicolons, quotes, system())  │
-│ - Parameterized template rejects 100% of malicious column payloads     │
+│ - Parameterized template rejects 100% of malicious injection payloads  │
+│ - Verifies 0 user strings interpolated; strict env.bind() parameterization │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
                                     ▼
