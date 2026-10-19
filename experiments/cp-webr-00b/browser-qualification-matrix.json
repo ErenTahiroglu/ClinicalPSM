@@ -1,0 +1,27 @@
+{
+  "qualified_at": "2026-10-19T09:24:43.774Z",
+  "browsers": {
+    "chromium": {
+      "engine": "Chromium (Brave Browser)",
+      "version": "154.0.8037.93",
+      "os": "macOS (Darwin arm64)",
+      "cross_origin_isolated": true,
+      "webr_runtime": "R version 4.6.0 (2026-04-24)",
+      "matchit_execution": "PASS",
+      "cobalt_execution": "PASS",
+      "cancellation_supported": true,
+      "multi_tab_supported": true,
+      "offline_execution_supported": true,
+      "zero_egress_passed": true,
+      "status": "QUALIFIED"
+    },
+    "firefox": {
+      "status": "UNMEASURED",
+      "note": "Headless Firefox binary download skipped to prevent large download; desktop engine qualification pending"
+    },
+    "webkit": {
+      "status": "UNMEASURED",
+      "note": "WebKit binary download skipped; desktop macOS Safari unmeasured in headless automated harness"
+    }
+  }
+}

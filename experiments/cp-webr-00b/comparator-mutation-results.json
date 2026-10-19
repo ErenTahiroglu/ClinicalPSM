@@ -1,0 +1,128 @@
+{
+  "tested_at": "2026-10-19T09:06:07.747Z",
+  "mutation_count": 12,
+  "passed_count": 12,
+  "all_mutations_caught": true,
+  "mutations": [
+    {
+      "id": "MUT_01_EXTRA_KEY_PAIRS",
+      "name": "Extra key in WebR matched pairs",
+      "demonstrably_failed": true,
+      "error_matched": true,
+      "errors_emitted": [
+        "Matched Pairs Keys: Extra unexpected keys in WebR: [extra_unit_9999]"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "MUT_02_MISSING_KEY_PAIRS",
+      "name": "Missing key in WebR matched pairs",
+      "demonstrably_failed": true,
+      "error_matched": true,
+      "errors_emitted": [
+        "Matched Pairs Keys: Missing keys in WebR: [sub_0001]"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "MUT_03_CHANGED_PAIR_IDENTITY",
+      "name": "Altered matched control ID",
+      "demonstrably_failed": true,
+      "error_matched": true,
+      "errors_emitted": [
+        "Matched pair mismatch for treated sub_0001: Native=sub_0265, WebR=sub_9999"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "MUT_04_ALTERED_WEIGHT",
+      "name": "Altered matching weight",
+      "demonstrably_failed": true,
+      "error_matched": true,
+      "errors_emitted": [
+        "Weight unit sub_0001: Diff 5.000e-1 exceeds tolerance 1e-12"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "MUT_05_FACTOR_LEVEL_DRIFT",
+      "name": "Model matrix colnames / factor level drift",
+      "demonstrably_failed": true,
+      "error_matched": true,
+      "errors_emitted": [
+        "Model matrix colnames mismatch: Native=[(Intercept),age,bmi,sbp], WebR=[(Intercept),x_cat_mutated,bmi,sbp]"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "MUT_06_WRONG_WARNING_CATEGORY",
+      "name": "Mismatched warning category",
+      "demonstrably_failed": true,
+      "error_matched": true,
+      "errors_emitted": [
+        "Warning categories mismatch: Native=[], WebR=[FAKE_WARNING_CATEGORY]"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "MUT_07_NONFINITE_VALUE",
+      "name": "Non-finite NaN or Infinity value",
+      "demonstrably_failed": true,
+      "error_matched": true,
+      "errors_emitted": [
+        "Distance unit sub_0001: Non-numeric string mismatch: Native=-0.566, WebR=Infinity"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "MUT_08_MISSING_COBALT_ROW",
+      "name": "Missing cobalt balance covariate row",
+      "demonstrably_failed": true,
+      "error_matched": true,
+      "errors_emitted": [
+        "Cobalt (raw) Diff.Un Keys: Missing keys in WebR: [age]"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "MUT_09_WRONG_STATUS",
+      "name": "Mismatched overall status",
+      "demonstrably_failed": true,
+      "error_matched": true,
+      "errors_emitted": [
+        "Status mismatch: Native=SUCCESS, WebR=UNEXPECTED_FAILURE"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "MUT_10_GLM_CONVERGENCE_MISMATCH",
+      "name": "GLM convergence state mismatch",
+      "demonstrably_failed": true,
+      "error_matched": true,
+      "errors_emitted": [
+        "GLM convergence mismatch: Native=true, WebR=false"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "MUT_11_GLM_RANK_DEFICIENT_MISMATCH",
+      "name": "GLM model rank mismatch",
+      "demonstrably_failed": true,
+      "error_matched": true,
+      "errors_emitted": [
+        "GLM rank mismatch: Native=4, WebR=5"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "MUT_12_DISCARDED_UNITS_MISMATCH",
+      "name": "Discarded units partition mismatch",
+      "demonstrably_failed": true,
+      "error_matched": true,
+      "errors_emitted": [
+        "Discarded units mismatch: Native=[], WebR=[sub_0001]"
+      ],
+      "verdict": "PASS"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "fix_19b_missing_treatment",
+  "name": "Missing treatment value",
+  "description": "NA in treatment vector; MatchIt errors on unhandled NA treatment",
+  "formula": "treat ~ x1 + x2",
+  "method": "nearest",
+  "distance": "glm",
+  "link": "linear.logit",
+  "caliper": {},
+  "std_caliper": false,
+  "discard": "none",
+  "ratio": 1,
+  "replace": false,
+  "m_order": "largest",
+  "expected_status": "EXPECTED_REFERENCE_ERROR",
+  "n_total": 100,
+  "n_treated": 34,
+  "n_control": 65,
+  "extra_meta": {
+    "error_category": "MISSING_TREATMENT"
+  }
+}

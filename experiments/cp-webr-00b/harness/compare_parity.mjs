@@ -1,237 +1,329 @@
-// CP-WEBR-00B Parity Evaluator
-// Compares Native R 4.6.0 Oracle against WebR 0.6.0 Wasm across 24 Golden Fixtures
+// CP-WEBR-00B R1 Parity Comparator
+// Strict, symmetric comparator between Native R 4.6.0 Oracle and WebR 0.6.0 Wasm
 
 import fs from 'node:fs';
 
-const nativeFile = 'experiments/cp-webr-00b/native-reference/native_results.json';
-const webrFile = 'experiments/cp-webr-00b/webr-results/webr_results.json';
-const outFile = 'experiments/cp-webr-00b/parity-results.json';
-
-const native = JSON.parse(fs.readFileSync(nativeFile, 'utf8'));
-const webr = JSON.parse(fs.readFileSync(webrFile, 'utf8'));
-
-// Predeclared Frozen Tolerances (CP-WEBR-00B Contract)
-const TOLERANCES = {
+export const TOLERANCES = {
   coefficients: 1e-6,
   distance: 1e-7,
   cobalt_diff: 1e-6,
   cobalt_v_ratio: 1e-6
 };
 
-const fixtureReport = {};
-let totalFixtures = 0;
-let semanticPassCount = 0;
-let numericPassCount = 0;
+// Check that set of keys on both objects are strictly identical
+export function assertExactKeySet(objA, objB, context) {
+  const keysA = Object.keys(objA || {}).sort();
+  const keysB = Object.keys(objB || {}).sort();
 
-for (const [id, nat] of Object.entries(native)) {
-  totalFixtures++;
-  const w = webr[id];
-  const report = {
-    id,
-    status_match: false,
-    semantic_parity: false,
-    numeric_parity: false,
-    pair_identities_exact: false,
-    weights_exact: false,
-    subclasses_exact: false,
-    discarded_exact: false,
-    max_diffs: {
-      coefficients: 0,
-      distance: 0,
-      cobalt_diff_un: 0,
-      cobalt_diff_adj: 0,
-      cobalt_v_ratio: 0
-    },
-    tolerance_violations: [],
-    semantic_mismatches: []
+  const missingInB = keysA.filter(k => !(k in (objB || {})));
+  const extraInB = keysB.filter(k => !(k in (objA || {})));
+
+  const errors = [];
+  if (missingInB.length > 0) {
+    errors.push(`${context}: Missing keys in WebR: [${missingInB.join(', ')}]`);
+  }
+  if (extraInB.length > 0) {
+    errors.push(`${context}: Extra unexpected keys in WebR: [${extraInB.join(', ')}]`);
+  }
+  return errors;
+}
+
+// Compare two values with strict non-finite checking
+export function compareValues(valA, valB, tolerance, context, allowNA = false) {
+  // If string "NA", "NaN", "Inf", "-Inf"
+  if (typeof valA === 'string' || typeof valB === 'string') {
+    if (valA === valB) return { match: true, diff: 0, error: null };
+    if (allowNA && (valA === 'NA' || valB === 'NA')) {
+      return { match: valA === valB, diff: 0, error: `${context}: NA mismatch: Native=${valA}, WebR=${valB}` };
+    }
+    return { match: false, diff: 0, error: `${context}: Non-numeric string mismatch: Native=${valA}, WebR=${valB}` };
+  }
+
+  // Reject unexpected NaN or Infinity
+  if (!Number.isFinite(valA) && !allowNA) {
+    return { match: false, diff: NaN, error: `${context}: Non-finite Native value: ${valA}` };
+  }
+  if (!Number.isFinite(valB) && !allowNA) {
+    return { match: false, diff: NaN, error: `${context}: Non-finite WebR value: ${valB}` };
+  }
+
+  if (Number.isNaN(valA) || Number.isNaN(valB)) {
+    const match = Number.isNaN(valA) && Number.isNaN(valB);
+    return { match, diff: match ? 0 : NaN, error: match ? null : `${context}: NaN mismatch` };
+  }
+
+  const diff = Math.abs(valA - valB);
+  if (diff > tolerance) {
+    return { match: false, diff, error: `${context}: Diff ${diff.toExponential(3)} exceeds tolerance ${tolerance}` };
+  }
+  return { match: true, diff, error: null };
+}
+
+export function compareFixture(nat, web, tolerances = TOLERANCES) {
+  const errors = [];
+  const maxDiffs = {
+    coefficients: 0,
+    distance: 0,
+    cobalt_raw_diff_un: 0,
+    cobalt_raw_diff_adj: 0,
+    cobalt_raw_v_ratio: 0,
+    cobalt_std_diff_un: 0,
+    cobalt_std_diff_adj: 0,
+    cobalt_std_v_ratio: 0
   };
 
-  if (!w) {
-    report.semantic_mismatches.push('Missing in WebR results');
-    fixtureReport[id] = report;
-    continue;
+  if (!web) {
+    return {
+      status_match: false,
+      semantic_parity: false,
+      numeric_parity: false,
+      errors: ['Missing fixture in WebR results'],
+      maxDiffs
+    };
   }
 
-  // 1. Status match
-  if (nat.status === w.status) {
-    report.status_match = true;
-  } else {
-    report.semantic_mismatches.push(`Status mismatch: Native=${nat.status}, WebR=${w.status}`);
+  // 1. Status and Failure Classification Match
+  const statusMatch = nat.status === web.status;
+  if (!statusMatch) {
+    errors.push(`Status mismatch: Native=${nat.status}, WebR=${web.status}`);
   }
 
-  // If both are errors or policy rejects, status match is sufficient
-  if (nat.status !== 'SUCCESS') {
-    report.semantic_parity = report.status_match;
-    report.numeric_parity = true; // Not applicable
-    report.pair_identities_exact = true;
-    report.weights_exact = true;
-    report.subclasses_exact = true;
-    report.discarded_exact = true;
-    if (report.semantic_parity) {
-      semanticPassCount++;
-      numericPassCount++;
+  // Warning categories
+  const normalizeArray = x => (Array.isArray(x) ? x.slice().sort() : (x ? [x] : []));
+  const natWarnCats = normalizeArray(nat.warning_categories);
+  const webWarnCats = normalizeArray(web.warning_categories);
+  if (JSON.stringify(natWarnCats) !== JSON.stringify(webWarnCats)) {
+    errors.push(`Warning categories mismatch: Native=[${natWarnCats.join(', ')}], WebR=[${webWarnCats.join(', ')}]`);
+  }
+
+  // Error category
+  if (nat.error_category !== web.error_category) {
+    errors.push(`Error category mismatch: Native=${nat.error_category}, WebR=${web.error_category}`);
+  }
+
+  // ClinicalPSM Policy match
+  if (nat.clinicalpsm_policy !== web.clinicalpsm_policy) {
+    errors.push(`ClinicalPSM policy mismatch: Native=${nat.clinicalpsm_policy}, WebR=${web.clinicalpsm_policy}`);
+  }
+
+  // If both failed as expected errors or policy rejects, verify no spurious matching payload
+  if (nat.status === 'EXPECTED_REFERENCE_ERROR' || nat.status === 'CLINICALPSM_POLICY_REJECT') {
+    if (web.matching) {
+      errors.push(`Unexpected matching payload in WebR for failed fixture: ${nat.status}`);
     }
-    fixtureReport[id] = report;
-    continue;
+    return {
+      status_match: statusMatch,
+      semantic_parity: errors.length === 0,
+      numeric_parity: true,
+      is_expected_failure: true,
+      errors,
+      maxDiffs
+    };
   }
 
+  // 2. Strict GLM Model Checks
   const nm = nat.matching;
-  const wm = w.matching;
+  const wm = web.matching;
+  if (!nm || !wm) {
+    errors.push(`Missing matching object: Native=${!!nm}, WebR=${!!wm}`);
+    return { status_match: statusMatch, semantic_parity: false, numeric_parity: false, errors, maxDiffs };
+  }
 
-  // 2. Exact Semantic Equalities
-  // A. Matched Pair Identities
-  let pairsMatch = true;
-  const natPairs = nm.matched_pairs || {};
-  const webPairs = wm.matched_pairs || {};
-  const natKeys = Object.keys(natPairs).sort();
-  const webKeys = Object.keys(webPairs).sort();
+  // Convergence & Rank
+  if (nm.converged !== wm.converged) {
+    errors.push(`GLM convergence mismatch: Native=${nm.converged}, WebR=${wm.converged}`);
+  }
+  if (nm.rank !== wm.rank) {
+    errors.push(`GLM rank mismatch: Native=${nm.rank}, WebR=${wm.rank}`);
+  }
 
-  if (natKeys.length !== webKeys.length) {
-    pairsMatch = false;
-    report.semantic_mismatches.push(`Matched pair count: Native=${natKeys.length}, WebR=${webKeys.length}`);
-  } else {
-    for (const k of natKeys) {
-      if (natPairs[k] !== webPairs[k]) {
-        pairsMatch = false;
-        report.semantic_mismatches.push(`Pair mismatch for treated ${k}: Native=${natPairs[k]}, WebR=${webPairs[k]}`);
-        break;
+  // Model matrix colnames
+  if (JSON.stringify(nm.model_matrix_colnames) !== JSON.stringify(wm.model_matrix_colnames)) {
+    errors.push(`Model matrix colnames mismatch: Native=[${nm.model_matrix_colnames}], WebR=[${wm.model_matrix_colnames}]`);
+  }
+
+  // Aliased parameters
+  const aliasKeyErrors = assertExactKeySet(nm.aliased, wm.aliased, 'GLM Aliased Keys');
+  errors.push(...aliasKeyErrors);
+  if (aliasKeyErrors.length === 0) {
+    for (const k of Object.keys(nm.aliased || {})) {
+      if (nm.aliased[k] !== wm.aliased[k]) {
+        errors.push(`Aliased parameter mismatch for ${k}: Native=${nm.aliased[k]}, WebR=${wm.aliased[k]}`);
       }
     }
   }
-  report.pair_identities_exact = pairsMatch;
 
-  // B. Discarded Units
-  const natDisc = (nm.discarded || []).sort();
-  const webDisc = (wm.discarded || []).sort();
-  const discMatch = JSON.stringify(natDisc) === JSON.stringify(webDisc);
-  report.discarded_exact = discMatch;
-  if (!discMatch) report.semantic_mismatches.push(`Discarded mismatch: Native=${natDisc.length}, WebR=${webDisc.length}`);
+  // 3. Matched Pairs, Weights, Subclasses, Discarded
+  // Discarded
+  const natDisc = (nm.discarded || []).slice().sort();
+  const webDisc = (wm.discarded || []).slice().sort();
+  if (JSON.stringify(natDisc) !== JSON.stringify(webDisc)) {
+    errors.push(`Discarded units mismatch: Native=[${natDisc.join(', ')}], WebR=[${webDisc.join(', ')}]`);
+  }
 
-  // C. Weights Vector
-  let weightsMatch = true;
-  const natW = nm.weights || {};
-  const webW = wm.weights || {};
-  for (const k of Object.keys(natW)) {
-    if (Math.abs(natW[k] - (webW[k] ?? -1)) > 1e-12) {
-      weightsMatch = false;
-      report.semantic_mismatches.push(`Weight mismatch for unit ${k}: Native=${natW[k]}, WebR=${webW[k]}`);
-      break;
+  // Pair identities (symmetric check)
+  const pairKeyErrors = assertExactKeySet(nm.matched_pairs, wm.matched_pairs, 'Matched Pairs Keys');
+  errors.push(...pairKeyErrors);
+  if (pairKeyErrors.length === 0) {
+    for (const [tId, cId] of Object.entries(nm.matched_pairs || {})) {
+      if (cId !== wm.matched_pairs[tId]) {
+        errors.push(`Matched pair mismatch for treated ${tId}: Native=${cId}, WebR=${wm.matched_pairs[tId]}`);
+      }
     }
   }
-  report.weights_exact = weightsMatch;
 
-  // D. Subclasses
-  let subMatch = true;
-  const natSub = nm.subclass || {};
-  const webSub = wm.subclass || {};
-  for (const k of Object.keys(natSub)) {
-    if (String(natSub[k]) !== String(webSub[k])) {
-      subMatch = false;
-      report.semantic_mismatches.push(`Subclass mismatch for unit ${k}: Native=${natSub[k]}, WebR=${webSub[k]}`);
-      break;
+  // Weights (symmetric check)
+  const weightKeyErrors = assertExactKeySet(nm.weights, wm.weights, 'Weights Keys');
+  errors.push(...weightKeyErrors);
+  if (weightKeyErrors.length === 0) {
+    for (const [id, wNat] of Object.entries(nm.weights || {})) {
+      const cmp = compareValues(wNat, wm.weights[id], 1e-12, `Weight unit ${id}`);
+      if (!cmp.match) errors.push(cmp.error);
     }
   }
-  report.subclasses_exact = subMatch;
 
-  report.semantic_parity = report.status_match && pairsMatch && discMatch && weightsMatch && subMatch;
-  if (report.semantic_parity) semanticPassCount++;
-
-  // 3. Numerical Tolerances
-  let numericValid = true;
-
-  // Distance differences
-  const natDist = nm.distance || {};
-  const webDist = wm.distance || {};
-  let maxDistDiff = 0;
-  for (const k of Object.keys(natDist)) {
-    const diff = Math.abs(natDist[k] - (webDist[k] ?? 0));
-    if (diff > maxDistDiff) maxDistDiff = diff;
-  }
-  report.max_diffs.distance = maxDistDiff;
-  if (maxDistDiff > TOLERANCES.distance) {
-    numericValid = false;
-    report.tolerance_violations.push(`Distance max diff ${maxDistDiff.toExponential(3)} exceeds tolerance ${TOLERANCES.distance}`);
-  }
-
-  // Coefficient differences
-  const natCoef = nm.coefficients || {};
-  const webCoef = wm.coefficients || {};
-  let maxCoefDiff = 0;
-  for (const k of Object.keys(natCoef)) {
-    if (natCoef[k] !== null && !isNaN(natCoef[k])) {
-      const diff = Math.abs(natCoef[k] - (webCoef[k] ?? 0));
-      if (diff > maxCoefDiff) maxCoefDiff = diff;
+  // Subclasses (symmetric check)
+  const subKeyErrors = assertExactKeySet(nm.subclass, wm.subclass, 'Subclass Keys');
+  errors.push(...subKeyErrors);
+  if (subKeyErrors.length === 0) {
+    for (const [id, sNat] of Object.entries(nm.subclass || {})) {
+      if (String(sNat) !== String(wm.subclass[id])) {
+        errors.push(`Subclass mismatch for unit ${id}: Native=${sNat}, WebR=${wm.subclass[id]}`);
+      }
     }
   }
-  report.max_diffs.coefficients = maxCoefDiff;
-  if (maxCoefDiff > TOLERANCES.coefficients) {
-    numericValid = false;
-    report.tolerance_violations.push(`Coefficient max diff ${maxCoefDiff.toExponential(3)} exceeds tolerance ${TOLERANCES.coefficients}`);
+
+  // 4. Numerical Parity: Coefficients & Distances
+  // Coefficients
+  const coefKeyErrors = assertExactKeySet(nm.coefficients, wm.coefficients, 'Coefficients Keys');
+  errors.push(...coefKeyErrors);
+  if (coefKeyErrors.length === 0) {
+    for (const [k, cNat] of Object.entries(nm.coefficients || {})) {
+      const cmp = compareValues(cNat, wm.coefficients[k], tolerances.coefficients, `Coeff ${k}`, true);
+      if (cmp.diff > maxDiffs.coefficients) maxDiffs.coefficients = cmp.diff;
+      if (!cmp.match) errors.push(cmp.error);
+    }
   }
 
-  // Cobalt Balance differences
-  if (nat.cobalt_balance && w.cobalt_balance) {
-    const nb = nat.cobalt_balance;
-    const wb = w.cobalt_balance;
+  // Distance (symmetric check)
+  const distKeyErrors = assertExactKeySet(nm.distance, wm.distance, 'Distance Keys');
+  errors.push(...distKeyErrors);
+  if (distKeyErrors.length === 0) {
+    for (const [id, dNat] of Object.entries(nm.distance || {})) {
+      const cmp = compareValues(dNat, wm.distance[id], tolerances.distance, `Distance unit ${id}`);
+      if (cmp.diff > maxDiffs.distance) maxDiffs.distance = cmp.diff;
+      if (!cmp.match) errors.push(cmp.error);
+    }
+  }
+
+  // 5. Cobalt Balance Diagnostics: Both raw and std binary
+  const compareCobaltSection = (balNat, balWeb, mode) => {
+    if (!balNat && !balWeb) return;
+    if (!balNat || !balWeb) {
+      errors.push(`Cobalt balance (${mode}) presence mismatch: Native=${!!balNat}, WebR=${!!balWeb}`);
+      return;
+    }
+
+    // Covariates list & types
+    if (JSON.stringify(balNat.covariates) !== JSON.stringify(balWeb.covariates)) {
+      errors.push(`Cobalt (${mode}) covariates list mismatch: Native=[${balNat.covariates}], WebR=[${balWeb.covariates}]`);
+    }
+    if (JSON.stringify(balNat.type) !== JSON.stringify(balWeb.type)) {
+      errors.push(`Cobalt (${mode}) variable types mismatch: Native=[${balNat.type}], WebR=[${balWeb.type}]`);
+    }
 
     // Diff.Un
-    let maxDiffUn = 0;
-    for (const k of Object.keys(nb.diff_un || {})) {
-      const diff = Math.abs(nb.diff_un[k] - (wb.diff_un?.[k] ?? 0));
-      if (diff > maxDiffUn) maxDiffUn = diff;
-    }
-    report.max_diffs.cobalt_diff_un = maxDiffUn;
-    if (maxDiffUn > TOLERANCES.cobalt_diff) {
-      numericValid = false;
-      report.tolerance_violations.push(`Cobalt Diff.Un max diff ${maxDiffUn.toExponential(3)} exceeds tolerance ${TOLERANCES.cobalt_diff}`);
+    const unKeyErrors = assertExactKeySet(balNat.diff_un, balWeb.diff_un, `Cobalt (${mode}) Diff.Un Keys`);
+    errors.push(...unKeyErrors);
+    if (unKeyErrors.length === 0) {
+      for (const [k, vNat] of Object.entries(balNat.diff_un || {})) {
+        const cmp = compareValues(vNat, balWeb.diff_un[k], tolerances.cobalt_diff, `Cobalt (${mode}) Diff.Un ${k}`, true);
+        const diffKey = `cobalt_${mode}_diff_un`;
+        if (cmp.diff > maxDiffs[diffKey]) maxDiffs[diffKey] = cmp.diff;
+        if (!cmp.match) errors.push(cmp.error);
+      }
     }
 
     // Diff.Adj
-    let maxDiffAdj = 0;
-    for (const k of Object.keys(nb.diff_adj || {})) {
-      const diff = Math.abs(nb.diff_adj[k] - (wb.diff_adj?.[k] ?? 0));
-      if (diff > maxDiffAdj) maxDiffAdj = diff;
-    }
-    report.max_diffs.cobalt_diff_adj = maxDiffAdj;
-    if (maxDiffAdj > TOLERANCES.cobalt_diff) {
-      numericValid = false;
-      report.tolerance_violations.push(`Cobalt Diff.Adj max diff ${maxDiffAdj.toExponential(3)} exceeds tolerance ${TOLERANCES.cobalt_diff}`);
+    const adjKeyErrors = assertExactKeySet(balNat.diff_adj, balWeb.diff_adj, `Cobalt (${mode}) Diff.Adj Keys`);
+    errors.push(...adjKeyErrors);
+    if (adjKeyErrors.length === 0) {
+      for (const [k, vNat] of Object.entries(balNat.diff_adj || {})) {
+        const cmp = compareValues(vNat, balWeb.diff_adj[k], tolerances.cobalt_diff, `Cobalt (${mode}) Diff.Adj ${k}`, true);
+        const diffKey = `cobalt_${mode}_diff_adj`;
+        if (cmp.diff > maxDiffs[diffKey]) maxDiffs[diffKey] = cmp.diff;
+        if (!cmp.match) errors.push(cmp.error);
+      }
     }
 
     // Variance Ratios
-    let maxVR = 0;
-    for (const k of Object.keys(nb.v_ratio_adj || {})) {
-      if (nb.v_ratio_adj[k] !== null && !isNaN(nb.v_ratio_adj[k])) {
-        const diff = Math.abs(nb.v_ratio_adj[k] - (wb.v_ratio_adj?.[k] ?? 0));
-        if (diff > maxVR) maxVR = diff;
+    if (balNat.v_ratio_adj && Object.keys(balNat.v_ratio_adj).length > 0) {
+      const vrKeyErrors = assertExactKeySet(balNat.v_ratio_adj, balWeb.v_ratio_adj, `Cobalt (${mode}) V.Ratio Keys`);
+      errors.push(...vrKeyErrors);
+      if (vrKeyErrors.length === 0) {
+        for (const [k, vNat] of Object.entries(balNat.v_ratio_adj || {})) {
+          const cmp = compareValues(vNat, balWeb.v_ratio_adj[k], tolerances.cobalt_v_ratio, `Cobalt (${mode}) V.Ratio ${k}`, true);
+          const diffKey = `cobalt_${mode}_v_ratio`;
+          if (cmp.diff > maxDiffs[diffKey]) maxDiffs[diffKey] = cmp.diff;
+          if (!cmp.match) errors.push(cmp.error);
+        }
       }
     }
-    report.max_diffs.cobalt_v_ratio = maxVR;
-    if (maxVR > TOLERANCES.cobalt_v_ratio) {
-      numericValid = false;
-      report.tolerance_violations.push(`Cobalt V.Ratio max diff ${maxVR.toExponential(3)} exceeds tolerance ${TOLERANCES.cobalt_v_ratio}`);
-    }
-  }
+  };
 
-  report.numeric_parity = numericValid;
-  if (report.numeric_parity) numericPassCount++;
+  compareCobaltSection(nat.cobalt_balance_raw, web.cobalt_balance_raw, 'raw');
+  compareCobaltSection(nat.cobalt_balance_std, web.cobalt_balance_std, 'std');
 
-  fixtureReport[id] = report;
+  const semanticErrors = errors.filter(e => !e.includes('exceeds tolerance'));
+  const numericErrors = errors.filter(e => e.includes('exceeds tolerance'));
+
+  return {
+    status_match: statusMatch,
+    semantic_parity: semanticErrors.length === 0,
+    numeric_parity: numericErrors.length === 0,
+    is_expected_failure: false,
+    errors,
+    maxDiffs
+  };
 }
 
-const summary = {
-  evaluated_at: new Date().toISOString(),
-  total_fixtures: totalFixtures,
-  semantic_pass_count: semanticPassCount,
-  numeric_pass_count: numericPassCount,
-  all_fixtures_pass: (semanticPassCount === totalFixtures) && (numericPassCount === totalFixtures),
-  tolerances_used: TOLERANCES,
-  fixture_details: fixtureReport
-};
+// CLI runner
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const nativeFile = 'experiments/cp-webr-00b/native-reference/native_results.json';
+  const webrFile = 'experiments/cp-webr-00b/webr-results/webr_results.json';
+  const outFile = 'experiments/cp-webr-00b/parity-results.json';
 
-fs.writeFileSync(outFile, JSON.stringify(summary, null, 2));
-console.log(`\nPARITY EVALUATION SUMMARY:`);
-console.log(`Total Fixtures: ${totalFixtures}`);
-console.log(`Semantic Parity Passes: ${semanticPassCount}/${totalFixtures} (${(semanticPassCount/totalFixtures*100).toFixed(1)}%)`);
-console.log(`Numerical Parity Passes: ${numericPassCount}/${totalFixtures} (${(numericPassCount/totalFixtures*100).toFixed(1)}%)`);
-console.log(`All Fixtures Pass: ${summary.all_fixtures_pass ? 'YES' : 'NO'}`);
+  const native = JSON.parse(fs.readFileSync(nativeFile, 'utf8'));
+  const webr = JSON.parse(fs.readFileSync(webrFile, 'utf8'));
+
+  const fixtureReport = {};
+  let total = 0;
+  let semanticPass = 0;
+  let numericPass = 0;
+
+  for (const [id, nat] of Object.entries(native)) {
+    total++;
+    const res = compareFixture(nat, webr[id], TOLERANCES);
+    fixtureReport[id] = res;
+    if (res.semantic_parity) semanticPass++;
+    if (res.numeric_parity) numericPass++;
+  }
+
+  const allPass = (semanticPass === total) && (numericPass === total);
+  const summary = {
+    evaluated_at: new Date().toISOString(),
+    total_fixtures: total,
+    semantic_pass_count: semanticPass,
+    numeric_pass_count: numericPass,
+    all_fixtures_pass: allPass,
+    tolerances_used: TOLERANCES,
+    fixture_details: fixtureReport
+  };
+
+  fs.writeFileSync(outFile, JSON.stringify(summary, null, 2) + '\n');
+  console.log(`\nSTRICT SYMMETRIC PARITY EVALUATION:`);
+  console.log(`Total Fixtures: ${total}`);
+  console.log(`Semantic Parity Passes: ${semanticPass}/${total} (${(semanticPass / total * 100).toFixed(1)}%)`);
+  console.log(`Numeric Parity Passes: ${numericPass}/${total} (${(numericPass / total * 100).toFixed(1)}%)`);
+  console.log(`Overall Pass: ${allPass ? 'YES' : 'NO'}`);
+}

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CP-WEBR-00B Browser Qualification Harness</title>
+</head>
+<body>
+  <h1>CP-WEBR-00B Browser Qualification Harness</h1>
+  <div id="status">Loading...</div>
+  <pre id="logs" style="background:#1e1e1e; color:#eee; padding:10px; max-height:400px; overflow:auto;"></pre>
+
+  <script type="module">
+    import { WebR, ChannelType } from '/webr/webr.js';
+
+    let webr = null;
+    let initialized = false;
+
+    function log(msg) {
+      console.log(msg);
+      const el = document.getElementById('logs');
+      if (el) el.textContent += msg + '\n';
+    }
+
+    window.harness = {
+      isIsolated: () => window.crossOriginIsolated,
+      initWebR: async () => {
+        const t0 = performance.now();
+        log('Instantiating WebR with baseUrl=/webr/...');
+        webr = new WebR({
+          baseUrl: '/webr/',
+          serviceWorkerUrl: '/webr/'
+        });
+        await webr.init();
+        log('WebR core initialized.');
+
+        const tPkg0 = performance.now();
+        log('Installing MatchIt and cobalt dependencies from local repo...');
+        const requiredPkgs = [
+          'Rcpp', 'R6', 'cli', 'rlang', 'vctrs', 'glue', 'withr', 'lifecycle',
+          'gtable', 'scales', 'farver', 'labeling', 'isoband', 'ggplot2',
+          'gridExtra', 'viridisLite', 'S7', 'arg', 'RColorBrewer', 'MatchIt', 'cobalt'
+        ];
+        await webr.installPackages(requiredPkgs, {
+          repos: [window.location.origin + '/repo']
+        });
+        log('Packages installed. Loading libraries...');
+        await webr.evalR('library(MatchIt); library(cobalt)');
+        const pkgTime = performance.now() - tPkg0;
+        initialized = true;
+
+        const rVer = (await (await webr.evalR('R.version.string')).toJs()).values[0];
+        document.getElementById('status').textContent = 'WebR Initialized: ' + rVer;
+
+        return {
+          r_version: rVer,
+          wasm_memory_bytes: webr._instance?.HEAP8 ? webr._instance.HEAP8.length : null,
+          init_duration_ms: performance.now() - t0,
+          pkg_install_duration_ms: pkgTime,
+          cross_origin_isolated: window.crossOriginIsolated
+        };
+      },
+      runPipeline: async (payload) => {
+        if (!initialized) throw new Error('WebR not initialized');
+        const { csvData, formula, link, caliper, std_caliper, discard } = payload;
+        const t0 = performance.now();
+
+        // 1. JS to R Transfer
+        const tJs2R0 = performance.now();
+        await webr.FS.writeFile('/tmp/data.csv', new TextEncoder().encode(csvData));
+        const js2RTime = performance.now() - tJs2R0;
+
+        // 2. Matching & GLM Execution
+        const tMatch0 = performance.now();
+        const rScript = `
+          df <- read.csv('/tmp/data.csv', stringsAsFactors = FALSE)
+          rownames(df) <- df$id
+          for (col in names(df)) {
+            if (is.character(df[[col]]) && col != "id") {
+              df[[col]] <- as.factor(df[[col]])
+            }
+          }
+          cal_val <- ${caliper === null || caliper === undefined ? 'NULL' : Number(caliper)}
+          std_val <- ${std_caliper ? 'TRUE' : 'FALSE'}
+          m_out <- MatchIt::matchit(
+            as.formula("${formula}"),
+            data = df,
+            method = "nearest",
+            distance = "glm",
+            link = "${link || 'linear.logit'}",
+            caliper = cal_val,
+            std.caliper = std_val,
+            discard = "${discard || 'none'}",
+            replace = FALSE,
+            ratio = 1
+          )
+          matched_pairs_list <- list()
+          if (!is.null(m_out$match.matrix)) {
+            for (t_id in rownames(m_out$match.matrix)) {
+              c_id <- m_out$match.matrix[t_id, 1]
+              if (!is.na(c_id)) {
+                matched_pairs_list[[length(matched_pairs_list) + 1]] <- list(treatment = t_id, control = c_id)
+              }
+            }
+          }
+          list(
+            n_pairs = length(matched_pairs_list)
+          )
+        `;
+        const matchResObj = await webr.evalR(rScript);
+        const matchTime = performance.now() - tMatch0;
+
+        // 3. Cobalt Execution
+        const tCobalt0 = performance.now();
+        const cobaltScript = `
+          b_raw <- cobalt::bal.tab(m_out, un = TRUE, binary = "raw", continuous = "std")
+          b_std <- cobalt::bal.tab(m_out, un = TRUE, binary = "std", continuous = "std")
+          list(
+            raw_vars = rownames(b_raw$Balance),
+            std_vars = rownames(b_std$Balance)
+          )
+        `;
+        const cobaltResObj = await webr.evalR(cobaltScript);
+        const cobaltTime = performance.now() - tCobalt0;
+
+        // 4. Result Serialization
+        const tSer0 = performance.now();
+        const matchJs = await matchResObj.toJs();
+        const cobaltJs = await cobaltResObj.toJs();
+        const serTime = performance.now() - tSer0;
+
+        return {
+          n_pairs: matchJs.values[0].values[0],
+          timings: {
+            total_ms: performance.now() - t0,
+            js_to_r_ms: js2RTime,
+            matching_ms: matchTime,
+            cobalt_ms: cobaltTime,
+            serialization_ms: serTime
+          },
+          wasm_memory_bytes: webr._instance?.HEAP8 ? webr._instance.HEAP8.length : null
+        };
+      },
+      triggerProhibitedFetch: async () => {
+        try {
+          const res = await fetch('/api/intentional-prohibited-leak', { method: 'POST', body: 'leak_payload' });
+          return { status: res.status, blocked: false };
+        } catch (e) {
+          return { error: e.message, blocked: true };
+        }
+      },
+      testInterrupt: async () => {
+        const t0 = performance.now();
+        if (webr) {
+          webr.interrupt();
+        }
+        return performance.now() - t0;
+      },
+      terminateWebR: async () => {
+        const t0 = performance.now();
+        if (webr) {
+          webr.close();
+          webr = null;
+          initialized = false;
+        }
+        return performance.now() - t0;
+      },
+      getMemory: () => {
+        return {
+          js_heap_size_limit: window.performance?.memory?.jsHeapSizeLimit || null,
+          total_js_heap_size: window.performance?.memory?.totalJSHeapSize || null,
+          used_js_heap_size: window.performance?.memory?.usedJSHeapSize || null
+        };
+      },
+      checkStorage: () => {
+        return {
+          localStorage_keys: Object.keys(localStorage),
+          sessionStorage_keys: Object.keys(sessionStorage)
+        };
+      }
+    };
+
+    log('Browser harness ready. crossOriginIsolated = ' + window.crossOriginIsolated);
+  </script>
+</body>
+</html>

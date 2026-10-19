@@ -5,7 +5,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-const webrDist = '/Users/eren/.gemini/antigravity-ide/brain/bde2c483-da90-4bd7-8519-833214691e68/scratch/webr-qualification/node_modules/webr/dist';
+const defaultWebrDist = '/Users/eren/.gemini/antigravity-ide/brain/bde2c483-da90-4bd7-8519-833214691e68/scratch/webr-qualification/node_modules/webr/dist';
+const webrDist = process.env.WEBR_DIST || (fs.existsSync('node_modules/webr/dist') ? path.resolve('node_modules/webr/dist') : defaultWebrDist);
 const depLockFile = 'experiments/cp-webr-00b/dependency-lock.json';
 const outFile = 'experiments/cp-webr-00b/cloudflare-asset-audit.json';
 

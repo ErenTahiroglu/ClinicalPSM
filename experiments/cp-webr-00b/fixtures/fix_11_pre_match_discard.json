@@ -1,0 +1,20 @@
+{
+  "id": "fix_11_pre_match_discard",
+  "name": "Pre-match discarded units with standardized caliper",
+  "description": "discard=both on non-overlapping regions with std.caliper=0.2; verifies standardization on non-discarded subset",
+  "formula": "treat ~ x",
+  "method": "nearest",
+  "distance": "glm",
+  "link": "linear.logit",
+  "caliper": 0.2,
+  "std_caliper": true,
+  "discard": "both",
+  "ratio": 1,
+  "replace": false,
+  "m_order": "largest",
+  "expected_status": "SUCCESS",
+  "n_total": 200,
+  "n_treated": 100,
+  "n_control": 100,
+  "extra_meta": []
+}

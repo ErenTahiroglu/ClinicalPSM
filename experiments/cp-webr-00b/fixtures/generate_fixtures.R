@@ -1,9 +1,10 @@
-# Deterministic synthetic fixture generator for CP-WEBR-00B
-# Output: JSON files for each fixture containing metadata, data frame, and call arguments
+# Deterministic synthetic fixture generator for CP-WEBR-00B R1
+# Output: CSV files and JSON metadata for each fixture
 
 suppressPackageStartupMessages({
   library(stats)
   library(utils)
+  library(jsonlite)
 })
 
 base_dir <- "experiments/cp-webr-00b/fixtures"
@@ -11,8 +12,7 @@ dir.create(base_dir, showWarnings = FALSE, recursive = TRUE)
 
 fixtures <- list()
 
-# Helper to write fixture
-save_fixture <- function(id, name, desc, data, formula_str, distance, link, caliper, std_caliper, discard, ratio, replace, m_order, expected_status) {
+save_fixture <- function(id, name, desc, data, formula_str, distance, link, caliper, std_caliper, discard, ratio, replace, m_order, expected_status, extra_meta = list()) {
   fix <- list(
     id = id,
     name = name,
@@ -31,17 +31,17 @@ save_fixture <- function(id, name, desc, data, formula_str, distance, link, cali
     n_total = nrow(data),
     n_treated = sum(data$treat == 1, na.rm = TRUE),
     n_control = sum(data$treat == 0, na.rm = TRUE),
-    data = as.data.frame(data)
+    extra_meta = extra_meta
   )
 
-  # Write CSV for transparent inspection
+  # Write CSV
   csv_file <- file.path(base_dir, paste0(id, ".csv"))
   write.csv(data, csv_file, row.names = FALSE, na = "NA")
 
-  # Save JSON spec
+  # Write JSON specification
   json_file <- file.path(base_dir, paste0(id, ".json"))
-  # Use simple JSON serialization
-  # We will serialize in R
+  jsonlite::write_json(fix, json_file, pretty = TRUE, auto_unbox = TRUE)
+
   return(fix)
 }
 
@@ -70,15 +70,16 @@ d2 <- data.frame(
   x_cat = factor(sample(c("low", "med", "high"), n2, replace = TRUE), levels = c("low", "med", "high"))
 )
 fixtures[[2]] <- save_fixture("fix_02_mixed_types", "Mixed factor types",
-  "N=400 with continuous, binary, and 3-level factor",
-  d2, "treat ~ x_cont + x_bin + x_cat", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "SUCCESS")
+  "N=400 with continuous, binary, and 3-level factor (baseline ref=low)",
+  d2, "treat ~ x_cont + x_bin + x_cat", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "SUCCESS",
+  list(factor_ref = list(x_cat = "low"), test_std_binary = TRUE))
 
 # 3. Explicit reference-level changes
 d3 <- d2
-d3$x_cat <- relevel(d3$x_cat, ref = "med")
 fixtures[[3]] <- save_fixture("fix_03_ref_level_change", "Reference level change",
-  "Same data as fix_02 with x_cat releveled to med",
-  d3, "treat ~ x_cont + x_bin + x_cat", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "SUCCESS")
+  "Same data as fix_02 with explicit reference level changed to 'med'",
+  d3, "treat ~ x_cont + x_bin + x_cat", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "SUCCESS",
+  list(factor_ref = list(x_cat = "med")))
 
 # 4. Input-row-order changes
 d4 <- d1[rev(seq_len(nrow(d1))), ]
@@ -94,13 +95,18 @@ d5 <- data.frame(
   x1 = rep(c(1, 2, 3, 4, 5), each = 10, times = 2),
   x2 = rep(c(0, 1), 50)
 )
+# Assert exact distance ties exist in d5
+fit5 <- glm(treat ~ x1 + x2, data = d5, family = binomial)
+dist5 <- predict(fit5, type = "link")
+stopifnot(length(unique(dist5)) < length(dist5))
 fixtures[[5]] <- save_fixture("fix_05_exact_distance_ties", "Exact distance ties",
-  "Discrete covariates with identical propensity scores across multiple controls",
-  d5, "treat ~ x1 + x2", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "SUCCESS")
+  "Discrete covariates producing identical propensity scores across multiple controls",
+  d5, "treat ~ x1 + x2", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "SUCCESS",
+  list(n_unique_distances = length(unique(dist5)), n_total = n5))
 
 # 6. No-caliper nearest matching
 fixtures[[6]] <- save_fixture("fix_06_no_caliper_nearest", "No-caliper nearest neighbor",
-  "Verify caliper=NULL behavior",
+  "Verify caliper=NULL default behavior",
   d1, "treat ~ age + bmi + sbp", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "SUCCESS")
 
 # 7. Probability-scale caliper
@@ -119,19 +125,27 @@ fixtures[[9]] <- save_fixture("fix_09_standardized_caliper", "Standardized dista
   d1, "treat ~ age + bmi + sbp", "glm", "linear.logit", 0.2, TRUE, "none", 1, FALSE, "largest", "SUCCESS")
 
 # 10. Deliberate difference between whole-sample SD and within-group pooled SD
-n10_t <- 50
-n10_c <- 150
+n10_t <- 100
+n10_c <- 100
 set.seed(1010)
 d10 <- data.frame(
   id = paste0("sub_", sprintf("%04d", 1:(n10_t + n10_c))),
-  treat = c(rep(1, n10_t), rep(0, n10_c)),
-  x = c(rnorm(n10_t, mean = 2, sd = 4), rnorm(n10_c, mean = 0, sd = 1))
+  treat = rep(c(1, 0), each = 100),
+  x = c(rnorm(100, mean = 2, sd = 1), rnorm(100, mean = -1, sd = 1))
 )
+fit10 <- glm(treat ~ x, data = d10, family = binomial)
+dist10 <- predict(fit10, type = "link")
+whole_sd10 <- sd(dist10)
+d10_t <- dist10[d10$treat == 1]
+d10_c <- dist10[d10$treat == 0]
+pooled_sd10 <- sqrt(((n10_t - 1) * var(d10_t) + (n10_c - 1) * var(d10_c)) / (n10_t + n10_c - 2))
+stopifnot(abs(whole_sd10 - pooled_sd10) > 1.0)
 fixtures[[10]] <- save_fixture("fix_10_whole_vs_pooled_sd", "Whole-sample vs pooled SD difference",
-  "Treated SD=4, Control SD=1, tests MatchIt whole-sample caliper standardization",
-  d10, "treat ~ x", "glm", "linear.logit", 0.2, TRUE, "none", 1, FALSE, "largest", "SUCCESS")
+  "Demonstrates MatchIt whole-sample caliper standardization differs substantially from pooled SD",
+  d10, "treat ~ x", "glm", "linear.logit", 0.2, TRUE, "none", 1, FALSE, "largest", "SUCCESS",
+  list(whole_sample_sd = whole_sd10, pooled_within_sd = pooled_sd10, sd_difference = abs(whole_sd10 - pooled_sd10)))
 
-# 11. Pre-match discarded units
+# 11. Pre-match discarded units with combined standardized caliper
 set.seed(1111)
 n11 <- 200
 d11 <- data.frame(
@@ -139,9 +153,9 @@ d11 <- data.frame(
   treat = rep(c(1, 0), each = 100),
   x = c(rnorm(100, mean = 3, sd = 1), rnorm(100, mean = 0, sd = 1))
 )
-fixtures[[11]] <- save_fixture("fix_11_pre_match_discard", "Pre-match discarded units",
-  "discard=both on non-overlapping regions",
-  d11, "treat ~ x", "glm", "linear.logit", NULL, FALSE, "both", 1, FALSE, "largest", "SUCCESS")
+fixtures[[11]] <- save_fixture("fix_11_pre_match_discard", "Pre-match discarded units with standardized caliper",
+  "discard=both on non-overlapping regions with std.caliper=0.2; verifies standardization on non-discarded subset",
+  d11, "treat ~ x", "glm", "linear.logit", 0.2, TRUE, "both", 1, FALSE, "largest", "SUCCESS")
 
 # 12. Caliper-unmatched units
 fixtures[[12]] <- save_fixture("fix_12_caliper_unmatched", "Caliper unmatched units",
@@ -187,7 +201,8 @@ d15 <- data.frame(
 )
 fixtures[[15]] <- save_fixture("fix_15_quasi_separation", "Quasi-separation",
   "Near-perfect separation creating large GLM coefficients and warnings",
-  d15, "treat ~ x_quasi + x_norm", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "SUCCESS_WITH_WARNING")
+  d15, "treat ~ x_quasi + x_norm", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "SUCCESS_WITH_WARNING",
+  list(warning_category = "SEPARATION_WARNING"))
 
 # 16. Complete separation
 n16 <- 80
@@ -197,8 +212,9 @@ d16 <- data.frame(
   x_sep = rep(c(10, -10), each = 40)
 )
 fixtures[[16]] <- save_fixture("fix_16_complete_separation", "Complete separation",
-  "Covariate perfectly predicts treatment; GLM non-convergence",
-  d16, "treat ~ x_sep", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "SUCCESS_WITH_WARNING")
+  "Covariate perfectly predicts treatment; GLM reaches maxit; publication output blocked by ClinicalPSM policy",
+  d16, "treat ~ x_sep", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "SUCCESS_WITH_WARNING",
+  list(warning_category = "SEPARATION_WARNING", clinicalpsm_policy = "REJECT_FOR_PUBLICATION"))
 
 # 17. Rank-deficient design matrix
 n17 <- 100
@@ -227,32 +243,45 @@ fixtures[[18]] <- save_fixture("fix_18_zero_variance", "Zero-variance covariate"
   "x_const has 0 variance; dropped from GLM",
   d18, "treat ~ x1 + x_const", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "SUCCESS")
 
-# 19. Missing treatment or selected covariates
+# 19a. Missing covariate values
 n19 <- 100
 set.seed(1919)
-d19 <- data.frame(
+d19a <- data.frame(
   id = paste0("sub_", sprintf("%04d", 1:n19)),
   treat = rbinom(n19, 1, 0.4),
   x1 = rnorm(n19),
   x2 = rnorm(n19)
 )
-d19$x1[5] <- NA
-d19$treat[12] <- NA
-fixtures[[19]] <- save_fixture("fix_19_missing_values", "Missing values in data",
-  "NA in treatment and covariate; MatchIt errors on unhandled NA",
-  d19, "treat ~ x1 + x2", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "EXPECTED_ERROR_MISSING")
+d19a$x1[5] <- NA
+fixtures[[19]] <- save_fixture("fix_19_missing_values", "Missing covariate values",
+  "NA in covariate x1; MatchIt errors on unhandled NA",
+  d19a, "treat ~ x1 + x2", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "EXPECTED_REFERENCE_ERROR",
+  list(error_category = "MISSING_COVARIATE"))
 
-# 20. Malformed category and invalid factor levels
+# 19b. Missing treatment values (dedicated test)
+d19b <- data.frame(
+  id = paste0("sub_", sprintf("%04d", 1:n19)),
+  treat = rbinom(n19, 1, 0.4),
+  x1 = rnorm(n19),
+  x2 = rnorm(n19)
+)
+d19b$treat[12] <- NA
+fixtures[[20]] <- save_fixture("fix_19b_missing_treatment", "Missing treatment value",
+  "NA in treatment vector; MatchIt errors on unhandled NA treatment",
+  d19b, "treat ~ x1 + x2", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "EXPECTED_REFERENCE_ERROR",
+  list(error_category = "MISSING_TREATMENT"))
+
+# 20. Malformed category
 n20 <- 100
 set.seed(2020)
 d20 <- data.frame(
   id = paste0("sub_", sprintf("%04d", 1:n20)),
   treat = rbinom(n20, 1, 0.4),
   x1 = rnorm(n20),
-  cat_var = factor(c("solo_level", rep("A", 49), rep("B", 50)))
+  cat_var = c(rep("ValidGroupA", 50), rep("ValidGroupB", 48), "", "   ") # empty and whitespace categories
 )
-fixtures[[20]] <- save_fixture("fix_20_malformed_category", "Single-unit factor level",
-  "Factor level with only 1 observation",
+fixtures[[21]] <- save_fixture("fix_20_malformed_category", "Malformed category values",
+  "Category contains empty string and whitespace-only labels",
   d20, "treat ~ x1 + cat_var", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "SUCCESS")
 
 # 21. Extreme propensity scores
@@ -262,9 +291,10 @@ d21 <- data.frame(
   treat = rep(c(1, 0), each = 60),
   x_ext = c(rnorm(60, mean = 10, sd = 1), rnorm(60, mean = -10, sd = 1))
 )
-fixtures[[21]] <- save_fixture("fix_21_extreme_propensities", "Extreme propensity scores",
+fixtures[[22]] <- save_fixture("fix_21_extreme_propensities", "Extreme propensity scores",
   "Propensity scores near 0 and 1; numerical stability check",
-  d21, "treat ~ x_ext", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "SUCCESS_WITH_WARNING")
+  d21, "treat ~ x_ext", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "SUCCESS_WITH_WARNING",
+  list(warning_category = "SEPARATION_WARNING"))
 
 # 22. Small or degenerate samples
 n22 <- 10
@@ -273,7 +303,7 @@ d22 <- data.frame(
   treat = c(rep(1, 4), rep(0, 6)),
   x = c(1.1, 1.2, 1.3, 1.4, 0.9, 1.0, 1.1, 1.5, 1.6, 1.7)
 )
-fixtures[[22]] <- save_fixture("fix_22_small_sample", "Small degenerate sample",
+fixtures[[23]] <- save_fixture("fix_22_small_sample", "Small degenerate sample",
   "N=10 (4 treated, 6 controls)",
   d22, "treat ~ x", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "SUCCESS")
 
@@ -284,16 +314,24 @@ d23 <- data.frame(
   treat = rep(c(1, 0), each = 20),
   x = c(rep(100, 20), rep(-100, 20))
 )
-fixtures[[23]] <- save_fixture("fix_23_no_eligible_match", "No eligible match",
+fixtures[[24]] <- save_fixture("fix_23_no_eligible_match", "No eligible match",
   "Strict caliper=0.01 between disjoint groups results in 0 matches",
   d23, "treat ~ x", "glm", "linear.logit", 0.01, FALSE, "none", 1, FALSE, "largest", "EXPECTED_ZERO_MATCHES")
 
-# 24. Duplicate row IDs
+# 24. Duplicate row IDs (ClinicalPSM policy reject)
 d24 <- d1[1:50, ]
 d24$id[2] <- d24$id[1] # force duplicate ID
-fixtures[[24]] <- save_fixture("fix_24_duplicate_ids", "Duplicate unit IDs",
+fixtures[[25]] <- save_fixture("fix_24_duplicate_ids", "Duplicate unit IDs",
   "Contains duplicate row identifier; ClinicalPSM policy rejection",
-  d24, "treat ~ age + bmi + sbp", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "CLINICALPSM_POLICY_REJECT")
+  d24, "treat ~ age + bmi + sbp", "glm", "linear.logit", NULL, FALSE, "none", 1, FALSE, "largest", "CLINICALPSM_POLICY_REJECT",
+  list(clinicalpsm_policy = "REJECT_DUPLICATE_ID"))
 
-# Output master manifest
-cat(sprintf("Generated %d fixtures.\n", length(fixtures)))
+# Master manifest
+master_manifest <- list(
+  generated_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+  fixture_count = length(fixtures),
+  fixtures = fixtures
+)
+jsonlite::write_json(master_manifest, file.path(base_dir, "fixtures_manifest.json"), pretty = TRUE, auto_unbox = TRUE)
+
+cat(sprintf("Generated %d fixtures with JSON manifests and CSV files.\n", length(fixtures)))

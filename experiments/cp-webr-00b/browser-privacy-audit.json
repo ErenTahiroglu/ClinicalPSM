@@ -1,0 +1,13 @@
+{
+  "tested_at": "2026-10-19T09:24:43.773Z",
+  "browser": "Chromium (Brave 154.0.8037.93)",
+  "negative_control_caught": true,
+  "offline_execution_succeeded": true,
+  "analysis_phase_requests_count": 1,
+  "sentinel_leaked": false,
+  "storage_persistence": {
+    "localStorage_keys": [],
+    "sessionStorage_keys": []
+  },
+  "verdict": "PASS"
+}

@@ -1,0 +1,20 @@
+{
+  "id": "fix_08_linear_logit_caliper",
+  "name": "Linear-logit caliper",
+  "description": "distance=glm, link=linear.logit, caliper=0.2 unstandardized",
+  "formula": "treat ~ age + bmi + sbp",
+  "method": "nearest",
+  "distance": "glm",
+  "link": "linear.logit",
+  "caliper": 0.2,
+  "std_caliper": false,
+  "discard": "none",
+  "ratio": 1,
+  "replace": false,
+  "m_order": "largest",
+  "expected_status": "SUCCESS",
+  "n_total": 300,
+  "n_treated": 119,
+  "n_control": 181,
+  "extra_meta": []
+}

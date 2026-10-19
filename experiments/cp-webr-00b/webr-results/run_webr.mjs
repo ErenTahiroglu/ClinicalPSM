@@ -1,41 +1,19 @@
-// CP-WEBR-00B WebR Execution Runner
-// Executes the 24 golden fixtures inside WebR 0.6.0 (R 4.6.0 Wasm)
+// CP-WEBR-00B R1 WebR Execution Runner
+// Executes the 25 golden fixtures inside WebR 0.6.0 (R 4.6.0 Wasm)
 
 import fs from 'node:fs';
 import path from 'node:path';
 
-const webrPkgPath = '/Users/eren/.gemini/antigravity-ide/brain/bde2c483-da90-4bd7-8519-833214691e68/scratch/webr-qualification/node_modules/webr';
+const defaultWebRPath = '/Users/eren/.gemini/antigravity-ide/brain/bde2c483-da90-4bd7-8519-833214691e68/scratch/webr-qualification/node_modules/webr';
+const webrPkgPath = process.env.WEBR_NODE_MODULES || defaultWebRPath;
 const { WebR } = await import(path.join(webrPkgPath, 'dist/webr.mjs'));
 
 const baseDir = 'experiments/cp-webr-00b/fixtures';
 const outFile = 'experiments/cp-webr-00b/webr-results/webr_results.json';
+const manifestFile = path.join(baseDir, 'fixtures_manifest.json');
 
-const fixtureSpecs = [
-  { id: "fix_01_well_conditioned", formula: "treat ~ age + bmi + sbp", link: "linear.logit", caliper: null, std: false, discard: "none" },
-  { id: "fix_02_mixed_types", formula: "treat ~ x_cont + x_bin + x_cat", link: "linear.logit", caliper: null, std: false, discard: "none" },
-  { id: "fix_03_ref_level_change", formula: "treat ~ x_cont + x_bin + x_cat", link: "linear.logit", caliper: null, std: false, discard: "none" },
-  { id: "fix_04_input_row_order", formula: "treat ~ age + bmi + sbp", link: "linear.logit", caliper: null, std: false, discard: "none" },
-  { id: "fix_05_exact_distance_ties", formula: "treat ~ x1 + x2", link: "linear.logit", caliper: null, std: false, discard: "none" },
-  { id: "fix_06_no_caliper_nearest", formula: "treat ~ age + bmi + sbp", link: "linear.logit", caliper: null, std: false, discard: "none" },
-  { id: "fix_07_prob_scale_caliper", formula: "treat ~ age + bmi + sbp", link: "logit", caliper: 0.1, std: false, discard: "none" },
-  { id: "fix_08_linear_logit_caliper", formula: "treat ~ age + bmi + sbp", link: "linear.logit", caliper: 0.2, std: false, discard: "none" },
-  { id: "fix_09_standardized_caliper", formula: "treat ~ age + bmi + sbp", link: "linear.logit", caliper: 0.2, std: true, discard: "none" },
-  { id: "fix_10_whole_vs_pooled_sd", formula: "treat ~ x", link: "linear.logit", caliper: 0.2, std: true, discard: "none" },
-  { id: "fix_11_pre_match_discard", formula: "treat ~ x", link: "linear.logit", caliper: null, std: false, discard: "both" },
-  { id: "fix_12_caliper_unmatched", formula: "treat ~ age + bmi + sbp", link: "linear.logit", caliper: 0.05, std: false, discard: "none" },
-  { id: "fix_13_more_treated_than_control", formula: "treat ~ x1 + x2", link: "linear.logit", caliper: null, std: false, discard: "none" },
-  { id: "fix_14_more_controls_than_treated", formula: "treat ~ x1 + x2", link: "linear.logit", caliper: null, std: false, discard: "none" },
-  { id: "fix_15_quasi_separation", formula: "treat ~ x_quasi + x_norm", link: "linear.logit", caliper: null, std: false, discard: "none" },
-  { id: "fix_16_complete_separation", formula: "treat ~ x_sep", link: "linear.logit", caliper: null, std: false, discard: "none" },
-  { id: "fix_17_rank_deficient", formula: "treat ~ x1 + x2", link: "linear.logit", caliper: null, std: false, discard: "none" },
-  { id: "fix_18_zero_variance", formula: "treat ~ x1 + x_const", link: "linear.logit", caliper: null, std: false, discard: "none" },
-  { id: "fix_19_missing_values", formula: "treat ~ x1 + x2", link: "linear.logit", caliper: null, std: false, discard: "none" },
-  { id: "fix_20_malformed_category", formula: "treat ~ x1 + cat_var", link: "linear.logit", caliper: null, std: false, discard: "none" },
-  { id: "fix_21_extreme_propensities", formula: "treat ~ x_ext", link: "linear.logit", caliper: null, std: false, discard: "none" },
-  { id: "fix_22_small_sample", formula: "treat ~ x", link: "linear.logit", caliper: null, std: false, discard: "none" },
-  { id: "fix_23_no_eligible_match", formula: "treat ~ x", link: "linear.logit", caliper: 0.01, std: false, discard: "none" },
-  { id: "fix_24_duplicate_ids", formula: "treat ~ age + bmi + sbp", link: "linear.logit", caliper: null, std: false, discard: "none" }
-];
+const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
+const fixtureSpecs = manifest.fixtures;
 
 console.log('Initializing WebR instance...');
 const webr = new WebR();
@@ -56,7 +34,7 @@ for (const spec of fixtureSpecs) {
   const csvContent = fs.readFileSync(csvPath, 'utf8');
 
   // Check for duplicate IDs (ClinicalPSM policy)
-  const idLines = csvContent.trim().split('\n').slice(1).map(l => l.split(',')[0]);
+  const idLines = csvContent.trim().split('\n').slice(1).map(l => l.split(',')[0].replace(/"/g, ''));
   const uniqueIds = new Set(idLines);
   if (uniqueIds.size < idLines.length) {
     allResults[fid] = {
@@ -64,19 +42,28 @@ for (const spec of fixtureSpecs) {
       runtime: "WEBR_WASM",
       r_version: rVer,
       status: "CLINICALPSM_POLICY_REJECT",
+      warning_categories: [],
       warnings: [],
-      error: "Duplicate row identifier detected: ClinicalPSM policy requires strictly unique patient/sample identifiers."
+      error_category: "DUPLICATE_IDENTIFIER",
+      error: "Duplicate row identifier detected: ClinicalPSM policy requires strictly unique patient/sample identifiers.",
+      clinicalpsm_policy: "REJECT_DUPLICATE_ID"
     };
-    console.log(`Evaluated ${fid}: status=CLINICALPSM_POLICY_REJECT pairs=N/A`);
+    console.log(`Evaluated ${fid}: status=CLINICALPSM_POLICY_REJECT`);
     continue;
   }
 
   // Load CSV into WebR VFS
   await webr.FS.writeFile('/tmp/fixture.csv', new TextEncoder().encode(csvContent));
 
-  const script = `
+  const factorRefStr = spec.extra_meta?.factor_ref?.x_cat
+    ? `df$x_cat <- relevel(factor(df$x_cat, levels = c("low", "med", "high")), ref = "${spec.extra_meta.factor_ref.x_cat}")`
+    : `if ("x_cat" %in% names(df)) df$x_cat <- relevel(factor(df$x_cat, levels = c("low", "med", "high")), ref = "low")`;
+
+    const caliperStr = (typeof spec.caliper === 'number') ? spec.caliper : 'NULL';
+
+    const script = `
     df <- read.csv('/tmp/fixture.csv', stringsAsFactors = FALSE)
-    if ("x_cat" %in% names(df)) df$x_cat <- factor(df$x_cat)
+    ${factorRefStr}
     if ("cat_var" %in% names(df)) df$cat_var <- factor(df$cat_var)
     rownames(df) <- df$id
 
@@ -84,21 +71,23 @@ for (const spec of fixtureSpecs) {
     err_msg <- NULL
     m_out <- NULL
 
+    formula_obj <- as.formula("${spec.formula}")
+
     withCallingHandlers({
       tryCatch({
         m_out <- MatchIt::matchit(
-          formula = ${spec.formula},
+          formula = formula_obj,
           data = df,
-          method = "nearest",
-          distance = "glm",
+          method = "${spec.method}",
+          distance = "${spec.distance}",
           link = "${spec.link}",
           estimand = "ATT",
-          ratio = 1,
-          replace = FALSE,
-          m.order = "largest",
+          ratio = ${spec.ratio},
+          replace = ${spec.replace ? 'TRUE' : 'FALSE'},
+          m.order = "${spec.m_order}",
           discard = "${spec.discard}",
-          caliper = ${spec.caliper === null ? 'NULL' : spec.caliper},
-          std.caliper = ${spec.std ? 'TRUE' : 'FALSE'}
+          caliper = ${caliperStr},
+          std.caliper = ${spec.std_caliper ? 'TRUE' : 'FALSE'}
         )
       }, error = function(e) {
         err_msg <<- conditionMessage(e)
@@ -108,16 +97,36 @@ for (const spec of fixtureSpecs) {
       invokeRestart("muffleWarning")
     })
 
+    warning_cats <- character(0)
+    for (wmsg in warnings_captured) {
+      if (grepl("numerically 0 or 1", wmsg)) {
+        warning_cats <- c(warning_cats, "SEPARATION_WARNING")
+      } else if (grepl("rank-deficient", wmsg)) {
+        warning_cats <- c(warning_cats, "RANK_DEFICIENT_WARNING")
+      } else if (grepl("did not converge", wmsg)) {
+        warning_cats <- c(warning_cats, "CONVERGENCE_WARNING")
+      } else {
+        warning_cats <- c(warning_cats, "OTHER_WARNING")
+      }
+    }
+    warning_cats <- unique(warning_cats)
+
     out_obj <- list(
       id = "${fid}",
       runtime = "WEBR_WASM",
       r_version = R.version.string,
-      status = if (is.null(err_msg)) "SUCCESS" else "ERROR",
+      status = "UNKNOWN",
+      warning_categories = warning_cats,
       warnings = warnings_captured,
-      error = err_msg
+      error_category = NULL,
+      error = err_msg,
+      clinicalpsm_policy = "${spec.extra_meta?.clinicalpsm_policy || 'ACCEPT'}"
     )
 
-    if (!is.null(m_out)) {
+    if (!is.null(err_msg)) {
+      out_obj$status <- "EXPECTED_REFERENCE_ERROR"
+      out_obj$error_category <- "${spec.extra_meta?.error_category || 'EXECUTION_ERROR'}"
+    } else {
       mm <- m_out$match.matrix
       treated_units <- rownames(mm)
       matched_pairs <- list()
@@ -127,20 +136,46 @@ for (const spec of fixtureSpecs) {
           matched_pairs[[t_id]] <- c_id
         }
       }
+
+      if (length(matched_pairs) == 0 && "${spec.expected_status}" == "EXPECTED_ZERO_MATCHES") {
+        out_obj$status <- "EXPECTED_ZERO_MATCHES"
+      } else if (length(warnings_captured) > 0) {
+        out_obj$status <- "SUCCESS_WITH_WARNING"
+      } else {
+        out_obj$status <- "SUCCESS"
+      }
+
       discarded_units <- names(m_out$discarded)[m_out$discarded]
       if (is.null(discarded_units)) discarded_units <- character(0)
+
+      weights_map <- as.list(m_out$weights)
+      subclass_map <- as.list(ifelse(is.na(m_out$subclass), "UNMATCHED", as.character(m_out$subclass)))
 
       glm_mod <- m_out$model
       coefs <- if (!is.null(glm_mod)) as.list(coef(glm_mod)) else list()
       converged <- if (!is.null(glm_mod)) glm_mod$converged else NA
+      rank <- if (!is.null(glm_mod)) glm_mod$rank else NA
+      aliased <- if (!is.null(glm_mod)) as.list(summary(glm_mod)$aliased) else list()
+      mm_cols <- if (!is.null(glm_mod)) colnames(model.matrix(glm_mod)) else character(0)
+
+      contrasts_list <- list()
+      if (!is.null(glm_mod) && !is.null(glm_mod$contrasts)) {
+        for (cname in names(glm_mod$contrasts)) {
+          contrasts_list[[cname]] <- glm_mod$contrasts[[cname]]
+        }
+      }
 
       out_obj$matching <- list(
         converged = converged,
+        rank = rank,
+        aliased = aliased,
+        model_matrix_colnames = mm_cols,
+        contrasts = contrasts_list,
         coefficients = coefs,
         distance = as.list(setNames(as.numeric(m_out$distance), names(m_out$distance))),
         matched_pairs = matched_pairs,
-        weights = as.list(m_out$weights),
-        subclass = as.list(ifelse(is.na(m_out$subclass), "UNMATCHED", as.character(m_out$subclass))),
+        weights = weights_map,
+        subclass = subclass_map,
         discarded = discarded_units,
         n_treated_total = sum(m_out$treat == 1),
         n_control_total = sum(m_out$treat == 0),
@@ -148,26 +183,34 @@ for (const spec of fixtureSpecs) {
         n_discarded = length(discarded_units)
       )
 
-      if (length(matched_pairs) > 0) {
+      extract_bal <- function(binary_mode) {
+        if (length(matched_pairs) == 0) return(NULL)
         bal <- tryCatch({
-          cobalt::bal.tab(m_out, un = TRUE, binary = "raw", s.d.denom = "treated")
+          cobalt::bal.tab(m_out, un = TRUE, binary = binary_mode, s.d.denom = "treated")
         }, error = function(e) NULL)
-        if (!is.null(bal) && !is.null(bal$Balance)) {
-          b_df <- as.data.frame(bal$Balance)
-          out_obj$cobalt_balance <- list(
-            covariates = rownames(b_df),
-            type = as.character(b_df$Type),
-            diff_un = as.list(setNames(b_df$Diff.Un, rownames(b_df))),
-            diff_adj = as.list(setNames(b_df$Diff.Adj, rownames(b_df))),
-            v_ratio_un = if ("V.Ratio.Un" %in% names(b_df)) as.list(setNames(b_df$V.Ratio.Un, rownames(b_df))) else list(),
-            v_ratio_adj = if ("V.Ratio.Adj" %in% names(b_df)) as.list(setNames(b_df$V.Ratio.Adj, rownames(b_df))) else list()
-          )
-        }
-      } else {
-        out_obj$cobalt_balance <- list(note = "Zero matched pairs; cobalt bal.tab skipped")
+
+        if (is.null(bal) || is.null(bal$Balance)) return(NULL)
+        b_df <- as.data.frame(bal$Balance)
+        raw_covs <- rownames(b_df)
+        canon_covs <- ifelse(grepl("^distance", raw_covs), "distance", raw_covs)
+
+        list(
+          binary_mode = binary_mode,
+          covariates = canon_covs,
+          raw_covariates = raw_covs,
+          type = as.character(b_df$Type),
+          diff_un = as.list(setNames(b_df$Diff.Un, canon_covs)),
+          diff_adj = as.list(setNames(b_df$Diff.Adj, canon_covs)),
+          v_ratio_un = if ("V.Ratio.Un" %in% names(b_df)) as.list(setNames(b_df$V.Ratio.Un, canon_covs)) else list(),
+          v_ratio_adj = if ("V.Ratio.Adj" %in% names(b_df)) as.list(setNames(b_df$V.Ratio.Adj, canon_covs)) else list()
+        )
       }
+
+      out_obj$cobalt_balance_raw <- extract_bal("raw")
+      out_obj$cobalt_balance_std <- extract_bal("std")
     }
-    jsonlite::toJSON(out_obj, auto_unbox = TRUE, null = "null", na = "null")
+
+    jsonlite::toJSON(out_obj, auto_unbox = TRUE, null = "null", na = "string")
   `;
 
   try {
@@ -183,8 +226,11 @@ for (const spec of fixtureSpecs) {
       runtime: "WEBR_WASM",
       r_version: rVer,
       status: "EXECUTION_EXCEPTION",
+      warning_categories: [],
       warnings: [],
-      error: e.message
+      error_category: "UNCAUGHT_EXCEPTION",
+      error: e.message,
+      clinicalpsm_policy: "REJECT_ON_CRASH"
     };
     console.error(`Exception evaluating ${fid}:`, e.message);
   }
