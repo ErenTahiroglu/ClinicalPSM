@@ -36,6 +36,11 @@ jobs:
       - name: Install root dependencies
         run: npm ci
 
+      - name: Setup experiment dependencies & install webr
+        run: |
+          node experiments/cp-webr-00b/harness/setup_experiment.mjs
+          npm install --no-save webr@0.6.0
+
       - name: Run alias mapping and canonical serialization unit suite
         run: node experiments/cp-webr-01b/harness/test_alias_and_serialization.mjs
 
