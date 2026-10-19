@@ -26,37 +26,33 @@ When a web server (e.g. Cloudflare Workers Static Assets) delivers pre-compiled 
 
 ## 2. Pinned WebR & R Package Dependency Inventory (SBOM)
 
-The complete runtime distribution comprises 21 R package archives and the WebR WebAssembly core, locked in `dependency-lock.json`:
+The complete runtime distribution comprises exactly **21 R package archives** plus the WebR WebAssembly core, locked in `experiments/cp-webr-00b/dependency-lock.json`. The table below is the authoritative SBOM; every entry matches the corresponding `sha256` in that file.
 
-| Package / Binary Component | Version | Exact License | Primary Upstream Source | Distribution Obligation |
+| Package / Binary Component | Version (Lock) | Exact License | Primary Upstream Source | Distribution Obligation |
 | :--- | :---: | :--- | :--- | :--- |
 | **`WebR Runtime Core`** (`R.wasm`, `webr.mjs`) | 0.6.0 | GPL-2.0-or-later | Posit / R Core Team | Full Wasm toolchain patch source disclosure |
 | **`R Base Core & Math Libraries`** (`libR.so`, `libRblas.so`) | 4.6.0 | GPL-2.0-or-later | R Foundation | Complete Corresponding Source |
-| **`MatchIt`** | 4.8.1 | GPL-2.0-or-later | CRAN (Ho, Imai, King, Stuart) | Complete Corresponding Source |
-| **`cobalt`** | 5.0.0 | GPL-2.0-or-later | CRAN (Greifer) | Complete Corresponding Source |
-| **`backports`** | 1.5.0 | GPL-2.0-only | CRAN (R Core Team / Michel Lang) | Complete Corresponding Source |
-| **`chk`** | 0.9.2 | GPL-3.0-only | CRAN (Joe Thorley) | Complete Corresponding Source |
-| **`cli`** | 3.6.5 | MIT | CRAN (Gábor Csárdi) | Notice & license retention |
-| **`crayon`** | 1.5.3 | MIT | CRAN (Gábor Csárdi) | Notice & license retention |
-| **`digest`** | 0.6.37 | GPL-2.0-or-later | CRAN (Dirk Eddelbuettel) | Complete Corresponding Source |
-| **`glue`** | 1.8.0 | MIT | CRAN (Jim Hester) | Notice & license retention |
-| **`gridExtra`** | 2.3 | GPL-2.0-or-later | CRAN (Baptiste Auguie) | Complete Corresponding Source |
+| **`MatchIt`** | 4.8.1 | GPL-2.0-only | CRAN (Ho, Imai, King, Stuart) | Complete Corresponding Source |
+| **`cobalt`** | 5.0.0 | GPL-2.0-only | CRAN (Greifer) | Complete Corresponding Source |
+| **`rlang`** | 1.3.0 | MIT | CRAN (Lionel Henry) | Notice & license retention |
+| **`cli`** | 3.6.6 | MIT | CRAN (Gábor Csárdi) | Notice & license retention |
+| **`arg`** | 0.2.1 | GPL-2.0-only | CRAN | Complete Corresponding Source |
+| **`Rcpp`** | 1.1.2 | GPL-2.0-only | CRAN (Eddelbuettel) | Complete Corresponding Source |
+| **`glue`** | 1.8.1 | MIT | CRAN (Jim Hester) | Notice & license retention |
+| **`lifecycle`** | 1.0.5 | MIT | CRAN (Lionel Henry) | Notice & license retention |
 | **`gtable`** | 0.3.6 | MIT | CRAN (Hadley Wickham) | Notice & license retention |
-| **`isoband`** | 0.2.7 | MIT | CRAN (Hadley Wickham) | Notice & license retention |
-| **`lifecycle`** | 1.0.4 | MIT | CRAN (Lionel Henry) | Notice & license retention |
-| **`magrittr`** | 2.0.3 | MIT | CRAN (Stefan Milton Bache) | Notice & license retention |
-| **`rlang`** | 1.1.5 | MIT | CRAN (Lionel Henry) | Notice & license retention |
-| **`vctrs`** | 0.6.5 | MIT | CRAN (Hadley Wickham) | Notice & license retention |
-| **`withr`** | 3.0.2 | MIT | CRAN (Jim Hester) | Notice & license retention |
-| **`ggplot2`** | 3.5.1 | MIT | CRAN (Hadley Wickham) | Notice & license retention |
-| **`tibble`** | 3.2.1 | MIT | CRAN (Kirill Müller) | Notice & license retention |
-| **`pillar`** | 1.10.1 | MIT | CRAN (Kirill Müller) | Notice & license retention |
-| **`scales`** | 1.3.0 | MIT | CRAN (Hadley Wickham) | Notice & license retention |
+| **`isoband`** | 0.3.0 | MIT | CRAN (Hadley Wickham) | Notice & license retention |
+| **`S7`** | 0.2.2 | MIT | CRAN | Notice & license retention |
 | **`farver`** | 2.1.2 | MIT | CRAN (Thomas Lin Pedersen) | Notice & license retention |
 | **`labeling`** | 0.4.3 | MIT | CRAN (Justin Talbot) | Notice & license retention |
-| **`munsell`** | 0.5.1 | MIT | CRAN (Charlotte Wickham) | Notice & license retention |
+| **`R6`** | 2.6.1 | MIT | CRAN | Notice & license retention |
 | **`RColorBrewer`** | 1.1-3 | Apache-2.0 | CRAN (Erich Neuwirth) | Notice & license retention |
-| **`viridisLite`** | 0.4.2 | MIT | CRAN (Simon Garnier) | Notice & license retention |
+| **`viridisLite`** | 0.4.3 | MIT | CRAN (Simon Garnier) | Notice & license retention |
+| **`scales`** | 1.4.0 | MIT | CRAN (Hadley Wickham) | Notice & license retention |
+| **`vctrs`** | 0.7.3 | MIT | CRAN (Hadley Wickham) | Notice & license retention |
+| **`withr`** | 3.0.3 | MIT | CRAN (Jim Hester) | Notice & license retention |
+| **`ggplot2`** | 4.0.3 | MIT | CRAN (Hadley Wickham) | Notice & license retention |
+| **`gridExtra`** | 2.3.1 | GPL-2.0-only | CRAN (Baptiste Auguie) | Complete Corresponding Source |
 
 ---
 

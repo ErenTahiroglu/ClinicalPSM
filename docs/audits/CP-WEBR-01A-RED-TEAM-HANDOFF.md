@@ -5,7 +5,7 @@
 **Branch:** `development`
 **Required Baseline SHA:** `759aab6de739deaa27f160aee1afde9a107385c0`
 **Authority:** Independent Red Team (ChatGPT)
-**Status:** Complete — Design-Only Handoff (Awaiting Red Team Approval)
+**Status:** R1 Correction Submitted — Awaiting Red Team Re-Approval
 
 ---
 
@@ -39,15 +39,16 @@ This phase is **strictly design-only**. No production code (`clinicalpsm/src/` o
 - **Production Contract:** Prohibits string interpolation. Ingestion enforces:
   1. Strict lexical allowlist for column names: `^[a-zA-Z_][a-zA-Z0-9._]{0,63}$` (disallowing all R reserved keywords).
   2. Structured binary buffer transfer via Transferable `postMessage` objects.
-  3. Pre-compiled immutable R templates with parameters passed via `webr.objs.setData()`.
+  3. Pre-compiled immutable R templates with parameters passed via the verified WebR 0.6.0 `REnvironment` API: `new webR.REnvironment()` → `env.bind(name, robj)` → `webR.evalR(code, { env })`.
+  - **Note:** `webr.objs.setData()` does not exist in WebR 0.6.0 and must not appear in any production contract or prototype.
 
 ### 2.3 Scientific Separation Policy
 - **Empirical Finding:** R's `glm()` optimization terminates with `converged: true` under complete separation because relative deviance reduction drops below $10^{-8}$, even though parameter estimates diverge to $\pm\infty$ with astronomical standard errors ($SE > 39,000$).
 - **Production Contract:**
   1. Algorithmic convergence (`converged == TRUE`) is never presented as proof that separation is absent.
-  2. If any $|\beta_j| > 10.0$ or $SE(\beta_j) > 50.0$, the run is flagged `QUASI_COMPLETE_SEPARATION` and classified as **`REJECT_FOR_PUBLICATION`**.
-  3. No automated Firth penalized likelihood fallback is permitted in the initial baseline.
-  4. The experiment does not yet implement an automatic separation detector; this is an explicit blocker for Phase `CP-STAT-02`.
+  2. Observable symptoms of separation (fitted probabilities collapsing to 0.0/1.0, extreme coefficient SEs in the thousands, or IRLS divergence) trigger `WARN_SUSPECTED_SEPARATION` and the run is classified as **`REJECT_FOR_PUBLICATION`**.
+  3. **The candidate heuristics `|beta_j| > 10.0` and `SE(beta_j) > 50.0` are not validated universal separation diagnostics.** They have been removed from this contract per R1 P0 corrections. Definitive automated separation detection is an explicit blocker for Phase `CP-STAT-02` (`SEPARATION_DETECTOR = NOT_IMPLEMENTED`, `AUTOMATED_SEPARATION_SAFETY = BLOCKED`).
+  4. No automated Firth penalized likelihood fallback is permitted in the initial baseline.
 
 ### 2.4 Resolution of Unresolved R2.1 Evidence Gaps
 - **Gap A (Falsification):** Automated two-pass security test specified for Phase `CP-WEBR-01B`: Pass 1 tests interception-active; Pass 2 disables interception to prove the security test demonstrably fails if interception breaks.

@@ -109,9 +109,15 @@ To protect clinical research integrity without making unsupported claims, Clinic
               ├── 1. Optimizer Failure (max iterations reached without convergence)
               │      └── Status: NUMERICAL_FAILURE (Fail Closed)
               │
-              ├── 2. Complete / Quasi-Complete Separation
-              │      Condition: |beta_j| > 10.0 OR SE(beta_j) > 50.0 OR fitted probs in {0, 1}
-              │      └── Status: REJECT_FOR_PUBLICATION (Fail Closed)
+              ├── 2. Suspected Separation (Observable Symptoms — NOT definitive heuristics)
+              │      Symptoms (any combination):
+              │        - glm() converged == TRUE yet fitted probs collapse to 0.0 or 1.0
+              │        - One or more coefficient SEs exceed ~1,000 (experiment: SE > 39,000)
+              │        - Coefficient estimates diverging across IRLS iterations
+              │      Classification: WARN_QUASI_SEPARATION advisory
+              │      Gate: REJECT_FOR_PUBLICATION (Fail Closed)
+              │      NOTE: No universal numeric threshold (|beta|>10, SE>50) is validated.
+              │            Definitive detection requires Phase CP-STAT-02 implementation.
               │
               ├── 3. Rank Deficiency / Collinearity
               │      Condition: rank(X) < ncol(X) OR any NA coefficient
@@ -126,14 +132,15 @@ To protect clinical research integrity without making unsupported claims, Clinic
 ```
 
 ### 3.3 Explicit Blocker Disclosure
-- **No Automatic Separation Detector in Experiment:** The feasibility experiment (`CP-WEBR-00B`) relied on fixture metadata for the `REJECT_FOR_PUBLICATION` classification of `fix_16`.
-- **Pre-Implementation Requirement:** A general-purpose runtime separation detector (evaluating coefficient magnitudes, standard errors, and boundary probabilities) must be implemented and independently validated against the 25 golden fixtures during Phase `CP-STAT-02` before any claim of automated separation safety can be made.
+- **SEPARATION_DETECTOR = NOT_IMPLEMENTED:** The feasibility experiment (`CP-WEBR-00B`) relied on fixture metadata for the `REJECT_FOR_PUBLICATION` classification of `fix_16`. No runtime separation detector exists.
+- **Numeric Threshold Prohibition:** The candidate heuristics `|beta_j| > 10.0` and `SE(beta_j) > 50.0` are **not validated universal separation diagnostics** and must not be embedded as definitive classification criteria in production code. They have been removed from this contract.
+- **AUTOMATED_SEPARATION_SAFETY = BLOCKED:** A general-purpose runtime separation detector (evaluating observable symptoms: boundary probabilities, SE magnitude relative to coefficient scale, and IRLS iteration divergence) must be implemented and independently validated against the 25 golden fixtures during Phase `CP-STAT-02` before any claim of automated separation safety can be made.
 
 ---
 
 ## 4. Canonical Scientific Result TypeScript Schema
 
-Every execution of the matching engine produces an immutable result snapshot adhering strictly to the following TypeScript interface:
+Every execution of the matching engine produces an **immutable** result snapshot adhering strictly to the following TypeScript interface. The result object is immediately frozen with `Object.freeze()` upon creation; no downstream consumer may mutate any field. All publication artifacts must reference the frozen snapshot directly.
 
 ```typescript
 /**
@@ -274,13 +281,24 @@ export interface CanonicalPsmResult {
       zValue: number;
       pValue: number;
     }>;
-    rubinB: number; // Absolute SMD of propensity scores post-matching
-    rubinR: number; // Ratio of propensity score variances post-matching
+    rubinB: number;
+    // Rubin's B: absolute standardized difference of propensity score MEANS
+    // between matched treated and matched control, standardized by the pooled
+    // unadjusted (pre-match) propensity score standard deviation.
+    // Rubin (2001) heuristic guidance: B < 25 suggests adequate balance (informational only).
+    rubinR: number;
+    // Rubin's R: ratio of matched treated propensity score variance to
+    // matched control propensity score variance.
+    // Rubin (2001) heuristic guidance: 0.5 < R < 2 suggests adequate variance overlap (informational only).
+    // Both B and R are reported as informational diagnostics; they do not override SMD-based balance.
   };
 
   // 12. Warnings & Scientific Advisory Ledger
   warnings: Array<{
-    code: 'WARN_QUASI_SEPARATION' | 'WARN_OFF_SUPPORT' | 'WARN_CALIPER_ATTRITION' | 'WARN_RANK_DEFICIENT' | 'WARN_MISSING_EXCLUSION';
+    code: 'WARN_SUSPECTED_SEPARATION' | 'WARN_OFF_SUPPORT' | 'WARN_CALIPER_ATTRITION' | 'WARN_RANK_DEFICIENT' | 'WARN_MISSING_EXCLUSION';
+    // WARN_SUSPECTED_SEPARATION: one or more observable symptoms of complete or quasi-complete
+    // separation detected (boundary probabilities, extreme SE, or IRLS divergence).
+    // Definitive classification blocked pending CP-STAT-02 automated detector.
     message: string;
     severity: 'informational' | 'warning' | 'fatal';
     impactDescription: string;

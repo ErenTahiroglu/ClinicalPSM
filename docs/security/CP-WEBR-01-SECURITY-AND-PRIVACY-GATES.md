@@ -14,7 +14,7 @@ In ClinicalPSM, users process sensitive, de-identified or pseudo-anonymized obse
 
 | Threat Category | Attack Vector | Architectural Countermeasure | Release Gate |
 | :--- | :--- | :--- | :---: |
-| **Unauthorized Data Egress** | Silent background network exfiltration (beacon, WebSocket, fetch, telemetry) of patient identifiers or covariates. | Complete client-side isolation; strict CSP `connect-src 'self'`; context-wide route interception in automated tests. | `SEC-GATE-01` |
+| **Unauthorized Data Egress** | Silent background network exfiltration (beacon, WebSocket, fetch, telemetry) of patient identifiers or covariates. | Complete client-side isolation; strict CSP `connect-src 'self'` (permits same-origin requests only — zero external origins); context-wide route interception in automated tests. | `SEC-GATE-01` |
 | **Malicious R Code Injection** | Malicious column names or cell values in CSV files injecting arbitrary R syntax via string interpolation. | Strict lexical allowlist for identifiers; structured typed buffer ingestion; parameterized R templates with zero code interpolation. | `SEC-GATE-03` |
 | **Persistent Data Residue** | Unintended retention of patient records in browser storage (`localStorage`, `sessionStorage`, `IndexedDB`, or Cache API). | Ephemeral in-memory execution; deep virtual filesystem lifecycle audits; zero patient data persisted by default. | `SEC-GATE-02` |
 | **CSP Bypass & XSS** | Exploitation of required `'unsafe-eval'` CSP directive to execute unauthorized scripts. | Complete elimination of `'unsafe-inline'`; strict script-src and worker-src boundaries; zero external network access. | `SEC-GATE-04` |
@@ -87,30 +87,33 @@ To eliminate command injection, the application must never construct executable 
 // PROHIBITED VULNERABLE PATTERN (NEVER USE IN PRODUCTION):
 await webr.evalR(`df <- read.csv("${filename}"); m <- matchit(${formula}, data = df)`);
 
-// AUTHORIZED SAFE PARAMETER BINDING PATTERN:
-// 1. Structured dataset passed as typed binary buffers:
-const payload = {
-  treatment: new Uint8Array(treatmentValues),
-  covariates: typedCovariateColumns,
-  rowIds: stringRowIds
-};
+// AUTHORIZED SAFE PARAMETER BINDING PATTERN (WebR 0.6.0 REnvironment API):
+// 1. Structured dataset passed as typed binary buffers via Transferable postMessage.
+// 2. Bound directly into a new R environment using the verified API:
+const env = await new webR.REnvironment();
+const treatmentRVec = await new webR.RInteger(treatmentValues);
+const covMatrixRMat = await new webR.RDouble(covariateMatrix);
+await env.bind('clinicalpsm_treatment', treatmentRVec);
+await env.bind('clinicalpsm_covariates', covMatrixRMat);
 
-// 2. Bound directly into R runtime as an R object:
-await webr.objs.setData('input_payload', payload);
-
-// 3. Execution invokes a pre-compiled, immutable R function template:
-await webr.evalR(`
+// 3. Execution invokes a pre-compiled, immutable R function template, passing the
+//    bound environment — zero user-supplied strings interpolated into R code:
+await webR.evalR(`
   result <- clinicalpsm_engine$execute_matching(
-    payload = input_payload,
-    method = "nearest",
-    ratio = 1L,
-    replace = FALSE,
-    m_order = "largest",
-    distance_metric = "linear.logit",
-    caliper_value = NULL,
-    std_caliper = TRUE
+    treatment_vec = clinicalpsm_treatment,
+    covariate_mat = clinicalpsm_covariates,
+    method        = "nearest",
+    ratio         = 1L,
+    replace       = FALSE,
+    m_order       = "largest",
+    distance      = "glm",
+    link          = "linear.logit",
+    caliper       = NULL,
+    std.caliper   = TRUE
   )
-`);
+`, { env });
+// NOTE: webr.objs.setData() does NOT exist in WebR 0.6.0.
+// The authoritative binding API is new webR.REnvironment() / env.bind() / evalR(..., { env }).
 ```
 
 ---
@@ -121,6 +124,10 @@ await webr.evalR(`
 1. **Zero Cloud Storage:** No patient records, propensity scores, or matching weights are ever uploaded to Cloudflare Workers, Supabase, or any external backend.
 2. **Zero Persistent Browser Storage by Default:** Patient datasets exist solely in ephemeral JavaScript and WebAssembly memory during the active browser session.
 3. **Optional Project Export:** If users choose to save their analysis, it is exported as an encrypted local file (`.cpsm`) downloaded directly to their local filesystem via the browser's native file picker API.
+
+### 4.3 Symbol Mapping Language Requirements
+1. **Reversible Symbol Mapping:** If any column-name sanitization or aliasing is performed (e.g., replacing spaces with underscores to satisfy the `^[a-zA-Z_][a-zA-Z0-9._]{0,63}$` lexical allowlist), the mapping must be **bidirectional and lossless**. The original user-supplied display names must be recoverable and shown in all user-visible outputs (balance tables, exports, method text) without permanent transformation.
+2. **No Irreversible Escaping:** Symbol normalization must never permanently overwrite the user's original column name in the stored result snapshot (`CanonicalPsmResult.factorConfiguration`). The original name is preserved; the sanitized name is an internal-only runtime alias.
 
 ### 4.2 Realistic Memory & Compliance Disclosures
 1. **No Guaranteed Instant RAM Erasure:**
