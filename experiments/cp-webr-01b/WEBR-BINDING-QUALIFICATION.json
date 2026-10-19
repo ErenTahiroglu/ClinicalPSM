@@ -1,0 +1,237 @@
+{
+  "executed_at": "2026-10-20T00:00:00.000Z",
+  "webr_version": "0.6.0",
+  "suite": "CP-WEBR-01B Parameter Binding & Injection Defense",
+  "total_adversarial_cases": 20,
+  "passed_adversarial_cases": 20,
+  "adversarial_tests": [
+    {
+      "id": "ADV-01",
+      "name": "Single quote injection in factor value",
+      "status": "PASS",
+      "details": {
+        "assigned_alias": "cov_01",
+        "formula": "trt_01 ~ cov_01",
+        "roundtrip_value": "O'Connor; Patient's Condition"
+      }
+    },
+    {
+      "id": "ADV-02",
+      "name": "Double quote injection in factor value",
+      "status": "PASS",
+      "details": {
+        "assigned_alias": "cov_01",
+        "formula": "trt_01 ~ cov_01",
+        "roundtrip_value": "Stage \"IV\" Malignancy"
+      }
+    },
+    {
+      "id": "ADV-03",
+      "name": "Backtick shell/R syntax injection",
+      "status": "PASS",
+      "details": {
+        "assigned_alias": "cov_01",
+        "formula": "trt_01 ~ cov_01",
+        "roundtrip_value": "`rm(list=ls())`"
+      }
+    },
+    {
+      "id": "ADV-04",
+      "name": "Semicolon and command injection in value",
+      "status": "PASS",
+      "details": {
+        "assigned_alias": "cov_01",
+        "formula": "trt_01 ~ cov_01",
+        "roundtrip_value": "positive; system('cat /etc/passwd');"
+      }
+    },
+    {
+      "id": "ADV-05",
+      "name": "Newline and carriage return in value",
+      "status": "PASS",
+      "details": {
+        "assigned_alias": "cov_01",
+        "formula": "trt_01 ~ cov_01",
+        "roundtrip_value": "Line 1\nLine 2\r\nLine 3"
+      }
+    },
+    {
+      "id": "ADV-06",
+      "name": "Complex Unicode & non-ASCII clinical header",
+      "status": "PASS",
+      "details": {
+        "assigned_alias": "cov_01",
+        "formula": "trt_01 ~ cov_01",
+        "roundtrip_value": "Klinik Skor: Şeker Hastalığı & β-Blokör (Δ mg/dL)"
+      }
+    },
+    {
+      "id": "ADV-07",
+      "name": "R reserved words as headers and factor levels",
+      "status": "PASS",
+      "details": {
+        "assigned_alias": "cov_01",
+        "formula": "trt_01 ~ cov_01",
+        "roundtrip_value": "function"
+      }
+    },
+    {
+      "id": "ADV-08",
+      "name": "System command string in header",
+      "status": "PASS",
+      "details": {
+        "assigned_alias": "cov_01",
+        "formula": "trt_01 ~ cov_01",
+        "roundtrip_value": "system('whoami; id')"
+      }
+    },
+    {
+      "id": "ADV-09",
+      "name": "File command string in factor value",
+      "status": "PASS",
+      "details": {
+        "assigned_alias": "cov_01",
+        "formula": "trt_01 ~ cov_01",
+        "roundtrip_value": "file('/tmp/data.csv')"
+      }
+    },
+    {
+      "id": "ADV-10",
+      "name": "Embedded formula syntax in column header",
+      "status": "PASS",
+      "details": {
+        "assigned_alias": "cov_01",
+        "formula": "trt_01 ~ cov_01",
+        "roundtrip_value": "trt ~ x1 + x2 * x3 | strata"
+      }
+    },
+    {
+      "id": "ADV-11",
+      "name": "Unicode normalization confusable header (decomposed vs composed)",
+      "status": "PASS",
+      "details": "Correctly rejected duplicate/confusable"
+    },
+    {
+      "id": "ADV-12",
+      "name": "Exact duplicate clinical headers",
+      "status": "PASS",
+      "details": "Correctly rejected duplicate/confusable"
+    },
+    {
+      "id": "ADV-13",
+      "name": "Malformed unicode / surrogate character",
+      "status": "PASS",
+      "details": "Sanitized/rejected surrogate character"
+    },
+    {
+      "id": "ADV-14",
+      "name": "Extremely long column header (>2000 chars)",
+      "status": "PASS",
+      "details": {
+        "assigned_alias": "cov_01",
+        "formula": "trt_01 ~ cov_01",
+        "roundtrip_value": "LONG_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      }
+    },
+    {
+      "id": "ADV-15",
+      "name": "Missing / NA factor values",
+      "status": "PASS",
+      "details": {
+        "assigned_alias": "cov_01",
+        "formula": "trt_01 ~ cov_01",
+        "roundtrip_value": "mild"
+      }
+    },
+    {
+      "id": "ADV-16",
+      "name": "R native and tidyverse pipe operators in strings",
+      "status": "PASS",
+      "details": {
+        "assigned_alias": "cov_01",
+        "formula": "trt_01 ~ cov_01",
+        "roundtrip_value": "|> head() %>% summary()"
+      }
+    },
+    {
+      "id": "ADV-17",
+      "name": "R comment injection attempt",
+      "status": "PASS",
+      "details": {
+        "assigned_alias": "cov_01",
+        "formula": "trt_01 ~ cov_01",
+        "roundtrip_value": "# comment \n q(save=\"no\")"
+      }
+    },
+    {
+      "id": "ADV-18",
+      "name": "Unbalanced brackets and delimiters in strings",
+      "status": "PASS",
+      "details": {
+        "assigned_alias": "cov_01",
+        "formula": "trt_01 ~ cov_01",
+        "roundtrip_value": "(((([[[[{{{))))}}}"
+      }
+    },
+    {
+      "id": "ADV-19",
+      "name": "R assignment operators in string values",
+      "status": "PASS",
+      "details": {
+        "assigned_alias": "cov_01",
+        "formula": "trt_01 ~ cov_01",
+        "roundtrip_value": "x <- 999; y <<- 1000; z := 50"
+      }
+    },
+    {
+      "id": "ADV-20",
+      "name": "Namespace traversal & global environment injection",
+      "status": "PASS",
+      "details": {
+        "assigned_alias": "cov_01",
+        "formula": "trt_01 ~ cov_01",
+        "roundtrip_value": "MatchIt:::matchit; .GlobalEnv$pwn <- 1"
+      }
+    }
+  ],
+  "statistical_pipeline_test": {
+    "status": "PASS",
+    "matched_treated": 5,
+    "matched_control": 5,
+    "smd_unadjusted": " 1.980440",
+    "smd_adjusted": "-0.04659859",
+    "r_heap_mb": 35.300000000000004
+  },
+  "native_parity_verification": {
+    "fixture": "fix_01_well_conditioned",
+    "parity_pass": true,
+    "coefficients": {
+      "intercept": {
+        "native": 0.9878,
+        "webr": 0.9877878917689553,
+        "diff": 0.000012108231044694051
+      },
+      "age": {
+        "native": 0.0001,
+        "webr": 0.00012220530808610455,
+        "diff": 0.000022205308086104542
+      },
+      "bmi": {
+        "native": -0.0018,
+        "webr": -0.0017723567776879712,
+        "diff": 0.00002764322231202875
+      },
+      "sbp": {
+        "native": -0.0105,
+        "webr": -0.010473254942287851,
+        "diff": 0.00002674505771214919
+      }
+    },
+    "sample_sizes": {
+      "matched_treated_webr": 119,
+      "matched_control_webr": 119,
+      "expected": 119
+    }
+  },
+  "verdict": "PASS"
+}

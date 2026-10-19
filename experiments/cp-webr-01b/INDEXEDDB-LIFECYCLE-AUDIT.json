@@ -1,0 +1,199 @@
+{
+  "executed_at": "2026-10-20T00:00:00.000Z",
+  "sentinels_monitored": [
+    "SYNTH_PT_7a9f8c12_SEC_TRACE_01",
+    "SYNTH_PT_b3e4d567_SEC_TRACE_02",
+    "FACTOR_LEVEL_ALPHA_9f8e7d6c",
+    "FACTOR_LEVEL_BETA_1a2b3c4d",
+    "Clinical Biomarker Δ [mg/dL]"
+  ],
+  "checkpoints": {
+    "T1_post_pipeline": {
+      "executed_at": "2026-10-20T00:00:00.000Z",
+      "sentinels_checked": [
+        "SYNTH_PT_7a9f8c12_SEC_TRACE_01",
+        "SYNTH_PT_b3e4d567_SEC_TRACE_02",
+        "FACTOR_LEVEL_ALPHA_9f8e7d6c",
+        "FACTOR_LEVEL_BETA_1a2b3c4d",
+        "Clinical Biomarker Δ [mg/dL]"
+      ],
+      "indexedDB": {
+        "databases": [
+          {
+            "name": "emscripten_filesystem",
+            "version": 1
+          }
+        ],
+        "records_inspected": 0,
+        "residue_matches": []
+      },
+      "localStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "sessionStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "cacheStorage": {
+        "caches_inspected": 0,
+        "requests_inspected": 0,
+        "residue_matches": []
+      },
+      "serviceWorkers": {
+        "registrations_count": 0
+      },
+      "total_residue_found": 0,
+      "storage_accessible": true
+    },
+    "T2_post_worker_terminate": {
+      "executed_at": "2026-10-20T00:00:00.000Z",
+      "sentinels_checked": [
+        "SYNTH_PT_7a9f8c12_SEC_TRACE_01",
+        "SYNTH_PT_b3e4d567_SEC_TRACE_02",
+        "FACTOR_LEVEL_ALPHA_9f8e7d6c",
+        "FACTOR_LEVEL_BETA_1a2b3c4d",
+        "Clinical Biomarker Δ [mg/dL]"
+      ],
+      "indexedDB": {
+        "databases": [
+          {
+            "name": "emscripten_filesystem",
+            "version": 1
+          }
+        ],
+        "records_inspected": 0,
+        "residue_matches": []
+      },
+      "localStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "sessionStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "cacheStorage": {
+        "caches_inspected": 0,
+        "requests_inspected": 0,
+        "residue_matches": []
+      },
+      "serviceWorkers": {
+        "registrations_count": 0
+      },
+      "total_residue_found": 0,
+      "storage_accessible": true
+    },
+    "T3_post_reload": {
+      "executed_at": "2026-10-20T00:00:00.000Z",
+      "sentinels_checked": [
+        "SYNTH_PT_7a9f8c12_SEC_TRACE_01",
+        "SYNTH_PT_b3e4d567_SEC_TRACE_02",
+        "FACTOR_LEVEL_ALPHA_9f8e7d6c",
+        "FACTOR_LEVEL_BETA_1a2b3c4d",
+        "Clinical Biomarker Δ [mg/dL]"
+      ],
+      "indexedDB": {
+        "databases": [
+          {
+            "name": "emscripten_filesystem",
+            "version": 1
+          }
+        ],
+        "records_inspected": 0,
+        "residue_matches": []
+      },
+      "localStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "sessionStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "cacheStorage": {
+        "caches_inspected": 0,
+        "requests_inspected": 0,
+        "residue_matches": []
+      },
+      "serviceWorkers": {
+        "registrations_count": 0
+      },
+      "total_residue_found": 0,
+      "storage_accessible": true
+    },
+    "T4_new_tab": {
+      "executed_at": "2026-10-20T00:00:00.000Z",
+      "sentinels_checked": [
+        "SYNTH_PT_7a9f8c12_SEC_TRACE_01",
+        "SYNTH_PT_b3e4d567_SEC_TRACE_02",
+        "FACTOR_LEVEL_ALPHA_9f8e7d6c",
+        "FACTOR_LEVEL_BETA_1a2b3c4d",
+        "Clinical Biomarker Δ [mg/dL]"
+      ],
+      "indexedDB": {
+        "databases": [
+          {
+            "name": "emscripten_filesystem",
+            "version": 1
+          }
+        ],
+        "records_inspected": 0,
+        "residue_matches": []
+      },
+      "localStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "sessionStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "cacheStorage": {
+        "caches_inspected": 0,
+        "requests_inspected": 0,
+        "residue_matches": []
+      },
+      "serviceWorkers": {
+        "registrations_count": 0
+      },
+      "total_residue_found": 0,
+      "storage_accessible": true
+    },
+    "T5_fresh_context": {
+      "executed_at": "2026-10-20T00:00:00.000Z",
+      "sentinels_checked": [
+        "SYNTH_PT_7a9f8c12_SEC_TRACE_01",
+        "SYNTH_PT_b3e4d567_SEC_TRACE_02",
+        "FACTOR_LEVEL_ALPHA_9f8e7d6c",
+        "FACTOR_LEVEL_BETA_1a2b3c4d",
+        "Clinical Biomarker Δ [mg/dL]"
+      ],
+      "indexedDB": {
+        "databases": [],
+        "records_inspected": 0,
+        "residue_matches": []
+      },
+      "localStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "sessionStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "cacheStorage": {
+        "caches_inspected": 0,
+        "requests_inspected": 0,
+        "residue_matches": []
+      },
+      "serviceWorkers": {
+        "registrations_count": 0
+      },
+      "total_residue_found": 0,
+      "storage_accessible": true
+    }
+  },
+  "total_residue_detected": 0,
+  "verdict": "PASS"
+}

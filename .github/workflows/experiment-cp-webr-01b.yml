@@ -1,0 +1,80 @@
+name: Experiment CP-WEBR-01B
+
+permissions:
+  contents: read
+
+on:
+  push:
+    paths:
+      - 'experiments/cp-webr-01b/**'
+      - 'docs/audits/CP-WEBR-01B-ARCHITECTURE-ERRATA.md'
+      - '.github/workflows/experiment-cp-webr-01b.yml'
+  pull_request:
+    paths:
+      - 'experiments/cp-webr-01b/**'
+      - 'docs/audits/CP-WEBR-01B-ARCHITECTURE-ERRATA.md'
+      - '.github/workflows/experiment-cp-webr-01b.yml'
+
+jobs:
+  qualification-validation:
+    name: CP-WEBR-01B Security, Binding & Artifact Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Run alias mapping and canonical serialization unit suite
+        run: node experiments/cp-webr-01b/harness/test_alias_and_serialization.mjs
+
+      - name: Test qualification server headers, negative controls & mock falsification sink
+        run: |
+          node -e "
+            import('./experiments/cp-webr-01b/browser-harness/server.mjs').then(({ createServer, PORT }) => {
+              const s = createServer();
+              s.listen(PORT, async () => {
+                const res = await fetch('http://localhost:' + PORT + '/index.html');
+                const coop = res.headers.get('cross-origin-opener-policy');
+                const coep = res.headers.get('cross-origin-embedder-policy');
+                const corp = res.headers.get('cross-origin-resource-policy');
+                const csp = res.headers.get('content-security-policy');
+                console.log('COOP:', coop);
+                console.log('COEP:', coep);
+                console.log('CORP:', corp);
+                console.log('CSP:', csp);
+                if (coop !== 'same-origin' || coep !== 'require-corp' || corp !== 'same-origin') {
+                  throw new Error('Missing COOP/COEP/CORP isolation headers');
+                }
+                const trapRes = await fetch('http://localhost:' + PORT + '/api/prohibited-leak-page', { method: 'POST' });
+                if (trapRes.status !== 403) throw new Error('Expected 403 on negative control page trap');
+                const sinkRes = await fetch('http://localhost:' + PORT + '/api/mock-falsification-sink', {
+                  method: 'POST',
+                  body: JSON.stringify({ sentinel: 'FALSIFICATION_SENTINEL_PAYLOAD_339a1c' })
+                });
+                if (sinkRes.status !== 200) throw new Error('Expected 200 on mock falsification sink');
+                const sinkJson = await sinkRes.json();
+                if (!sinkJson.matchedSentinel) throw new Error('Mock sink did not match sentinel');
+                console.log('Server headers, negative controls & falsification sink verified successfully!');
+                s.close();
+                process.exit(0);
+              });
+            });
+          "
+
+      - name: Run WebR parameter binding, 20 adversarial cases & native R parity check
+        run: node experiments/cp-webr-01b/harness/test_webr_binding.mjs
+
+      - name: Verify artifact manifest integrity
+        run: node experiments/cp-webr-01b/harness/verify_manifest.mjs

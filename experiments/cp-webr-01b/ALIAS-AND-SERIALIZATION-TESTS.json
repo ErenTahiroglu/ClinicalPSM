@@ -1,0 +1,141 @@
+{
+  "executed_at": "2026-10-20T00:00:00.000Z",
+  "suite": "CP-WEBR-01B Alias & Canonical Serialization Suite",
+  "total": 15,
+  "passed": 15,
+  "failed": 0,
+  "results": [
+    {
+      "name": "Field Order Normalization Invariance",
+      "status": "PASS",
+      "details": {
+        "serA": "{\"a\":2,\"arr\":[1,2],\"m\":{\"x\":20,\"y\":10},\"z\":1}",
+        "serB": "{\"a\":2,\"arr\":[1,2],\"m\":{\"x\":20,\"y\":10},\"z\":1}"
+      }
+    },
+    {
+      "name": "Versioned Envelope Integrity Verification",
+      "status": "PASS",
+      "details": {
+        "valid": true,
+        "expectedHash": "085cfc4059f02e5f6df5c894cbd89ad84645b89d0e892d2b3b5a5ba7f9d03b4e",
+        "actualHash": "085cfc4059f02e5f6df5c894cbd89ad84645b89d0e892d2b3b5a5ba7f9d03b4e",
+        "reason": "OK"
+      }
+    },
+    {
+      "name": "Tampering Detection: Value Mutation",
+      "status": "PASS",
+      "details": {
+        "valid": false,
+        "expectedHash": "85a7c90f44a84be01ef6588eab7abe02dcb121d046e9aaef3b2ff1edf36cdf6a",
+        "actualHash": "085cfc4059f02e5f6df5c894cbd89ad84645b89d0e892d2b3b5a5ba7f9d03b4e",
+        "reason": "HASH_MISMATCH"
+      }
+    },
+    {
+      "name": "Tampering Detection: Key Injection",
+      "status": "PASS",
+      "details": {
+        "valid": false,
+        "expectedHash": "5065cbbdb0a2d8cc41f327df6257be529f7872576bebd77e6a4653563113e90a",
+        "actualHash": "085cfc4059f02e5f6df5c894cbd89ad84645b89d0e892d2b3b5a5ba7f9d03b4e",
+        "reason": "HASH_MISMATCH"
+      }
+    },
+    {
+      "name": "Explicit Null Value Preservation",
+      "status": "PASS",
+      "details": {
+        "serNull": "{\"a\":null,\"b\":\"valid\",\"c\":123}"
+      }
+    },
+    {
+      "name": "Non-finite Float Normalization to null",
+      "status": "PASS",
+      "details": {
+        "serFloat": "{\"inf\":null,\"nan\":null,\"negInf\":null,\"valid\":1.234}"
+      }
+    },
+    {
+      "name": "Unicode NFC Deterministic Matching",
+      "status": "PASS",
+      "details": {
+        "serNFD": "{\"label\":\"Café\"}",
+        "serNFC": "{\"label\":\"Café\"}"
+      }
+    },
+    {
+      "name": "Treatment Alias Regex Compliance",
+      "status": "PASS",
+      "details": {
+        "trtAlias": "trt_01"
+      }
+    },
+    {
+      "name": "Covariate Sequential Aliases",
+      "status": "PASS",
+      "details": {
+        "aliases": [
+          "cov_01",
+          "cov_02",
+          "cov_03",
+          "cov_04"
+        ]
+      }
+    },
+    {
+      "name": "All Aliases Strictly Satisfy ^[a-z]+_[0-9]{2,6}$",
+      "status": "PASS",
+      "details": {
+        "all": [
+          "trt_01",
+          "cov_01",
+          "cov_02",
+          "cov_03",
+          "cov_04"
+        ]
+      }
+    },
+    {
+      "name": "Lossless Original Header & Display Name Round-Trip",
+      "status": "PASS",
+      "details": {
+        "alias": "cov_02",
+        "role": "covariate",
+        "displayName": "Serum Creatinine [mg/dL]",
+        "originalHeader": "Serum Creatinine [mg/dL]",
+        "index": 2
+      }
+    },
+    {
+      "name": "Lossless Unicode Header Round-Trip",
+      "status": "PASS",
+      "details": {
+        "alias": "cov_03",
+        "role": "covariate",
+        "displayName": "Biomarker Δ",
+        "originalHeader": "Biomarker Δ",
+        "index": 3
+      }
+    },
+    {
+      "name": "Duplicate Header Rejection",
+      "status": "PASS",
+      "details": {}
+    },
+    {
+      "name": "Unicode Confusable / Normalization Equivalent Rejection",
+      "status": "PASS",
+      "details": {}
+    },
+    {
+      "name": "Large-Scale Covariate Sequential Mapping Regex Compliance",
+      "status": "PASS",
+      "details": {
+        "count": 100,
+        "sampleLast": "cov_100"
+      }
+    }
+  ]
+}
