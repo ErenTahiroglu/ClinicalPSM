@@ -316,11 +316,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const unsafeModelsExcludedFromPublication = [];
 
   for (const [id, r] of Object.entries(fixtureReport)) {
-    if (id === 'fix_24_duplicate_ids') {
+    const natStatus = native[id]?.status;
+    const webStatus = webr[id]?.status;
+
+    if (natStatus === 'CLINICALPSM_POLICY_REJECT' || webStatus === 'CLINICALPSM_POLICY_REJECT') {
       productPolicyRejects.push(id);
-    } else if (['fix_17_rank_deficient', 'fix_18_zero_variance', 'fix_19_missing_values', 'fix_19b_missing_treatment'].includes(id)) {
+    } else if (natStatus === 'EXPECTED_REFERENCE_ERROR' || webStatus === 'EXPECTED_REFERENCE_ERROR') {
       expectedReferenceErrors.push(id);
-    } else if (id === 'fix_16_complete_separation') {
+    } else if (!r.numeric_parity) {
       numericalToleranceFailures.push(id);
       unsafeModelsExcludedFromPublication.push(id);
     } else if (r.status_match && r.semantic_parity && r.numeric_parity) {
@@ -354,7 +357,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       numerical_tolerance_failures_fixtures: numericalToleranceFailures,
       unsafe_propensity_models_excluded_from_publication_count: unsafeModelsExcludedFromPublication.length,
       unsafe_propensity_models_fixtures: unsafeModelsExcludedFromPublication,
-      policy_fail_closed_contract_note: "Complete separation (fix_16) produces non-identifiable GLM coefficients (se > 39,000) that fail numerical tolerance. In accordance with the statistical contract, this model is classified as REJECT_FOR_PUBLICATION rather than publication-ready. Numeric parity is 24/25, Semantic and Policy Parity is 25/25."
+      policy_fail_closed_contract_note: "In fix_16 (complete separation), R glm() achieves algorithmic convergence (matching.converged == TRUE) because consecutive deviance steps drop below epsilon (1e-8). However, the underlying propensity model exhibits complete separation: parameters are mathematically non-identifiable, with coefficient standard errors exceeding 39,000. This causes extreme linear predictors near boundary values 0 and 1, resulting in cross-platform floating-point distance discrepancies that fail numeric parity. While semantic parity passes (matched pairs match), the model is marked REJECT_FOR_PUBLICATION based on fixture contract criteria. Note: the current qualification harness does not implement an automatic runtime separation detector in production; that capability remains a production implementation requirement. Numeric parity is 24/25, Semantic and Policy Parity is 25/25."
     },
     tolerances_used: TOLERANCES,
     fixture_details: fixtureReport

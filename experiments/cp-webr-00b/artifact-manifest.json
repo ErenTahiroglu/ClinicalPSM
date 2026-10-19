@@ -1,23 +1,8 @@
 {
   "experiment_id": "CP-WEBR-00B-R2",
-  "generated_at": "2026-10-19T10:24:00Z",
-  "file_count": 85,
+  "generated_at": "2026-10-19T17:43:29.768Z",
+  "file_count": 86,
   "artifacts": [
-    {
-      "file": "CP-WEBR-00B-R1-RED-TEAM-REMEDIATION.md",
-      "bytes": 15121,
-      "sha256": "fa3fe1bf9c515942d274ab107f0889bdbf9b87d99e0a856e6f333a2bab44071b"
-    },
-    {
-      "file": "CP-WEBR-00B-R2-RED-TEAM-REPORT.md",
-      "bytes": 16005,
-      "sha256": "1331e870b8c6773ba589567cd6da8e775fe19e26298129c35e87fbd0395eed38"
-    },
-    {
-      "file": "CP-WEBR-00B-RESULT.md",
-      "bytes": 7204,
-      "sha256": "dacbbe56ae57a110e2b650c37d679763f8284db608d9fe4659fb579be3cfe4ba"
-    },
     {
       "file": "benchmark-results.csv",
       "bytes": 668,
@@ -25,13 +10,13 @@
     },
     {
       "file": "browser-benchmarks.csv",
-      "bytes": 788,
-      "sha256": "f6bc66f0a4e43316430d0a20d5603070db6bcc72bac37647c7e8c4a5f3bd24d1"
+      "bytes": 787,
+      "sha256": "6b57b926c7d5f26175022b53f400dd0d6d83884f6c5636d566c2e192f97d61a7"
     },
     {
       "file": "browser-harness/harness.js",
-      "bytes": 6613,
-      "sha256": "a0659177d90f33613ef3d5597e181ad3e2af4541ba51a4c9a9fe8037c65677c2"
+      "bytes": 8520,
+      "sha256": "c597903f805ee3ad995a6901c506bb073c1c6e600d18d783f07e9df8c4d4afbb"
     },
     {
       "file": "browser-harness/index.html",
@@ -50,18 +35,18 @@
     },
     {
       "file": "browser-harness/worker.js",
-      "bytes": 7764,
-      "sha256": "5b0925ca7911185f0ea2aa48ef19a6afb179ce7e5960542d34c3540f48a5275b"
+      "bytes": 8312,
+      "sha256": "c25c3b51cfe652cce30d7b6c48cfc44a4910884e3a304f4efd0b0f8a45b3ee07"
     },
     {
       "file": "browser-privacy-audit.json",
-      "bytes": 1650,
-      "sha256": "4773622b755255ea5ed793126e231c14fdd3dbce3b037578982d938de531134a"
+      "bytes": 127952,
+      "sha256": "75ae3b8f1d20b4f12930080b507ef3e9dfb6c9965cc91190737133bd4aac7433"
     },
     {
       "file": "browser-qualification-matrix.json",
-      "bytes": 1541,
-      "sha256": "a9df8366168cd9b048289c4fd06ef2ed87b00bc979ed0ba90137b852e414beea"
+      "bytes": 1718,
+      "sha256": "ee41360280a3f1ba711bd3ae6845b09e942a981afc16f2fb2c364e8dfdd469ad"
     },
     {
       "file": "cloudflare-asset-audit.json",
@@ -72,6 +57,26 @@
       "file": "comparator-mutation-results.json",
       "bytes": 3744,
       "sha256": "d4c083bda9b049df54679e37a6046208f813d9263fc76e5e92525261d31d52c1"
+    },
+    {
+      "file": "CP-WEBR-00B-R1-RED-TEAM-REMEDIATION.md",
+      "bytes": 15121,
+      "sha256": "fa3fe1bf9c515942d274ab107f0889bdbf9b87d99e0a856e6f333a2bab44071b"
+    },
+    {
+      "file": "CP-WEBR-00B-R2-RED-TEAM-REPORT.md",
+      "bytes": 19002,
+      "sha256": "b51d91f755547398d5fe9ae3bf4683bf54ca9d95e64e33b33e099425ad11939f"
+    },
+    {
+      "file": "CP-WEBR-00B-R2.1-EVIDENCE-CLOSURE.md",
+      "bytes": 14302,
+      "sha256": "b32a4dac767612cc4343f44440fa5583aca8de85b6065d88f624574a318bedf6"
+    },
+    {
+      "file": "CP-WEBR-00B-RESULT.md",
+      "bytes": 9103,
+      "sha256": "1057fcfa7a859dc5e3d8631ea5a996b385e4f4601dafd375d65ad2ca50b38b26"
     },
     {
       "file": "dependency-lock.json",
@@ -355,8 +360,8 @@
     },
     {
       "file": "harness/compare_parity.mjs",
-      "bytes": 15355,
-      "sha256": "72b98af6cb561df046720dae37845d09a45e9be495a7d0f47b846a6f98712016"
+      "bytes": 16007,
+      "sha256": "d019f5abcb9a40f2579bf8544abb41d7aff0bcf8561244725facc6764e846d65"
     },
     {
       "file": "harness/download_local_repo.mjs",
@@ -370,8 +375,8 @@
     },
     {
       "file": "harness/run_browser_qualification.mjs",
-      "bytes": 18730,
-      "sha256": "0ece9a1e6c5d4e86f2777994a17a96dbdd4a39f3f8258b74832d49a2cac0457e"
+      "bytes": 25531,
+      "sha256": "d825c8e4201d574392a7eeac036985e3997aa0e8247223fae584a1f90ee36624"
     },
     {
       "file": "harness/run_privacy_audit.mjs",
@@ -410,8 +415,8 @@
     },
     {
       "file": "parity-results.json",
-      "bytes": 13778,
-      "sha256": "dfbf570a78608206ff43dd32d4906714a3def55a67d70002a05dbd2e980bc028"
+      "bytes": 14340,
+      "sha256": "e069f203864c47441dea83f16aa66ba288d6271dc519e80bd1de0e39388d54ba"
     },
     {
       "file": "privacy-audit.json",

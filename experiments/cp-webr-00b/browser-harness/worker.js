@@ -81,12 +81,16 @@ self.onmessage = async (e) => {
             df[[col]] <- as.factor(df[[col]])
           }
         }
+        sentinel_found <- any(grepl("SENTINEL", df$id))
+        sentinel_id <- if (sentinel_found) df$id[grep("SENTINEL", df$id)[1]] else ""
         m_out <- MatchIt::matchit(
           as.formula("${formula}"),
           data = df,
           method = "nearest",
           distance = "glm",
           link = "${link || 'linear.logit'}",
+          estimand = "${payload.estimand || 'ATT'}",
+          m.order = "${payload.m_order || 'largest'}",
           caliper = ${cal_val},
           std.caliper = ${std_val},
           discard = "${discard || 'none'}",
@@ -103,7 +107,9 @@ self.onmessage = async (e) => {
           }
         }
         list(
-          n_pairs = length(matched_pairs_list)
+          n_pairs = length(matched_pairs_list),
+          sentinel_present_in_r = sentinel_found,
+          sentinel_id = sentinel_id
         )
       `;
       const matchResObj = await webr.evalR(rScript);
@@ -149,6 +155,9 @@ self.onmessage = async (e) => {
         r_heap_memory_mb: rHeapMb,
         wasm_linear_memory_bytes: null, // UNMEASURED across worker boundary
         n_pairs: matchJs.values[0].values[0],
+        sentinel_received: Boolean(csvData && csvData.includes('SENTINEL')),
+        sentinel_present_in_r: Boolean(matchJs.values[1]?.values[0]),
+        sentinel_id: String(matchJs.values[2]?.values[0] || ''),
         cobalt: cobaltJs.values
       });
       return;

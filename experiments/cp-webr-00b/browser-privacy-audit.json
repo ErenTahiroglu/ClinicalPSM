@@ -1,22 +1,39 @@
 {
-  "audit_version": "R2",
+  "audit_version": "R2.1",
   "evaluated_at": "2026-10-19T17:03:59.796Z",
   "browser": "Chromium (Brave Browser 154.0.8037.93)",
   "os": "macOS Darwin arm64",
   "cross_origin_isolated": true,
+  "verified_sentinel_injection": {
+    "target_id": "sub_0001",
+    "target_existed_once_in_fixture": true,
+    "sentinel": "SENTINEL_PATIENT_MRN_8877665544",
+    "sentinel_in_csv_count": 1,
+    "worker_received_sentinel": true,
+    "sentinel_present_in_r_dataframe": true,
+    "sentinel_id_in_r": "SENTINEL_PATIENT_MRN_8877665544",
+    "online_matched_pairs": 119,
+    "online_unexpected_requests_delta": 0
+  },
   "negative_controls": {
     "page_level_interception": {
       "sentinel": "SENTINEL_PAGE_EGRESS_SECRET_KEY_987654321",
-      "detected_and_blocked": true
+      "detected_and_blocked": true,
+      "target_endpoint": "/api/intentional-prohibited-leak",
+      "action": "aborted (blockedbyclient)"
     },
     "worker_level_interception": {
       "sentinel": "SENTINEL_WORKER_EGRESS_SECRET_KEY_123456789",
-      "detected_and_blocked": true
-    }
+      "detected_and_blocked": true,
+      "target_endpoint": "/api/intentional-prohibited-leak",
+      "action": "aborted (blockedbyclient)"
+    },
+    "falsification_evidence": "Without client route interception, page and worker fetch requests transmit high-entropy secret sentinels across the network boundary to the server."
   },
   "offline_execution": {
     "network_disabled": true,
     "matching_and_cobalt_succeeded": true,
+    "matched_pairs": 119,
     "patient_sentinel_transmitted": false,
     "patient_sentinel_leaked_in_console": false
   },
@@ -50,15 +67,3322 @@
       "registrations": []
     }
   },
-  "cancellation_latencies": {
-    "graceful_interrupt_ms": 1.7349999998696148,
-    "graceful_recovery_confirmed": true,
-    "hard_termination_latency_ms": 0.10499999998137355,
-    "fresh_worker_recovery_latency_ms": 10.660000000149012,
-    "total_cancellation_latency_ms": 10.854999999981374,
-    "demonstrated_recovery": true
+  "cancellation_and_recovery_metrics": {
+    "interrupt_request_to_cessation_ms": 1.5899999998509884,
+    "interrupted_worker_recovery_confirmed": true,
+    "worker_termination_request_ms": 0.0400000000372529,
+    "pending_request_rejected": true,
+    "wasm_linear_memory_release_latency": "UNMEASURED (Private to terminated worker process)",
+    "new_worker_creation_ms": 0.07500000018626451,
+    "full_webr_package_restoration_ms": 2225.8799999998882,
+    "subsequent_statistical_operation_ms": 91.25499999988824,
+    "subsequent_operation_succeeded": true,
+    "subsequent_matched_pairs": 119,
+    "full_demonstrated_recovery": true
   },
-  "total_network_requests": 217,
-  "total_bytes_transferred": 53939167,
-  "verdict": "PRIVACY_NO_EGRESS_PASS"
+  "assertions": {
+    "target_id_existed_once_in_raw_csv": true,
+    "sentinel_injected_into_sample_csv": true,
+    "worker_received_sentinel_dataset": true,
+    "sentinel_present_in_r_dataframe": true,
+    "online_pipeline_succeeded": true,
+    "zero_unexpected_network_requests_during_online_analysis": true,
+    "zero_sentinels_leaked_into_network": true,
+    "offline_pipeline_succeeded": true,
+    "negative_control_page_egress_blocked": true,
+    "negative_control_worker_egress_blocked": true,
+    "negative_controls_falsification_verified": true,
+    "browser_storage_clean": true,
+    "zero_sentinels_persisted_in_storage": true,
+    "full_recovery_after_termination_verified": true
+  },
+  "total_network_requests": 215,
+  "total_bytes_transferred": 54248066,
+  "verdict": "PRIVACY_NO_EGRESS_PASS",
+  "network_audit_log": [
+    {
+      "phase": "COLD_NAVIGATION",
+      "url": "http://localhost:8899/index.html",
+      "method": "GET",
+      "headers": {
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "sec-gpc": "1",
+        "upgrade-insecure-requests": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Chromium\";v=\"154\", \"Brave\";v=\"154\", \"Not A(Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\""
+      },
+      "postData": null,
+      "resourceType": "document",
+      "isProhibited": false
+    },
+    {
+      "phase": "COLD_NAVIGATION",
+      "url": "http://localhost:8899/style.css",
+      "method": "GET",
+      "headers": {
+        "accept": "text/css,*/*;q=0.1",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/index.html",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Chromium\";v=\"154\", \"Brave\";v=\"154\", \"Not A(Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\""
+      },
+      "postData": null,
+      "resourceType": "stylesheet",
+      "isProhibited": false
+    },
+    {
+      "phase": "COLD_NAVIGATION",
+      "url": "http://localhost:8899/harness.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "origin": "http://localhost:8899",
+        "referer": "http://localhost:8899/index.html",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Chromium\";v=\"154\", \"Brave\";v=\"154\", \"Not A(Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\""
+      },
+      "postData": null,
+      "resourceType": "script",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/worker.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/index.html",
+        "sec-gpc": "1"
+      },
+      "postData": null,
+      "resourceType": "script",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/webr/webr.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "origin": "http://localhost:8899",
+        "referer": "http://localhost:8899/worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "script",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/webr/R.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "other",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/webr/R.wasm",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "fetch",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/webr/libRblas.so",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "fetch",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/library/translations/DESCRIPTION",
+      "method": "HEAD",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/library/translations/DESCRIPTION",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/webr/libRlapack.so",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/PACKAGES.rds",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/PACKAGES.gz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/Rcpp_1.1.2.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/R6_2.6.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/cli_3.6.6.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/rlang_1.3.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/vctrs_0.7.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/glue_1.8.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/withr_3.0.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/lifecycle_1.0.5.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/gtable_0.3.6.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/scales_1.4.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/farver_2.1.2.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/labeling_0.4.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/isoband_0.3.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/ggplot2_4.0.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/gridExtra_2.3.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/viridisLite_0.4.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/S7_0.2.2.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/arg_0.2.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/RColorBrewer_1.1-3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/MatchIt_4.8.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/cobalt_5.0.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/share.js.metadata",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "WORKER_INIT",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/share.data.gz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "NEGATIVE_CONTROL_TEST",
+      "url": "http://localhost:8899/api/intentional-prohibited-leak",
+      "method": "POST",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "content-type": "application/json",
+        "origin": "http://localhost:8899",
+        "referer": "http://localhost:8899/index.html",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "x-sentinel-page": "SENTINEL_PAGE_EGRESS_SECRET_KEY_987654321",
+        "sec-ch-ua": "\"Chromium\";v=\"154\", \"Brave\";v=\"154\", \"Not A(Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\""
+      },
+      "postData": "{\"sentinel_payload\":\"SENTINEL_PAGE_EGRESS_SECRET_KEY_987654321\"}",
+      "resourceType": "fetch",
+      "isProhibited": true
+    },
+    {
+      "phase": "NEGATIVE_CONTROL_TEST",
+      "url": "http://localhost:8899/api/intentional-prohibited-leak",
+      "method": "POST",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "content-type": "application/json",
+        "origin": "http://localhost:8899",
+        "referer": "http://localhost:8899/worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "x-sentinel-worker": "SENTINEL_WORKER_EGRESS_SECRET_KEY_123456789"
+      },
+      "postData": "{\"sentinel_payload\":\"SENTINEL_WORKER_EGRESS_SECRET_KEY_123456789\"}",
+      "resourceType": "fetch",
+      "isProhibited": true
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/worker.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/index.html",
+        "sec-gpc": "1"
+      },
+      "postData": null,
+      "resourceType": "script",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/webr/webr.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "origin": "http://localhost:8899",
+        "referer": "http://localhost:8899/worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "script",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/webr/R.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "other",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/webr/R.wasm",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "fetch",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/webr/libRblas.so",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "fetch",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/library/translations/DESCRIPTION",
+      "method": "HEAD",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/library/translations/DESCRIPTION",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/webr/libRlapack.so",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/PACKAGES.rds",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/PACKAGES.gz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/Rcpp_1.1.2.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/R6_2.6.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/cli_3.6.6.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/rlang_1.3.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/vctrs_0.7.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/glue_1.8.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/withr_3.0.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/lifecycle_1.0.5.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/gtable_0.3.6.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/scales_1.4.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/farver_2.1.2.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/labeling_0.4.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/isoband_0.3.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/ggplot2_4.0.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/gridExtra_2.3.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/viridisLite_0.4.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/S7_0.2.2.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/arg_0.2.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/RColorBrewer_1.1-3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/MatchIt_4.8.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/cobalt_5.0.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/share.js.metadata",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "CANCELLATION_BENCHMARK",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/share.data.gz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/index.html",
+      "method": "GET",
+      "headers": {
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "sec-gpc": "1",
+        "upgrade-insecure-requests": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Chromium\";v=\"154\", \"Brave\";v=\"154\", \"Not A(Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\""
+      },
+      "postData": null,
+      "resourceType": "document",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/style.css",
+      "method": "GET",
+      "headers": {
+        "accept": "text/css,*/*;q=0.1",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/index.html",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Chromium\";v=\"154\", \"Brave\";v=\"154\", \"Not A(Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\""
+      },
+      "postData": null,
+      "resourceType": "stylesheet",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/harness.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "origin": "http://localhost:8899",
+        "referer": "http://localhost:8899/index.html",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Chromium\";v=\"154\", \"Brave\";v=\"154\", \"Not A(Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\""
+      },
+      "postData": null,
+      "resourceType": "script",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/index.html",
+      "method": "GET",
+      "headers": {
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "sec-gpc": "1",
+        "upgrade-insecure-requests": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Chromium\";v=\"154\", \"Brave\";v=\"154\", \"Not A(Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\""
+      },
+      "postData": null,
+      "resourceType": "document",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/style.css",
+      "method": "GET",
+      "headers": {
+        "accept": "text/css,*/*;q=0.1",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/index.html",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Chromium\";v=\"154\", \"Brave\";v=\"154\", \"Not A(Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\""
+      },
+      "postData": null,
+      "resourceType": "stylesheet",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/harness.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "origin": "http://localhost:8899",
+        "referer": "http://localhost:8899/index.html",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Chromium\";v=\"154\", \"Brave\";v=\"154\", \"Not A(Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\""
+      },
+      "postData": null,
+      "resourceType": "script",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/index.html",
+      "method": "GET",
+      "headers": {
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "sec-gpc": "1",
+        "upgrade-insecure-requests": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Chromium\";v=\"154\", \"Brave\";v=\"154\", \"Not A(Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\""
+      },
+      "postData": null,
+      "resourceType": "document",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/style.css",
+      "method": "GET",
+      "headers": {
+        "accept": "text/css,*/*;q=0.1",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/index.html",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Chromium\";v=\"154\", \"Brave\";v=\"154\", \"Not A(Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\""
+      },
+      "postData": null,
+      "resourceType": "stylesheet",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/harness.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "origin": "http://localhost:8899",
+        "referer": "http://localhost:8899/index.html",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Chromium\";v=\"154\", \"Brave\";v=\"154\", \"Not A(Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\""
+      },
+      "postData": null,
+      "resourceType": "script",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/index.html",
+      "method": "GET",
+      "headers": {
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "sec-gpc": "1",
+        "upgrade-insecure-requests": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Chromium\";v=\"154\", \"Brave\";v=\"154\", \"Not A(Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\""
+      },
+      "postData": null,
+      "resourceType": "document",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/style.css",
+      "method": "GET",
+      "headers": {
+        "accept": "text/css,*/*;q=0.1",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/index.html",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Chromium\";v=\"154\", \"Brave\";v=\"154\", \"Not A(Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\""
+      },
+      "postData": null,
+      "resourceType": "stylesheet",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/harness.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "origin": "http://localhost:8899",
+        "referer": "http://localhost:8899/index.html",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "sec-ch-ua": "\"Chromium\";v=\"154\", \"Brave\";v=\"154\", \"Not A(Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\""
+      },
+      "postData": null,
+      "resourceType": "script",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/worker.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/index.html",
+        "sec-gpc": "1"
+      },
+      "postData": null,
+      "resourceType": "script",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/worker.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/index.html",
+        "sec-gpc": "1"
+      },
+      "postData": null,
+      "resourceType": "script",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/worker.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/index.html",
+        "sec-gpc": "1"
+      },
+      "postData": null,
+      "resourceType": "script",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/worker.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/index.html",
+        "sec-gpc": "1"
+      },
+      "postData": null,
+      "resourceType": "script",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/webr.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "origin": "http://localhost:8899",
+        "referer": "http://localhost:8899/worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "script",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/webr.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "origin": "http://localhost:8899",
+        "referer": "http://localhost:8899/worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "script",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/webr.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "origin": "http://localhost:8899",
+        "referer": "http://localhost:8899/worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "script",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/webr.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "origin": "http://localhost:8899",
+        "referer": "http://localhost:8899/worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "script",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/R.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "other",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/R.wasm",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "fetch",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/R.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "other",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/R.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "other",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/R.js",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "other",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/R.wasm",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "fetch",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/libRblas.so",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "fetch",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/R.wasm",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "fetch",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/R.wasm",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "fetch",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/library/translations/DESCRIPTION",
+      "method": "HEAD",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/library/translations/DESCRIPTION",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/libRblas.so",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "fetch",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/libRblas.so",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "fetch",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/libRblas.so",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "fetch",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/libRlapack.so",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/PACKAGES.rds",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/PACKAGES.gz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/Rcpp_1.1.2.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/R6_2.6.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/cli_3.6.6.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/rlang_1.3.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/vctrs_0.7.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/library/translations/DESCRIPTION",
+      "method": "HEAD",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/library/translations/DESCRIPTION",
+      "method": "HEAD",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/library/translations/DESCRIPTION",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/glue_1.8.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/library/translations/DESCRIPTION",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/withr_3.0.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/lifecycle_1.0.5.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/gtable_0.3.6.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/scales_1.4.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/farver_2.1.2.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/labeling_0.4.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/isoband_0.3.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/library/translations/DESCRIPTION",
+      "method": "HEAD",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/library/translations/DESCRIPTION",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/ggplot2_4.0.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/gridExtra_2.3.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/viridisLite_0.4.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/S7_0.2.2.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/arg_0.2.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/RColorBrewer_1.1-3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/MatchIt_4.8.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/cobalt_5.0.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/libRlapack.so",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/libRlapack.so",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/libRlapack.so",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/share.js.metadata",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/share.data.gz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/PACKAGES.rds",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/PACKAGES.gz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/PACKAGES.rds",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/Rcpp_1.1.2.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/PACKAGES.gz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/PACKAGES.rds",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/PACKAGES.gz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/Rcpp_1.1.2.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/Rcpp_1.1.2.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/R6_2.6.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/cli_3.6.6.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/R6_2.6.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/R6_2.6.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/cli_3.6.6.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/cli_3.6.6.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/rlang_1.3.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/rlang_1.3.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/rlang_1.3.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/vctrs_0.7.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/vctrs_0.7.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/vctrs_0.7.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/glue_1.8.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/glue_1.8.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/glue_1.8.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/withr_3.0.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/withr_3.0.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/withr_3.0.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/lifecycle_1.0.5.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/lifecycle_1.0.5.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/lifecycle_1.0.5.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/gtable_0.3.6.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/gtable_0.3.6.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/gtable_0.3.6.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/scales_1.4.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/scales_1.4.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/scales_1.4.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/farver_2.1.2.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/farver_2.1.2.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/farver_2.1.2.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/labeling_0.4.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/labeling_0.4.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/labeling_0.4.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/isoband_0.3.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/isoband_0.3.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/isoband_0.3.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/ggplot2_4.0.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/ggplot2_4.0.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/ggplot2_4.0.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/gridExtra_2.3.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/gridExtra_2.3.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/gridExtra_2.3.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/viridisLite_0.4.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/viridisLite_0.4.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/viridisLite_0.4.3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/S7_0.2.2.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/S7_0.2.2.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/S7_0.2.2.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/arg_0.2.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/arg_0.2.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/RColorBrewer_1.1-3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/arg_0.2.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/MatchIt_4.8.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/RColorBrewer_1.1-3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/RColorBrewer_1.1-3.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/MatchIt_4.8.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/MatchIt_4.8.1.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/cobalt_5.0.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/cobalt_5.0.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/repo/bin/emscripten/contrib/4.6/cobalt_5.0.0.tgz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/share.js.metadata",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/share.js.metadata",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/share.data.gz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/share.data.gz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/share.js.metadata",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    },
+    {
+      "phase": "MULTI_TAB_TEST",
+      "url": "http://localhost:8899/webr/vfs/usr/lib/R/share.data.gz",
+      "method": "GET",
+      "headers": {
+        "accept": "*/*",
+        "accept-language": "tr-TR,tr;q=0.6",
+        "referer": "http://localhost:8899/webr/webr-worker.js",
+        "sec-gpc": "1",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+      },
+      "postData": null,
+      "resourceType": "xhr",
+      "isProhibited": false
+    }
+  ]
 }

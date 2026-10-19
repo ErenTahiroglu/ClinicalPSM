@@ -71,33 +71,83 @@ window.harness = {
     return await sendToWorker('INTERRUPT');
   },
 
-  terminateWorker: async () => {
-    const t0 = performance.now();
+  terminateWorker: async (sampleCsv) => {
+    log('Testing hard cancellation with pending request rejection...');
+    let pendingRejected = false;
+
+    // Launch a pending operation on the active worker
+    const pendingPromise = sendToWorker('START_LONG_WORKLOAD');
+    pendingPromise.catch(() => {
+      pendingRejected = true;
+    });
+
+    const tTerm0 = performance.now();
     log('Terminating Dedicated Application Worker via worker.terminate()...');
     if (worker) {
       worker.terminate();
       worker = null;
-      // Reject any pending requests
+      // Reject any pending requests immediately
       for (const [id, req] of pendingRequests.entries()) {
         req.reject(new Error('Worker terminated'));
         pendingRequests.delete(id);
       }
     }
-    const termLatency = performance.now() - t0;
+    const termLatency = performance.now() - tTerm0;
     log('Worker terminated in ' + termLatency.toFixed(2) + ' ms');
 
-    // Confirm demonstrated recovery: create fresh worker and run simple ping
-    const tRec0 = performance.now();
-    worker = createDedicatedWorker();
-    const pingRes = await sendToWorker('PING');
-    const recLatency = performance.now() - tRec0;
-    log('Spawned fresh recovery worker; ping response in ' + recLatency.toFixed(2) + ' ms');
+    try {
+      await pendingPromise;
+    } catch {
+      pendingRejected = true;
+    }
 
+    // 2. New worker creation
+    const tCreate0 = performance.now();
+    worker = createDedicatedWorker();
+    const createLatency = performance.now() - tCreate0;
+    log('Fresh worker created in ' + createLatency.toFixed(2) + ' ms');
+
+    // 3. Full WebR and package restoration
+    const tRestore0 = performance.now();
+    log('Restoring WebR runtime and all packages on fresh worker...');
+    const initRes = await sendToWorker('INIT');
+    const restoreLatency = performance.now() - tRestore0;
+    log('WebR restored in ' + restoreLatency.toFixed(2) + ' ms (' + initRes.r_version + ')');
+
+    // 4. Successful subsequent statistical operation
+    let statLatency = 0;
+    let statSuccess = false;
+    let statPairs = 0;
+    if (sampleCsv) {
+      const tStat0 = performance.now();
+      log('Executing full matching & cobalt pipeline on restored worker...');
+      const statRes = await sendToWorker('RUN_PIPELINE', {
+        csvData: sampleCsv,
+        formula: 'treat ~ age + bmi + sbp',
+        link: 'linear.logit',
+        estimand: 'ATT',
+        m_order: 'largest',
+        caliper: null,
+        std_caliper: false,
+        discard: 'none'
+      });
+      statLatency = performance.now() - tStat0;
+      statPairs = statRes.n_pairs;
+      statSuccess = statRes.type === 'PIPELINE_SUCCESS' && statRes.n_pairs === 119;
+      log('Subsequent statistical pipeline executed in ' + statLatency.toFixed(2) + ' ms, pairs: ' + statRes.n_pairs);
+    }
+
+    const fullRecovery = statSuccess || (!sampleCsv && initRes.r_version);
     return {
-      termination_latency_ms: termLatency,
-      recovery_latency_ms: recLatency,
-      total_cancellation_latency_ms: performance.now() - t0,
-      recovered: pingRes.type === 'PONG'
+      worker_termination_request_ms: termLatency,
+      pending_request_rejected: pendingRejected,
+      wasm_linear_memory_release_latency: 'UNMEASURED (Private to terminated worker process)',
+      new_worker_creation_ms: createLatency,
+      full_webr_package_restoration_ms: restoreLatency,
+      subsequent_statistical_operation_ms: statLatency,
+      subsequent_operation_succeeded: statSuccess,
+      matched_pairs: statPairs,
+      full_demonstrated_recovery: Boolean(fullRecovery)
     };
   },
 
