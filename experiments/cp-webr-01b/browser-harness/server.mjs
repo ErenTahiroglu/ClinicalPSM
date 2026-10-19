@@ -1,9 +1,10 @@
 // CP-WEBR-01B Browser Qualification Server
 // Features:
 // 1. Production-approximate COOP, COEP, CORP, and configurable CSP
-// 2. Traps for negative control prohibited endpoints (/api/prohibited-leak-*)
-// 3. Independent mock falsification sink (/api/mock-falsification-sink)
-// 4. Strict Wasm, JS, and gzip MIME mappings
+// 2. Pre-egress prevention verification endpoints (/api/prohibited-leak-*-prevention)
+// 3. Server-side rejection endpoint (/api/prohibited-server-rejection) returning HTTP 403
+// 4. Independent mock falsification sink (/api/mock-falsification-sink)
+// 5. Strict Wasm, JS, and gzip MIME mappings
 
 import http from 'node:http';
 import fs from 'node:fs';
@@ -38,8 +39,9 @@ function getMime(p) {
 }
 
 export function createServer(options = {}) {
-  const cspMode = options.cspMode || 'standard'; // 'standard', 'minimal', 'no-eval-page'
+  const baseCspMode = options.cspMode || 'standard';
   const falsificationSinkLog = [];
+  const preventionEndpointsLog = [];
 
   const server = http.createServer(async (req, res) => {
     // Standard isolation headers
@@ -56,15 +58,19 @@ export function createServer(options = {}) {
       return;
     }
 
-    // Dynamic CSP Configuration
+    const url = new URL(req.url, `http://localhost:${PORT}`);
+    const pathname = decodeURIComponent(url.pathname);
+    const reqCsp = url.searchParams.get('csp') || baseCspMode;
+
+    // Dynamic CSP Configuration based on profile
     let cspHeader = "default-src 'self' 'wasm-unsafe-eval' blob: data:; " +
       "script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' blob:; " +
       "worker-src 'self' blob:; " +
       "style-src 'self'; " +
       "connect-src 'self';";
 
-    if (cspMode === 'no-eval-page') {
-      // Test page without unsafe-eval (unsafe-eval reserved for worker)
+    if (reqCsp === 'strict-page' || reqCsp === 'no-eval-page') {
+      // Profile B: Strict Page CSP removing 'unsafe-eval'
       cspHeader = "default-src 'self' 'wasm-unsafe-eval' blob: data:; " +
         "script-src 'self' 'wasm-unsafe-eval' blob:; " +
         "worker-src 'self' blob:; " +
@@ -74,16 +80,39 @@ export function createServer(options = {}) {
 
     res.setHeader('Content-Security-Policy', cspHeader);
 
-    const url = new URL(req.url, `http://localhost:${PORT}`);
-    const pathname = decodeURIComponent(url.pathname);
+    // Negative control prevention trap endpoints (if reached, server logs hit)
+    if (pathname === '/api/prohibited-leak-page-prevention' || pathname === '/api/prohibited-leak-worker-prevention' || pathname === '/api/prohibited-leak-page' || pathname === '/api/prohibited-leak-worker') {
+      preventionEndpointsLog.push({
+        endpoint: pathname,
+        method: req.method,
+        received_at: new Date().toISOString()
+      });
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        error: 'REACHED_SERVER_UNEXPECTEDLY',
+        endpoint: pathname
+      }));
+      return;
+    }
 
-    // Negative control trap endpoints
-    if (pathname === '/api/prohibited-leak-page' || pathname === '/api/prohibited-leak-worker') {
+    // Server-side rejection endpoint (deliberately allowed through to verify 403 handling)
+    if (pathname === '/api/prohibited-server-rejection') {
       res.writeHead(403, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
-        error: 'BLOCKED_PROHIBITED_ENDPOINT',
+        classification: 'SERVER_REJECTION',
+        status: 403,
         endpoint: pathname,
-        receivedMethod: req.method
+        message: 'Request reached mock server boundary and was rejected with HTTP 403'
+      }));
+      return;
+    }
+
+    // Prevention status query endpoint
+    if (pathname === '/api/prevention-audit-status') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        receivedCount: preventionEndpointsLog.length,
+        log: preventionEndpointsLog
       }));
       return;
     }
@@ -144,6 +173,7 @@ export function createServer(options = {}) {
   });
 
   server.getFalsificationLog = () => falsificationSinkLog;
+  server.getPreventionLog = () => preventionEndpointsLog;
   return server;
 }
 

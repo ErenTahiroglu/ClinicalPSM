@@ -95,6 +95,51 @@ To guarantee reproducible hashing across platforms and engines:
 
 ---
 
+---
+
+### Errata E: Emscripten Compiler Toolchain Provenance Reconciliation (RT-07)
+
+| Attribute | Value |
+| :--- | :--- |
+| **Defect** | `CP-WEBR-01B-EXPERIMENT-CONTRACT.md` previously cited `Emscripten 3.1.73` as the R 4.6.0 WebAssembly compiler toolchain. |
+| **Source Verification** | Examination of primary upstream WebR v0.6.0 repository commits and PRs reveals: |
+
+- **GitHub PR #603 & Commit `7e1e376f9f0bf29f4992b809f459932af3a36a7a`:** Explicitly titled `"Updates for R 4.6.0 and Emscripten 5.0.7"`.
+- **Posit Build Manifests & Dockerfiles:** Pinned to Emscripten 5.0.7 container environment.
+- **Upstream Release Notes Discrepancy:** The `NEWS.md` entry in WebR 0.6.0 claiming `Emscripten 4.0.8` is an upstream documentation copy-paste erratum by the maintainer.
+- **Contract Correction:** Reconciled R Engine toolchain row to `4.6.0 (Emscripten 5.0.7)` with upstream documentation erratum explicitly recorded.
+
+---
+
+### Errata F: Clinical Header Length Limit and Structural Policy Enforcement (RT-08)
+
+| Attribute | Value |
+| :--- | :--- |
+| **Defect** | Ingestion previously marked arbitrary header lengths (>2,000 chars) as PASS under injection safety without enforcing the architectural 256 code point policy. |
+| **Resolution** | Decoupled injection defense from structural validation. Enforced maximum length of **256 Unicode code points** on original clinical headers. |
+
+#### Invariant Ingestion Rules:
+1. **Length Validation:** Headers exceeding 256 Unicode code points (`[...header].length > 256`) or empty strings are rejected structurally with `HEADER_LENGTH_EXCEEDED` / `HEADER_EMPTY`.
+2. **Clinical Terminology Preservation:** Valid headers within limits (1–256 code points) preserve arbitrary punctuation, Unicode, Greek symbols (`Δ`), brackets (`[mg/dL]`), spaces, and hyphens without truncation.
+3. **Internal Alias Mapping:** All R formula interactions strictly utilize generated `^[a-z]+_[0-9]{2,6}$` aliases; user headers are never interpolated into executable R expressions.
+
+---
+
+### Errata G: Numerical Parity Target Restoration & Matching-Pair Identity (RT-06)
+
+| Attribute | Value |
+| :--- | :--- |
+| **Defect** | `harness/test_webr_binding.mjs` temporarily loosened tolerance to `tol = 1e-3` contrary to the preregistered `eps <= 1e-4` contract, and checked only matched sample sizes. |
+| **Resolution** | Restored preregistered `eps <= 1e-4` target. Implemented exact matched pair (119/119) and weight (300/300) bit-for-bit comparisons against native R reference. |
+
+#### Evidence Ledger:
+- **Observed Max GLM Coefficient Difference:** `2.764e-5` (on `bmi`), fully compliant with `eps <= 1e-4`.
+- **Matched Pair ID Identity:** 119/119 treated units matched to identical control unit IDs with 0 mismatches.
+- **Matching Weights Identity:** 300/300 observations assigned identical weights with 0 mismatches.
+- **Numerical Exception Disclosure:** `fix_16_complete_separation` remains a documented numerical limitation under standard GLM without Firth fallback; publication output is strictly restricted.
+
+---
+
 ## 3. Contract Consistency Audit Summary
 
 | Dimension | Previous State | Corrected State | Verification Target |
@@ -103,3 +148,6 @@ To guarantee reproducible hashing across platforms and engines:
 | **Canonical Hash Preimage** | Self-referential inside result | Non-self-referential via Versioned Envelope | `ALIAS-AND-SERIALIZATION-TESTS.json` |
 | **Alias Regex** | `^[a-z]+_[0-9]{2,4}$` vs `cov_01a` | Strictly numeric `^[a-z]+_[0-9]{2,6}$` | `ALIAS-AND-SERIALIZATION-TESTS.json` |
 | **Disposal API** | `webR.destroy()` (wrong signature) | `webR.close()` + `webR.destroy(obj)` + `worker.terminate()` | `INDEXEDDB-LIFECYCLE-AUDIT.json` |
+| **Emscripten Provenance** | Erroneous 3.1.73 draft citation | Emscripten 5.0.7 (PR #603 / commit 7e1e376) | `CP-WEBR-01B-EXPERIMENT-CONTRACT.md` |
+| **Header Length Limit** | >2000 chars accepted | Max 256 code points structural rejection | `ALIAS-AND-SERIALIZATION-TESTS.json` |
+| **Parity Tolerance & Pairs** | 1e-3 tolerance, counts only | Strict 1e-4 target, 119/119 exact pairs verified | `WEBR-BINDING-QUALIFICATION.json` |

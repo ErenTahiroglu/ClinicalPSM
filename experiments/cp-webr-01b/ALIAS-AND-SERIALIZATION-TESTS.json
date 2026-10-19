@@ -1,8 +1,8 @@
 {
   "executed_at": "2026-10-20T00:00:00.000Z",
   "suite": "CP-WEBR-01B Alias & Canonical Serialization Suite",
-  "total": 15,
-  "passed": 15,
+  "total": 18,
+  "passed": 18,
   "failed": 0,
   "results": [
     {
@@ -136,6 +136,23 @@
         "count": 100,
         "sampleLast": "cov_100"
       }
+    },
+    {
+      "name": "Header Length Policy: Exact 256 Code Points Accepted",
+      "status": "PASS",
+      "details": {}
+    },
+    {
+      "name": "Header Length Policy: 257 Code Points Rejected",
+      "status": "PASS",
+      "details": {
+        "error": "HEADER_LENGTH_EXCEEDED: Covariate header length (257) exceeds maximum limit of 256 characters"
+      }
+    },
+    {
+      "name": "Empty/Whitespace Header Rejection",
+      "status": "PASS",
+      "details": {}
     }
   ]
 }

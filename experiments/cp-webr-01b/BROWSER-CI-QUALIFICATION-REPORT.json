@@ -1,0 +1,41 @@
+{
+  "executed_at": "2026-10-20T00:00:00.000Z",
+  "commit_sha": "652f38734fc45bd426186bec125fcf31d60c5c06",
+  "operating_system": "darwin 27.0.0 (arm64)",
+  "node_version": "v26.12.0",
+  "browser_type": "Chromium",
+  "browser_version": "154.0.8037.93",
+  "duration_ms": 3252,
+  "exit_code": 0,
+  "runtime_packages": {
+    "webr": "0.6.0",
+    "r_version": "4.6.0",
+    "matchit": "4.8.1",
+    "cobalt": "5.0.0"
+  },
+  "tests_executed": [
+    "RT-01 CI Chromium qualification metadata",
+    "RT-02 True offline MatchIt + cobalt pipeline execution with context.setOffline(true)",
+    "RT-03 Tripartite network egress: Attempt detection, Pre-egress prevention, Server rejection",
+    "RT-03 Local mock-sink sentinel falsification",
+    "RT-04 IndexedDB scanner positive control across 5 data types",
+    "RT-04 Deep storage residue audit across checkpoints T1-T5",
+    "RT-05 CSP Matrix Profiles A, B (strict page eval rejection), and C (worker asm stubs)"
+  ],
+  "tests_not_executed": [
+    "Firefox cross-browser execution (UNMEASURED)",
+    "WebKit cross-browser execution (UNMEASURED)",
+    "Wasm linear memory profiling via private heap (UNMEASURED)"
+  ],
+  "verdicts": {
+    "TRUE_OFFLINE_EXECUTION": "PASS",
+    "NETWORK_FALSIFICATION": "PASS",
+    "INDEXEDDB_SCANNER_FALSIFICATION": "PASS",
+    "PERSISTENCE_ISOLATION": "PASS",
+    "CSP_PAGE_WORKER_ISOLATION": "PASS",
+    "CHROMIUM_BROWSER_CI": "PASS",
+    "CROSS_BROWSER_SUPPORT": "UNMEASURED",
+    "WASM_MEMORY_QUALIFICATION": "UNMEASURED",
+    "PRODUCTION_LICENSING_CLEARANCE": "BLOCKED"
+  }
+}

@@ -148,10 +148,17 @@ async function runBindingQualification() {
     },
     {
       id: 'ADV-14',
-      name: 'Extremely long column header (>2000 chars)',
+      name: 'Over-limit column header (>256 chars) structural rejection',
       input: 'LONG_' + 'A'.repeat(2500),
+      type: 'header_over_length',
+      expected: 'REJECT_LENGTH_EXCEEDED'
+    },
+    {
+      id: 'ADV-14B',
+      name: 'Complex clinical header within length limit (250 chars)',
+      input: 'LAB_' + 'A'.repeat(240) + '_VAL',
       type: 'header',
-      expected: 'SAFE_MAPPED_NO_BUFFER_OVERRUN'
+      expected: 'SAFE_MAPPED_WITHIN_LIMIT'
     },
     {
       id: 'ADV-15',
@@ -202,6 +209,27 @@ async function runBindingQualification() {
     const mapper = new IdentifierMapper();
 
     try {
+      if (tc.type === 'header_over_length') {
+        let threw = false;
+        let errMsg = '';
+        try {
+          mapper.registerTreatment('Treatment');
+          mapper.registerCovariate(tc.input);
+        } catch (err) {
+          if (err.message.startsWith('HEADER_LENGTH_EXCEEDED')) {
+            threw = true;
+            errMsg = err.message;
+          }
+        }
+        if (threw) {
+          testReport.passed_adversarial_cases++;
+          testReport.adversarial_tests.push({ id: tc.id, name: tc.name, status: 'PASS', details: `Structural policy: correctly rejected over-limit header (${errMsg})` });
+        } else {
+          testReport.adversarial_tests.push({ id: tc.id, name: tc.name, status: 'FAIL', details: 'Failed to enforce header length limit' });
+        }
+        continue;
+      }
+
       if (tc.type === 'duplicate_exact' || tc.type === 'duplicate_confusable') {
         let threw = false;
         try {
@@ -484,13 +512,25 @@ async function runBindingQualification() {
       )
 
       coefs <- coef(m_fix$model)
+      mm <- m_fix$match.matrix
+      treated_units <- rownames(mm)
+      pairs <- list()
+      for (u in treated_units) {
+        c_id <- mm[u, 1]
+        if (!is.na(c_id)) {
+          pairs[[u]] <- c_id
+        }
+      }
+
       list(
         intercept = as.numeric(coefs["(Intercept)"]),
         coef_age = as.numeric(coefs["cov_01"]),
         coef_bmi = as.numeric(coefs["cov_02"]),
         coef_sbp = as.numeric(coefs["cov_03"]),
         matched_treated = sum(m_fix$weights[df$trt_01 == 1] > 0),
-        matched_control = sum(m_fix$weights[df$trt_01 == 0] > 0)
+        matched_control = sum(m_fix$weights[df$trt_01 == 0] > 0),
+        pairs = pairs,
+        weights = as.list(m_fix$weights)
       )
     `;
 
@@ -503,34 +543,79 @@ async function runBindingQualification() {
     const webrSbp = fixRes.values[3].values[0];
     const webrMatchedTrt = fixRes.values[4].values[0];
     const webrMatchedCtrl = fixRes.values[5].values[0];
+    const webrPairsObj = fixRes.values[6];
+    const webrWeightsObj = fixRes.values[7];
 
     const nativeIntercept = f1Native.matching.coefficients['(Intercept)'];
     const nativeAge = f1Native.matching.coefficients['age'];
     const nativeBmi = f1Native.matching.coefficients['bmi'];
     const nativeSbp = f1Native.matching.coefficients['sbp'];
 
-    const tol = 1e-3;
+    const tol = 1e-4; // Restored preregistered strict tolerance
     const interceptDiff = Math.abs(webrIntercept - nativeIntercept);
     const ageDiff = Math.abs(webrAge - nativeAge);
     const bmiDiff = Math.abs(webrBmi - nativeBmi);
     const sbpDiff = Math.abs(webrSbp - nativeSbp);
 
-    const parityPass = interceptDiff < tol && ageDiff < tol && bmiDiff < tol && sbpDiff < tol &&
-      webrMatchedTrt === 119 && webrMatchedCtrl === 119;
+    // Exact matching pairs check
+    const nativePairs = f1Native.matching.matched_pairs;
+    let pairMismatches = 0;
+    for (const [tId, expCId] of Object.entries(nativePairs)) {
+      const idx = webrPairsObj.names.indexOf(tId);
+      const actCId = idx >= 0 ? webrPairsObj.values[idx]?.values[0] : null;
+      if (actCId !== expCId) {
+        pairMismatches++;
+      }
+    }
+
+    // Exact weights check
+    const nativeWeights = f1Native.matching.weights;
+    let weightMismatches = 0;
+    for (const [sId, expW] of Object.entries(nativeWeights)) {
+      const idx = webrWeightsObj.names.indexOf(sId);
+      const actW = idx >= 0 ? webrWeightsObj.values[idx]?.values[0] : null;
+      if (actW !== expW) {
+        weightMismatches++;
+      }
+    }
+
+    const coefPass = interceptDiff <= tol && ageDiff <= tol && bmiDiff <= tol && sbpDiff <= tol;
+    const sampleSizePass = webrMatchedTrt === 119 && webrMatchedCtrl === 119;
+    const pairsPass = pairMismatches === 0 && Object.keys(nativePairs).length === 119;
+    const weightsPass = weightMismatches === 0 && Object.keys(nativeWeights).length === 300;
+
+    const parityPass = coefPass && sampleSizePass && pairsPass && weightsPass;
 
     testReport.native_parity_verification = {
       fixture: 'fix_01_well_conditioned',
+      tolerance_target: 'eps <= 1e-4',
+      tolerance_observed_max: Math.max(interceptDiff, ageDiff, bmiDiff, sbpDiff),
       parity_pass: parityPass,
       coefficients: {
-        intercept: { native: nativeIntercept, webr: webrIntercept, diff: interceptDiff },
-        age: { native: nativeAge, webr: webrAge, diff: ageDiff },
-        bmi: { native: nativeBmi, webr: webrBmi, diff: bmiDiff },
-        sbp: { native: nativeSbp, webr: webrSbp, diff: sbpDiff }
+        intercept: { native: nativeIntercept, webr: webrIntercept, diff: interceptDiff, pass: interceptDiff <= tol },
+        age: { native: nativeAge, webr: webrAge, diff: ageDiff, pass: ageDiff <= tol },
+        bmi: { native: nativeBmi, webr: webrBmi, diff: bmiDiff, pass: bmiDiff <= tol },
+        sbp: { native: nativeSbp, webr: webrSbp, diff: sbpDiff, pass: sbpDiff <= tol }
+      },
+      matching_pairs: {
+        total_native_pairs: Object.keys(nativePairs).length,
+        total_webr_pairs: webrPairsObj.names.length,
+        mismatches: pairMismatches,
+        pass: pairsPass
+      },
+      matching_weights: {
+        total_observations: Object.keys(nativeWeights).length,
+        mismatches: weightMismatches,
+        pass: weightsPass
       },
       sample_sizes: {
         matched_treated_webr: webrMatchedTrt,
         matched_control_webr: webrMatchedCtrl,
-        expected: 119
+        expected: 119,
+        pass: sampleSizePass
+      },
+      numerical_exceptions: {
+        fix_16_complete_separation: 'Documented scientific limitation: complete separation causes non-convergence under standard GLM without Firth fallback; publication output is restricted.'
       }
     };
     console.log('Native R parity verification:', testReport.native_parity_verification);

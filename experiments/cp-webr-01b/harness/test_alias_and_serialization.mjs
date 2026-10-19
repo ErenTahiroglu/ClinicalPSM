@@ -80,6 +80,7 @@ export function verifyEnvelopeIntegrity(envelope) {
 // 2. Alias Mapping Implementation
 // -------------------------------------------------------------
 
+export const MAX_HEADER_LENGTH = 256;
 const ALIAS_REGEX = /^[a-z]+_[0-9]{2,6}$/;
 
 export class IdentifierMapper {
@@ -94,9 +95,15 @@ export class IdentifierMapper {
 
   registerTreatment(originalHeader) {
     if (!originalHeader || typeof originalHeader !== 'string') {
-      throw new Error('INVALID_TREATMENT_HEADER');
+      throw new Error('INVALID_TREATMENT_HEADER: Header must be a non-empty string');
     }
     const nfc = originalHeader.normalize('NFC').trim();
+    if (nfc.length === 0) {
+      throw new Error('INVALID_TREATMENT_HEADER: Header cannot be empty');
+    }
+    if (nfc.length > MAX_HEADER_LENGTH) {
+      throw new Error(`HEADER_LENGTH_EXCEEDED: Treatment header length (${nfc.length}) exceeds maximum limit of ${MAX_HEADER_LENGTH} characters`);
+    }
     if (this.seenNormalized.has(nfc)) {
       throw new Error(`DUPLICATE_HEADER: ${originalHeader}`);
     }
@@ -117,9 +124,15 @@ export class IdentifierMapper {
 
   registerCovariate(originalHeader) {
     if (!originalHeader || typeof originalHeader !== 'string') {
-      throw new Error('INVALID_COVARIATE_HEADER');
+      throw new Error('INVALID_COVARIATE_HEADER: Header must be a non-empty string');
     }
     const nfc = originalHeader.normalize('NFC').trim();
+    if (nfc.length === 0) {
+      throw new Error('INVALID_COVARIATE_HEADER: Header cannot be empty');
+    }
+    if (nfc.length > MAX_HEADER_LENGTH) {
+      throw new Error(`HEADER_LENGTH_EXCEEDED: Covariate header length (${nfc.length}) exceeds maximum limit of ${MAX_HEADER_LENGTH} characters`);
+    }
     if (this.seenNormalized.has(nfc)) {
       throw new Error(`DUPLICATE_HEADER: ${originalHeader}`);
     }
@@ -311,6 +324,37 @@ async function runTestSuite() {
     count: 100,
     sampleLast: largeMapper.getAlias('Clinical Variable 100')
   });
+
+  // Test 15: Header Length Boundary - Exact 256 code points allowed
+  const lenMapper = new IdentifierMapper();
+  lenMapper.registerTreatment('TRT');
+  const exact256 = 'A'.repeat(256);
+  const alias256 = lenMapper.registerCovariate(exact256);
+  assert('Header Length Policy: Exact 256 Code Points Accepted', alias256 === 'cov_01');
+
+  // Test 16: Header Length Boundary - 257 code points rejected with descriptive diagnostic
+  let lenOverRejected = false;
+  let lenErrorMsg = '';
+  try {
+    lenMapper.registerCovariate('B'.repeat(257));
+  } catch (err) {
+    if (err.message.startsWith('HEADER_LENGTH_EXCEEDED')) {
+      lenOverRejected = true;
+      lenErrorMsg = err.message;
+    }
+  }
+  assert('Header Length Policy: 257 Code Points Rejected', lenOverRejected === true, { error: lenErrorMsg });
+
+  // Test 17: Empty Header Rejection
+  let emptyRejected = false;
+  try {
+    lenMapper.registerCovariate('   ');
+  } catch (err) {
+    if (err.message.startsWith('INVALID_COVARIATE_HEADER')) {
+      emptyRejected = true;
+    }
+  }
+  assert('Empty/Whitespace Header Rejection', emptyRejected === true);
 
   // Output results
   const outPath = path.resolve('experiments/cp-webr-01b/ALIAS-AND-SERIALIZATION-TESTS.json');

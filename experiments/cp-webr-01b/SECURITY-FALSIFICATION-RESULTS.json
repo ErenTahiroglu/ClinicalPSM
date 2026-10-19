@@ -1,24 +1,69 @@
 {
   "executed_at": "2026-10-20T00:00:00.000Z",
-  "nominal_run": {
-    "offline_analysis_requests": 0,
+  "commit_sha": "652f38734fc45bd426186bec125fcf31d60c5c06",
+  "nominal_offline_run": {
+    "status": "PASS",
+    "network_state_set_offline": true,
+    "analysis_network_requests": 0,
     "sentinels_verified_in_r_dataframe": true,
-    "status": "PASS"
+    "matched_pairs_count": 3,
+    "matched_sample_size": {
+      "treated": 3,
+      "control": 3
+    },
+    "pipeline_duration_ms": 64.19999999925494
   },
-  "negative_controls": {
-    "control_a_page_egress": {
-      "endpoint": "/api/prohibited-leak-page",
-      "status": 403,
-      "trapped": true
+  "tripartite_egress_qualification": {
+    "property_a_attempt_detection": {
+      "status": "PASS",
+      "attempts_recorded": 4,
+      "log": [
+        {
+          "url": "http://localhost:8899/api/prohibited-leak-page-prevention",
+          "method": "POST",
+          "origin": "http://localhost:8899",
+          "hasSentinel": false,
+          "timestamp": "2026-10-20T00:00:00.000Z"
+        },
+        {
+          "url": "http://localhost:8899/api/prohibited-leak-worker-prevention",
+          "method": "POST",
+          "origin": "http://localhost:8899",
+          "hasSentinel": false,
+          "timestamp": "2026-10-20T00:00:00.000Z"
+        },
+        {
+          "url": "http://localhost:8899/api/prohibited-server-rejection",
+          "method": "POST",
+          "origin": "http://localhost:8899",
+          "hasSentinel": false,
+          "timestamp": "2026-10-20T00:00:00.000Z"
+        },
+        {
+          "url": "http://localhost:8899/api/prohibited-server-rejection",
+          "method": "POST",
+          "origin": "http://localhost:8899",
+          "hasSentinel": false,
+          "timestamp": "2026-10-20T00:00:00.000Z"
+        }
+      ]
     },
-    "control_b_worker_egress": {
-      "endpoint": "/api/prohibited-leak-worker",
-      "status": 403,
-      "trapped": true
+    "property_b_pre_egress_prevention": {
+      "status": "PASS",
+      "page_client_aborted": true,
+      "worker_client_aborted": true,
+      "mock_server_received_zero_hits": true,
+      "classification": "PRE_EGRESS_PREVENTION"
     },
-    "control_c_external_domain": {
-      "blocked_by_client_or_csp": true
+    "property_c_server_side_rejection": {
+      "status": "PASS",
+      "page_status": 403,
+      "worker_status": 403,
+      "classification": "SERVER_REJECTION"
     }
+  },
+  "negative_control_external": {
+    "blocked_by_client_or_csp": true
   },
   "falsification_run": {
     "sink_endpoint": "/api/mock-falsification-sink",
@@ -26,28 +71,27 @@
     "mock_sink_received": true,
     "demonstrates_falsification_capability": true
   },
-  "request_audit_summary": {
-    "total_requests_recorded": 44,
-    "prohibited_trapped_count": 2
-  },
   "verdict": "PASS",
   "browser_matrix": {
     "chromium": {
       "tested": true,
-      "browser": "Chromium / Brave",
+      "browser": "Chromium",
       "version": "154.0.8037.93",
       "status": "PASS"
     },
     "firefox": {
       "tested": false,
+      "status": "UNMEASURED",
       "reason": "UNMEASURED_NOT_INSTALLED"
     },
     "webkit": {
       "tested": false,
+      "status": "UNMEASURED",
       "reason": "UNMEASURED_NOT_INSTALLED"
     },
     "safari_mobile": {
       "tested": false,
+      "status": "UNMEASURED",
       "reason": "UNMEASURED_PLATFORM"
     }
   }

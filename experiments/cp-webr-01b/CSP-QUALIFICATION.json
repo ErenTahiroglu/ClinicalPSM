@@ -1,16 +1,32 @@
 {
   "executed_at": "2026-10-20T00:00:00.000Z",
-  "coop": "same-origin",
-  "coep": "require-corp",
-  "corp": "same-origin",
-  "csp_header": "default-src 'self' 'wasm-unsafe-eval' blob: data:; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' blob:; worker-src 'self' blob:; style-src 'self'; connect-src 'self';",
-  "page_cross_origin_isolated": true,
-  "wasm_mime_valid": true,
-  "eval_isolation": {
-    "page_requires_unsafe_eval": false,
-    "worker_requires_unsafe_eval": true,
-    "reason": "Emscripten dynamic linker (ASM_CONSTS for libRlapack.so and libRblas.so) evaluates dynamic asm stubs inside worker scope"
+  "commit_sha": "652f38734fc45bd426186bec125fcf31d60c5c06",
+  "matrix": {
+    "profile_a_baseline": {
+      "csp_header": "default-src 'self' 'wasm-unsafe-eval' blob: data:; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' blob:; worker-src 'self' blob:; style-src 'self'; connect-src 'self';",
+      "coop_header": "same-origin",
+      "coep_header": "require-corp",
+      "corp_header": "same-origin",
+      "page_cross_origin_isolated": true,
+      "allows_worker_asm_stubs": true,
+      "limitation": "Allows unsafe-eval in page scope to maintain parity with Emscripten dynamic linker"
+    },
+    "profile_b_strict_page": {
+      "csp_header": "default-src 'self' 'wasm-unsafe-eval' blob: data:; script-src 'self' 'wasm-unsafe-eval' blob:; worker-src 'self' blob:; style-src 'self'; connect-src 'self';",
+      "contains_unsafe_eval": false,
+      "page_prohibited_eval_blocked": true,
+      "eval_error_message": "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'wasm-unsafe-eval' blob:\".\n",
+      "security_policy_violations_recorded": 1,
+      "demonstrates_page_isolation": true
+    },
+    "profile_c_worker_qualification": {
+      "worker_type": "DedicatedWorker",
+      "inherits_network_connect_src": "connect-src self (prohibits external egress)",
+      "worker_requires_unsafe_eval": true,
+      "emscripten_dynamic_linker_reason": "Emscripten dynamic linking (ASM_CONSTS for libRlapack.so and libRblas.so) requires runtime JS function generation inside worker scope",
+      "worker_sandbox_boundary": "Worker isolated from DOM, cookies, sessionStorage, and localStorage credentials",
+      "security_risk_assessment": "Tracked exception; unsafe-eval in worker remains a documented attack surface"
+    }
   },
-  "threat_mitigation": "Worker is isolated from DOM, cookies, localStorage and page credentials. Strict connect-src self prevents worker network egress.",
   "verdict": "PASS"
 }

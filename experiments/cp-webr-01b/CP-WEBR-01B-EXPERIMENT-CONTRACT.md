@@ -26,7 +26,7 @@ The experiment evaluates five core gates:
 | Component | Pinned Version | Source / SHA-256 Archive Digest |
 | :--- | :--- | :--- |
 | **WebR Core** | `v0.6.0` | `dist/R.wasm` (18,062,845 bytes, `f417f7b30cf337f7fa2032479e02c5f11186714dbf77c867a1fb5f0967ae87b1`) |
-| **R Engine** | `4.6.0` (Emscripten 3.1.73) | Integrated in WebR v0.6.0 |
+| **R Engine** | `4.6.0` (Emscripten 5.0.7) | Integrated in WebR v0.6.0 (PR #603 / commit 7e1e376; upstream NEWS.md 4.0.8 documentation erratum noted) |
 | **MatchIt** | `4.8.1` | `MatchIt_4.8.1.tgz` (`a79a32cbebeff67f6b92f7d14d2a138db565668b813f8983944634ea81048f06`) |
 | **cobalt** | `5.0.0` | `cobalt_5.0.0.tgz` (`4fceba6fa8c11f71a9f1437fd69e6b3eb72c67feea9c395bc58e1c6ae78a1bc7`) |
 | **Transitive Dependencies** | 19 pinned packages | Verified in `experiments/cp-webr-00b/dependency-lock.json` |

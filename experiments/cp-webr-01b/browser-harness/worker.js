@@ -180,16 +180,30 @@ self.onmessage = async (e) => {
       return;
     }
 
-    if (type === 'TRIGGER_PROHIBITED_LEAK_WORKER') {
+    if (type === 'TRIGGER_WORKER_PREVENTION' || type === 'TRIGGER_PROHIBITED_LEAK_WORKER') {
       try {
-        const resp = await fetch('/api/prohibited-leak-worker', {
+        const resp = await fetch('/api/prohibited-leak-worker-prevention', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ leak: 'PROHIBITED_WORKER_EGRESS', sentinel: payload.sentinel })
+          body: JSON.stringify({ leak: 'WORKER_EGRESS_PREVENTION', sentinel: payload.sentinel })
         });
-        self.postMessage({ id, type: 'PROHIBITED_LEAK_RESPONSE', status: resp.status });
+        self.postMessage({ id, type: 'WORKER_PREVENTION_RESPONSE', status: resp.status, aborted_pre_egress: false });
       } catch (err) {
-        self.postMessage({ id, type: 'PROHIBITED_LEAK_BLOCKED', error: err.message });
+        self.postMessage({ id, type: 'WORKER_PREVENTION_ABORTED', fetch_error: err.message, aborted_pre_egress: true });
+      }
+      return;
+    }
+
+    if (type === 'TRIGGER_WORKER_SERVER_REJECTION') {
+      try {
+        const resp = await fetch('/api/prohibited-server-rejection', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ leak: 'WORKER_SERVER_REJECTION_TEST', sentinel: payload.sentinel })
+        });
+        self.postMessage({ id, type: 'WORKER_SERVER_REJECTION_RESPONSE', status: resp.status });
+      } catch (err) {
+        self.postMessage({ id, type: 'WORKER_SERVER_REJECTION_ERROR', fetch_error: err.message });
       }
       return;
     }

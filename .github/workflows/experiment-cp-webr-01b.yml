@@ -36,6 +36,9 @@ jobs:
       - name: Install root dependencies
         run: npm ci
 
+      - name: Verify artifact manifest integrity (committed baseline)
+        run: node experiments/cp-webr-01b/harness/verify_manifest.mjs
+
       - name: Setup experiment dependencies & install webr
         run: |
           node experiments/cp-webr-00b/harness/setup_experiment.mjs
@@ -62,8 +65,8 @@ jobs:
                 if (coop !== 'same-origin' || coep !== 'require-corp' || corp !== 'same-origin') {
                   throw new Error('Missing COOP/COEP/CORP isolation headers');
                 }
-                const trapRes = await fetch('http://localhost:' + PORT + '/api/prohibited-leak-page', { method: 'POST' });
-                if (trapRes.status !== 403) throw new Error('Expected 403 on negative control page trap');
+                const trapRes = await fetch('http://localhost:' + PORT + '/api/prohibited-leak-page-prevention', { method: 'POST' });
+                if (trapRes.status !== 400) throw new Error('Expected 400 on negative control page prevention trap');
                 const sinkRes = await fetch('http://localhost:' + PORT + '/api/mock-falsification-sink', {
                   method: 'POST',
                   body: JSON.stringify({ sentinel: 'FALSIFICATION_SENTINEL_PAYLOAD_339a1c' })
@@ -78,8 +81,26 @@ jobs:
             });
           "
 
-      - name: Run WebR parameter binding, 20 adversarial cases & native R parity check
+      - name: Run WebR parameter binding, 21 adversarial cases & native R parity check
         run: node experiments/cp-webr-01b/harness/test_webr_binding.mjs
 
-      - name: Verify artifact manifest integrity
-        run: node experiments/cp-webr-01b/harness/verify_manifest.mjs
+      - name: Install Playwright Chromium and system dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Run real Chromium browser security, true offline & falsification suite
+        run: node experiments/cp-webr-01b/harness/test_browser_security.mjs
+
+      - name: Verify browser qualification verdicts
+        run: |
+          node -e "
+            const report = JSON.parse(require('fs').readFileSync('experiments/cp-webr-01b/BROWSER-CI-QUALIFICATION-REPORT.json'));
+            console.log('Browser qualification verdicts:', report.verdicts);
+            if (report.exit_code !== 0) throw new Error('Browser qualification exit code was non-zero');
+            if (report.verdicts.TRUE_OFFLINE_EXECUTION !== 'PASS') throw new Error('TRUE_OFFLINE_EXECUTION did not pass');
+            if (report.verdicts.NETWORK_FALSIFICATION !== 'PASS') throw new Error('NETWORK_FALSIFICATION did not pass');
+            if (report.verdicts.INDEXEDDB_SCANNER_FALSIFICATION !== 'PASS') throw new Error('INDEXEDDB_SCANNER_FALSIFICATION did not pass');
+            if (report.verdicts.PERSISTENCE_ISOLATION !== 'PASS') throw new Error('PERSISTENCE_ISOLATION did not pass');
+            if (report.verdicts.CSP_PAGE_WORKER_ISOLATION !== 'PASS') throw new Error('CSP_PAGE_WORKER_ISOLATION did not pass');
+            if (report.verdicts.CHROMIUM_BROWSER_CI !== 'PASS') throw new Error('CHROMIUM_BROWSER_CI did not pass');
+            console.log('All CI browser qualification gates verified PASS!');
+          "

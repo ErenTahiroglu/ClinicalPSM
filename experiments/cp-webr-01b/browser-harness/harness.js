@@ -1,5 +1,5 @@
 // CP-WEBR-01B Browser Harness Script
-// Provides deep recursive storage inspection and worker orchestration
+// Provides deep recursive storage inspection, scanner falsification probe, and worker orchestration
 
 window.currentWorker = null;
 let msgId = 0;
@@ -82,7 +82,6 @@ async function inspectValueRecursively(val, sentinels, path = '') {
 
   if (typeof val === 'object') {
     for (const k of Object.keys(val)) {
-      // Check key name itself
       for (const s of sentinels) {
         if (k.includes(s)) matches.push({ path: `${path}.${k}`, sentinel: s, type: 'object_key' });
       }
@@ -119,36 +118,44 @@ export async function inspectDeepStorage(sentinels) {
         if (!dbInfo.name) continue;
         await new Promise((resolve) => {
           const req = indexedDB.open(dbInfo.name);
+          req.onblocked = () => resolve();
+          req.onerror = () => resolve();
           req.onsuccess = async (e) => {
             const db = e.target.result;
             const storeNames = Array.from(db.objectStoreNames);
             for (const sName of storeNames) {
-              await new Promise((sResolve) => {
-                const tx = db.transaction(sName, 'readonly');
-                const store = tx.objectStore(sName);
-                const curReq = store.openCursor();
-                curReq.onsuccess = async (ev) => {
-                  const cursor = ev.target.result;
-                  if (cursor) {
-                    audit.indexedDB.records_inspected++;
-                    // Inspect key
-                    const keyMatches = await inspectValueRecursively(cursor.key, sentinels, `${dbInfo.name}.${sName}[key]`);
-                    audit.indexedDB.residue_matches.push(...keyMatches);
-                    // Inspect value
-                    const valMatches = await inspectValueRecursively(cursor.value, sentinels, `${dbInfo.name}.${sName}[val]`);
-                    audit.indexedDB.residue_matches.push(...valMatches);
-                    cursor.continue();
-                  } else {
-                    sResolve();
-                  }
-                };
-                curReq.onerror = () => sResolve();
+              const records = await new Promise((sResolve) => {
+                try {
+                  const tx = db.transaction(sName, 'readonly');
+                  const store = tx.objectStore(sName);
+                  const items = [];
+                  const curReq = store.openCursor();
+                  curReq.onsuccess = (ev) => {
+                    const cursor = ev.target.result;
+                    if (cursor) {
+                      items.push({ key: cursor.key, value: cursor.value });
+                      cursor.continue();
+                    } else {
+                      sResolve(items);
+                    }
+                  };
+                  curReq.onerror = () => sResolve([]);
+                } catch {
+                  sResolve([]);
+                }
               });
+
+              for (const item of records) {
+                audit.indexedDB.records_inspected++;
+                const keyMatches = await inspectValueRecursively(item.key, sentinels, `${dbInfo.name}.${sName}[key]`);
+                audit.indexedDB.residue_matches.push(...keyMatches);
+                const valMatches = await inspectValueRecursively(item.value, sentinels, `${dbInfo.name}.${sName}[val]`);
+                audit.indexedDB.residue_matches.push(...valMatches);
+              }
             }
             db.close();
             resolve();
           };
-          req.onerror = () => resolve();
         });
       }
     }
@@ -232,19 +239,144 @@ export async function inspectDeepStorage(sentinels) {
 }
 
 // -------------------------------------------------------------
-// Negative control triggers
+// Storage Scanner Positive Control Falsification Probe (RT-04)
 // -------------------------------------------------------------
 
-export async function triggerPageEgress(sentinel) {
-  const resp = await fetch('/api/prohibited-leak-page', {
+export async function runStorageScannerFalsification() {
+  const PROBE_DB_NAME = 'scanner_falsification_probe_db';
+  const PROBE_STORE_NAME = 'probe_store';
+  const probeSentinels = [
+    'PROBE_KEY_SNTL_01',
+    'PROBE_STR_SNTL_02',
+    'PROBE_NEST_SNTL_03',
+    'PROBE_TYPED_SNTL_04',
+    'PROBE_BLOB_SNTL_05'
+  ];
+
+  // 1. Clean existing probe database if present
+  await new Promise((resolve) => {
+    const delReq = indexedDB.deleteDatabase(PROBE_DB_NAME);
+    delReq.onsuccess = () => resolve();
+    delReq.onerror = () => resolve();
+  });
+
+  // 2. Insert deliberate test records across 5 storage types
+  await new Promise((resolve, reject) => {
+    const openReq = indexedDB.open(PROBE_DB_NAME, 1);
+    openReq.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(PROBE_STORE_NAME)) {
+        db.createObjectStore(PROBE_STORE_NAME);
+      }
+    };
+    openReq.onsuccess = async (e) => {
+      const db = e.target.result;
+      const tx = db.transaction(PROBE_STORE_NAME, 'readwrite');
+      const store = tx.objectStore(PROBE_STORE_NAME);
+
+      // Record 1: Key sentinel
+      store.put('harmless_payload', 'PROBE_KEY_SNTL_01');
+      // Record 2: String value sentinel
+      store.put('Patient record string holding PROBE_STR_SNTL_02 token', 'rec_str');
+      // Record 3: Nested object sentinel
+      store.put({ clinical: { ehr: { biomarker: 'PROBE_NEST_SNTL_03' } } }, 'rec_nested');
+      // Record 4: TypedArray sentinel
+      const typedBytes = new TextEncoder().encode('Raw buffer holding PROBE_TYPED_SNTL_04 bytes');
+      store.put(typedBytes.buffer, 'rec_typedarray');
+      // Record 5: Blob sentinel
+      const blob = new Blob(['Document content holding PROBE_BLOB_SNTL_05'], { type: 'text/plain' });
+      store.put(blob, 'rec_blob');
+
+      tx.oncomplete = () => {
+        db.close();
+        resolve();
+      };
+      tx.onerror = (err) => reject(err);
+    };
+    openReq.onerror = (err) => reject(err);
+  });
+
+  // 3. Scan for planted sentinels
+  const probeAudit = await inspectDeepStorage(probeSentinels);
+  const detectedSentinels = new Set(probeAudit.indexedDB.residue_matches.map(m => m.sentinel));
+
+  const keyFound = detectedSentinels.has('PROBE_KEY_SNTL_01');
+  const strFound = detectedSentinels.has('PROBE_STR_SNTL_02');
+  const nestFound = detectedSentinels.has('PROBE_NEST_SNTL_03');
+  const typedFound = detectedSentinels.has('PROBE_TYPED_SNTL_04');
+  const blobFound = detectedSentinels.has('PROBE_BLOB_SNTL_05');
+
+  const allFound = keyFound && strFound && nestFound && typedFound && blobFound;
+
+  // 4. Delete probe database and verify post-cleanup
+  await new Promise((resolve) => {
+    const delReq = indexedDB.deleteDatabase(PROBE_DB_NAME);
+    delReq.onsuccess = () => resolve();
+    delReq.onerror = () => resolve();
+    delReq.onblocked = () => resolve();
+  });
+
+  const postCleanupAudit = await inspectDeepStorage(probeSentinels);
+  const cleanupVerified = postCleanupAudit.total_residue_found === 0;
+
+  return {
+    scanner_falsification_verdict: (allFound && cleanupVerified) ? 'SCANNER_FALSIFICATION_PASS' : 'FAIL',
+    planted_count: probeSentinels.length,
+    detected_count: detectedSentinels.size,
+    detected_by_type: {
+      key: keyFound,
+      string: strFound,
+      nested_object: nestFound,
+      typed_array: typedFound,
+      blob: blobFound
+    },
+    cleanup_verified: cleanupVerified
+  };
+}
+
+// -------------------------------------------------------------
+// Network Egress Triggers (Pre-egress prevention vs Server Rejection)
+// -------------------------------------------------------------
+
+export async function triggerPageEgressPrevention(sentinel) {
+  try {
+    const resp = await fetch('/api/prohibited-leak-page-prevention', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ leak: 'PAGE_EGRESS_PREVENTION', sentinel })
+    });
+    return { status: resp.status, aborted_pre_egress: false };
+  } catch (err) {
+    return { error: err.message, aborted_pre_egress: true };
+  }
+}
+
+export async function triggerPageServerRejection(sentinel) {
+  const resp = await fetch('/api/prohibited-server-rejection', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ leak: 'PAGE_EGRESS', sentinel })
+    body: JSON.stringify({ leak: 'SERVER_REJECTION_TEST', sentinel })
   });
   return { status: resp.status };
+}
+
+export function testPageEvalAsync() {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      try {
+        eval('1 + 1');
+        resolve({ blocked: false });
+      } catch (err) {
+        resolve({ blocked: true, error: err.message });
+      }
+    }, 10);
+  });
 }
 
 window.createWorker = createWorker;
 window.sendWorkerMessage = sendWorkerMessage;
 window.inspectDeepStorage = inspectDeepStorage;
-window.triggerPageEgress = triggerPageEgress;
+window.runStorageScannerFalsification = runStorageScannerFalsification;
+window.triggerPageEgressPrevention = triggerPageEgressPrevention;
+window.triggerPageServerRejection = triggerPageServerRejection;
+window.testPageEvalAsync = testPageEvalAsync;

@@ -1,5 +1,19 @@
 {
   "executed_at": "2026-10-20T00:00:00.000Z",
+  "commit_sha": "652f38734fc45bd426186bec125fcf31d60c5c06",
+  "scanner_falsification": {
+    "scanner_falsification_verdict": "SCANNER_FALSIFICATION_PASS",
+    "planted_count": 5,
+    "detected_count": 5,
+    "detected_by_type": {
+      "key": true,
+      "string": true,
+      "nested_object": true,
+      "typed_array": true,
+      "blob": true
+    },
+    "cleanup_verified": true
+  },
   "sentinels_monitored": [
     "SYNTH_PT_7a9f8c12_SEC_TRACE_01",
     "SYNTH_PT_b3e4d567_SEC_TRACE_02",
@@ -195,5 +209,8 @@
     }
   },
   "total_residue_detected": 0,
-  "verdict": "PASS"
+  "scanner_falsification_verdict": "SCANNER_FALSIFICATION_PASS",
+  "patient_sentinel_residue_verdict": "PATIENT_SENTINEL_RESIDUE_NOT_OBSERVED",
+  "overall_storage_verdict": "PASS",
+  "disclaimer": "Inspection certifies absence of patient sentinel residue in browser storage APIs (IndexedDB, LocalStorage, SessionStorage, CacheStorage). Does not certify forensic erasure of OS swap or process RAM."
 }
