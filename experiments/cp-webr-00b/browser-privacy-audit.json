@@ -1,13 +1,64 @@
 {
-  "tested_at": "2026-10-19T09:24:43.773Z",
-  "browser": "Chromium (Brave 154.0.8037.93)",
-  "negative_control_caught": true,
-  "offline_execution_succeeded": true,
-  "analysis_phase_requests_count": 1,
-  "sentinel_leaked": false,
-  "storage_persistence": {
-    "localStorage_keys": [],
-    "sessionStorage_keys": []
+  "audit_version": "R2",
+  "evaluated_at": "2026-10-19T17:03:59.796Z",
+  "browser": "Chromium (Brave Browser 154.0.8037.93)",
+  "os": "macOS Darwin arm64",
+  "cross_origin_isolated": true,
+  "negative_controls": {
+    "page_level_interception": {
+      "sentinel": "SENTINEL_PAGE_EGRESS_SECRET_KEY_987654321",
+      "detected_and_blocked": true
+    },
+    "worker_level_interception": {
+      "sentinel": "SENTINEL_WORKER_EGRESS_SECRET_KEY_123456789",
+      "detected_and_blocked": true
+    }
   },
-  "verdict": "PASS"
+  "offline_execution": {
+    "network_disabled": true,
+    "matching_and_cobalt_succeeded": true,
+    "patient_sentinel_transmitted": false,
+    "patient_sentinel_leaked_in_console": false
+  },
+  "persistent_storage_audit": {
+    "localStorage": {
+      "count": 0,
+      "keys": []
+    },
+    "sessionStorage": {
+      "count": 0,
+      "keys": []
+    },
+    "indexedDB": {
+      "count": 1,
+      "databases": [
+        {
+          "name": "emscripten_filesystem",
+          "version": 1,
+          "stores": [
+            "FILES"
+          ]
+        }
+      ]
+    },
+    "caches": {
+      "count": 0,
+      "keys": []
+    },
+    "serviceWorker": {
+      "count": 0,
+      "registrations": []
+    }
+  },
+  "cancellation_latencies": {
+    "graceful_interrupt_ms": 1.7349999998696148,
+    "graceful_recovery_confirmed": true,
+    "hard_termination_latency_ms": 0.10499999998137355,
+    "fresh_worker_recovery_latency_ms": 10.660000000149012,
+    "total_cancellation_latency_ms": 10.854999999981374,
+    "demonstrated_recovery": true
+  },
+  "total_network_requests": 217,
+  "total_bytes_transferred": 53939167,
+  "verdict": "PRIVACY_NO_EGRESS_PASS"
 }

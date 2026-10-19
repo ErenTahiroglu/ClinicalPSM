@@ -1,9 +1,53 @@
 {
-  "evaluated_at": "2026-10-19T09:05:38.460Z",
+  "evaluated_at": "2026-10-19T17:04:45.332Z",
   "total_fixtures": 25,
   "semantic_pass_count": 25,
   "numeric_pass_count": 24,
   "all_fixtures_pass": false,
+  "classifications": {
+    "successful_pair_equivalence_count": 19,
+    "successful_pair_equivalence_fixtures": [
+      "fix_01_well_conditioned",
+      "fix_02_mixed_types",
+      "fix_03_ref_level_change",
+      "fix_04_input_row_order",
+      "fix_05_exact_distance_ties",
+      "fix_06_no_caliper_nearest",
+      "fix_07_prob_scale_caliper",
+      "fix_08_linear_logit_caliper",
+      "fix_09_standardized_caliper",
+      "fix_10_whole_vs_pooled_sd",
+      "fix_11_pre_match_discard",
+      "fix_12_caliper_unmatched",
+      "fix_13_more_treated_than_control",
+      "fix_14_more_controls_than_treated",
+      "fix_15_quasi_separation",
+      "fix_20_malformed_category",
+      "fix_21_extreme_propensities",
+      "fix_22_small_sample",
+      "fix_23_no_eligible_match"
+    ],
+    "expected_reference_errors_count": 4,
+    "expected_reference_errors_fixtures": [
+      "fix_17_rank_deficient",
+      "fix_18_zero_variance",
+      "fix_19_missing_values",
+      "fix_19b_missing_treatment"
+    ],
+    "product_policy_rejects_count": 1,
+    "product_policy_rejects_fixtures": [
+      "fix_24_duplicate_ids"
+    ],
+    "numerical_tolerance_failures_count": 1,
+    "numerical_tolerance_failures_fixtures": [
+      "fix_16_complete_separation"
+    ],
+    "unsafe_propensity_models_excluded_from_publication_count": 1,
+    "unsafe_propensity_models_fixtures": [
+      "fix_16_complete_separation"
+    ],
+    "policy_fail_closed_contract_note": "Complete separation (fix_16) produces non-identifiable GLM coefficients (se > 39,000) that fail numerical tolerance. In accordance with the statistical contract, this model is classified as REJECT_FOR_PUBLICATION rather than publication-ready. Numeric parity is 24/25, Semantic and Policy Parity is 25/25."
+  },
   "tolerances_used": {
     "coefficients": 0.000001,
     "distance": 1e-7,

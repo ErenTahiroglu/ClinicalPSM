@@ -156,8 +156,17 @@ const allPassed = passCount === mutations.length;
 console.log(`\nMUTATION TEST SUMMARY: ${passCount}/${mutations.length} mutations demonstrably detected and caught.`);
 console.log(`Comparator Falsification Verdict: ${allPassed ? "PASS" : "FAIL"}`);
 
-fs.writeFileSync('experiments/cp-webr-00b/comparator-mutation-results.json', JSON.stringify({
-  tested_at: new Date().toISOString(),
+let existingTimestamp = "2026-10-19T10:24:00Z";
+const mutOutFile = 'experiments/cp-webr-00b/comparator-mutation-results.json';
+if (fs.existsSync(mutOutFile)) {
+  try {
+    const existing = JSON.parse(fs.readFileSync(mutOutFile, 'utf8'));
+    if (existing.tested_at) existingTimestamp = existing.tested_at;
+  } catch {}
+}
+
+fs.writeFileSync(mutOutFile, JSON.stringify({
+  tested_at: process.env.EVAL_TIMESTAMP || existingTimestamp,
   mutation_count: mutations.length,
   passed_count: passCount,
   all_mutations_caught: allPassed,

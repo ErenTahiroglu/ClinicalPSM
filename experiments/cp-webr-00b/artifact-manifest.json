@@ -1,7 +1,7 @@
 {
-  "experiment_id": "CP-WEBR-00B-R1",
-  "generated_at": "2026-10-19T09:33:12.246Z",
-  "file_count": 80,
+  "experiment_id": "CP-WEBR-00B-R2",
+  "generated_at": "2026-10-19T10:24:00Z",
+  "file_count": 85,
   "artifacts": [
     {
       "file": "CP-WEBR-00B-R1-RED-TEAM-REMEDIATION.md",
@@ -9,9 +9,14 @@
       "sha256": "fa3fe1bf9c515942d274ab107f0889bdbf9b87d99e0a856e6f333a2bab44071b"
     },
     {
+      "file": "CP-WEBR-00B-R2-RED-TEAM-REPORT.md",
+      "bytes": 16005,
+      "sha256": "1331e870b8c6773ba589567cd6da8e775fe19e26298129c35e87fbd0395eed38"
+    },
+    {
       "file": "CP-WEBR-00B-RESULT.md",
-      "bytes": 6186,
-      "sha256": "67cd352d222f6913d62f3c5cd46e234b15b13643a6dbb1180a52ebbdfe5e64a6"
+      "bytes": 7204,
+      "sha256": "dacbbe56ae57a110e2b650c37d679763f8284db608d9fe4659fb579be3cfe4ba"
     },
     {
       "file": "benchmark-results.csv",
@@ -20,43 +25,53 @@
     },
     {
       "file": "browser-benchmarks.csv",
-      "bytes": 643,
-      "sha256": "40d747d59703e06e54a07dfa3c7a6cb065ad0419b7074f662462d13d77c8095d"
+      "bytes": 788,
+      "sha256": "f6bc66f0a4e43316430d0a20d5603070db6bcc72bac37647c7e8c4a5f3bd24d1"
+    },
+    {
+      "file": "browser-harness/harness.js",
+      "bytes": 6613,
+      "sha256": "a0659177d90f33613ef3d5597e181ad3e2af4541ba51a4c9a9fe8037c65677c2"
     },
     {
       "file": "browser-harness/index.html",
-      "bytes": 6619,
-      "sha256": "9d0bc57f1c0d5920e3221898b3269a57d7304c303ab87cf377df3c4227001668"
+      "bytes": 360,
+      "sha256": "fa6860488b71b159f568ec7372579c00092929488f70341e15f96302b4e62814"
     },
     {
       "file": "browser-harness/server.mjs",
-      "bytes": 3219,
-      "sha256": "deb24a30a190498717814e203e2e81bb2e4aebd540c18facd9c54373c7e25d9a"
+      "bytes": 3821,
+      "sha256": "015c104d411db2d7162f4b133d3cdcac885aa3815ec9726b497c391fbe9a034b"
+    },
+    {
+      "file": "browser-harness/style.css",
+      "bytes": 342,
+      "sha256": "fb14d63a8508900a4189adc5d567f11d1d4781b0f943bb4bcadc2b037cea738f"
     },
     {
       "file": "browser-harness/worker.js",
-      "bytes": 4577,
-      "sha256": "96a2ed7e8221f4d8493d73109d2f1b9d4b5ed5f2ed0b8840776ec7bb441b2a67"
+      "bytes": 7764,
+      "sha256": "5b0925ca7911185f0ea2aa48ef19a6afb179ce7e5960542d34c3540f48a5275b"
     },
     {
       "file": "browser-privacy-audit.json",
-      "bytes": 345,
-      "sha256": "801e3de934258be232463bfa8acf36043eb2700533fd0932839aed5b012b6725"
+      "bytes": 1650,
+      "sha256": "4773622b755255ea5ed793126e231c14fdd3dbce3b037578982d938de531134a"
     },
     {
       "file": "browser-qualification-matrix.json",
-      "bytes": 884,
-      "sha256": "ee437433ab4e3e7b6bce18cdf95da3b72f96e9fc13a9a75e253d1737bd0ee683"
+      "bytes": 1541,
+      "sha256": "a9df8366168cd9b048289c4fd06ef2ed87b00bc979ed0ba90137b852e414beea"
     },
     {
       "file": "cloudflare-asset-audit.json",
       "bytes": 55661,
-      "sha256": "b64d765389b5d1bc214ccd51270d8356d37361fc03f880e3e9604219aade38a0"
+      "sha256": "d62b3563dc85be379d9302337b18b195e4bcba1af50705ca213bcd59880a6de4"
     },
     {
       "file": "comparator-mutation-results.json",
       "bytes": 3744,
-      "sha256": "bdb671e5ccf33c7a82bed43779c11a8f544d36d9d99aa280d13011f4b692715d"
+      "sha256": "d4c083bda9b049df54679e37a6046208f813d9263fc76e5e92525261d31d52c1"
     },
     {
       "file": "dependency-lock.json",
@@ -335,13 +350,13 @@
     },
     {
       "file": "harness/audit_cloudflare_assets.mjs",
-      "bytes": 4433,
-      "sha256": "4932f07e30256601094e9705ad89e731db81a96bc660cb60189b64b39aeacbf0"
+      "bytes": 4882,
+      "sha256": "d60747b056798679cd9503a8c187e28b623f19fa6e46e9283f023f6f86ba532b"
     },
     {
       "file": "harness/compare_parity.mjs",
-      "bytes": 12824,
-      "sha256": "159a664c75247fba5d365b2750100ac6974f6a0293aa6564ca9629813c35d3ac"
+      "bytes": 15355,
+      "sha256": "72b98af6cb561df046720dae37845d09a45e9be495a7d0f47b846a6f98712016"
     },
     {
       "file": "harness/download_local_repo.mjs",
@@ -350,23 +365,33 @@
     },
     {
       "file": "harness/run_benchmarks.mjs",
-      "bytes": 4183,
-      "sha256": "b0bce49c17f139c17d134a2a966368f592d6853e96370d67a2f5418e680ff320"
+      "bytes": 4521,
+      "sha256": "02845ed67f65e8a7fb3f8e35632a309067018582058224e6c46773922acaa0e0"
     },
     {
       "file": "harness/run_browser_qualification.mjs",
-      "bytes": 11724,
-      "sha256": "dec32f9753e5e2a6fd5132f27782488b37294fc688b32f5ec8dc69828041b0a1"
+      "bytes": 18730,
+      "sha256": "0ece9a1e6c5d4e86f2777994a17a96dbdd4a39f3f8258b74832d49a2cac0457e"
     },
     {
       "file": "harness/run_privacy_audit.mjs",
-      "bytes": 6885,
-      "sha256": "b6044392a2597d29120e004ad19047022a143cd7f81fc6532cca5b2e1dc078a2"
+      "bytes": 7223,
+      "sha256": "ba8e79264794969284bc6d2cdd1c00795039c8f46d57a500d203c307b0c2570d"
+    },
+    {
+      "file": "harness/setup_experiment.mjs",
+      "bytes": 4054,
+      "sha256": "9cdefe7f1d92b177ed2993368b94269d3c705fd6a298c7a3ea739412c06eb983"
     },
     {
       "file": "harness/test_comparator_mutations.mjs",
-      "bytes": 5283,
-      "sha256": "853b430021103757c2d0bdc86782317e34f8f0130d31668b1e6aa8f0881e309d"
+      "bytes": 5580,
+      "sha256": "619510ec325c075c29ab12302abfa692e9123e42501b6389cf6e3bf1db6b986a"
+    },
+    {
+      "file": "harness/verify_manifest.mjs",
+      "bytes": 1712,
+      "sha256": "f7824c239d1051be0aaa487ae051bab98e2a7a20f95f5045693511d2d9c8f8e2"
     },
     {
       "file": "licenses-and-sbom.md",
@@ -385,8 +410,8 @@
     },
     {
       "file": "parity-results.json",
-      "bytes": 12022,
-      "sha256": "3fa60e2a3151ca59fa5df968f4697b407c988b3deed954dd4f010cb293b8ae78"
+      "bytes": 13778,
+      "sha256": "dfbf570a78608206ff43dd32d4906714a3def55a67d70002a05dbd2e980bc028"
     },
     {
       "file": "privacy-audit.json",
@@ -395,8 +420,8 @@
     },
     {
       "file": "webr-results/run_webr.mjs",
-      "bytes": 9088,
-      "sha256": "782515b2009b6b88edd496cfa3b62bc0fea37f717e27e9ee23a088ca809dd9ec"
+      "bytes": 9352,
+      "sha256": "b3f97c88214648db63a4cda72b959e4ece6d3b848f2b002dc4795983cbcb8551"
     },
     {
       "file": "webr-results/webr_results.json",

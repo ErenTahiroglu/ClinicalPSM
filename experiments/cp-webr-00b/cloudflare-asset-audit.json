@@ -1,5 +1,5 @@
 {
-  "audited_at": "2026-10-19T09:27:06.823Z",
+  "audited_at": "2026-10-19T17:04:45.502Z",
   "target_tier": "Cloudflare Workers Static Assets (Free Tier)",
   "limits": {
     "max_single_asset_bytes": 26214400,

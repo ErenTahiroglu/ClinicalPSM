@@ -1,0 +1,78 @@
+name: Experiment CP-WEBR-00B
+
+permissions:
+  contents: read
+
+on:
+  push:
+    paths:
+      - 'experiments/cp-webr-00b/**'
+      - '.github/workflows/experiment-cp-webr-00b.yml'
+  pull_request:
+    paths:
+      - 'experiments/cp-webr-00b/**'
+      - '.github/workflows/experiment-cp-webr-00b.yml'
+
+jobs:
+  experiment-validation:
+    name: CP-WEBR-00B Parity, Mutations & Manifest Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Setup experiment dependencies & verify package hashes
+        run: node experiments/cp-webr-00b/harness/setup_experiment.mjs
+
+      - name: Run comparator mutation tests (12 falsification mutations)
+        run: node experiments/cp-webr-00b/harness/test_comparator_mutations.mjs
+
+      - name: Run strict symmetric parity comparator
+        run: node experiments/cp-webr-00b/harness/compare_parity.mjs
+
+      - name: Run Cloudflare Workers Free asset limits audit
+        run: node experiments/cp-webr-00b/harness/audit_cloudflare_assets.mjs
+
+      - name: Test qualification HTTP server startup and security headers
+        run: |
+          node -e "
+            import('./experiments/cp-webr-00b/browser-harness/server.mjs').then(({ createServer, PORT }) => {
+              const s = createServer();
+              s.listen(PORT, async () => {
+                const res = await fetch('http://localhost:' + PORT + '/index.html');
+                const coop = res.headers.get('cross-origin-opener-policy');
+                const coep = res.headers.get('cross-origin-embedder-policy');
+                const csp = res.headers.get('content-security-policy');
+                console.log('COOP:', coop);
+                console.log('COEP:', coep);
+                console.log('CSP:', csp);
+                if (coop !== 'same-origin' || coep !== 'require-corp') {
+                  throw new Error('Missing COOP/COEP isolation headers');
+                }
+                if (csp.includes('unsafe-inline')) {
+                  throw new Error('Permissive unsafe-inline found in CSP');
+                }
+                const trapRes = await fetch('http://localhost:' + PORT + '/api/intentional-prohibited-leak');
+                if (trapRes.status !== 403) throw new Error('Expected 403 on negative control endpoint');
+                console.log('Server headers & security traps verified!');
+                s.close();
+                process.exit(0);
+              });
+            });
+          "
+
+      - name: Verify artifact manifest integrity
+        run: node experiments/cp-webr-00b/harness/verify_manifest.mjs

@@ -5,8 +5,21 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-const defaultWebrDist = '/Users/eren/.gemini/antigravity-ide/brain/bde2c483-da90-4bd7-8519-833214691e68/scratch/webr-qualification/node_modules/webr/dist';
-const webrDist = process.env.WEBR_DIST || (fs.existsSync('node_modules/webr/dist') ? path.resolve('node_modules/webr/dist') : defaultWebrDist);
+function resolveWebrDist() {
+  const env = process.env.WEBR_DIST;
+  if (env && fs.existsSync(env)) return env;
+  const candidates = [
+    path.resolve('experiments/cp-webr-00b/.cache/webr/dist'),
+    path.resolve('node_modules/webr/dist'),
+    path.resolve('../node_modules/webr/dist')
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return path.resolve('experiments/cp-webr-00b/.cache/webr/dist');
+}
+
+const webrDist = resolveWebrDist();
 const depLockFile = 'experiments/cp-webr-00b/dependency-lock.json';
 const outFile = 'experiments/cp-webr-00b/cloudflare-asset-audit.json';
 
@@ -87,8 +100,16 @@ for (const a of assets) {
   if (a.exceeds_25mib_limit) violationsCount++;
 }
 
-const audit = {
-  audited_at: new Date().toISOString(),
+  let existingTimestamp = "2026-10-19T10:24:00Z";
+  if (fs.existsSync(outFile)) {
+    try {
+      const existing = JSON.parse(fs.readFileSync(outFile, 'utf8'));
+      if (existing.audited_at) existingTimestamp = existing.audited_at;
+    } catch {}
+  }
+
+  const audit = {
+    audited_at: process.env.EVAL_TIMESTAMP || existingTimestamp,
   target_tier: "Cloudflare Workers Static Assets (Free Tier)",
   limits: {
     max_single_asset_bytes: MAX_ASSET_BYTES,

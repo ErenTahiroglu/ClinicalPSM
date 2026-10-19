@@ -6,7 +6,21 @@ import path from 'node:path';
 import http from 'node:http';
 import https from 'node:https';
 
-const webrPkgPath = '/Users/eren/.gemini/antigravity-ide/brain/bde2c483-da90-4bd7-8519-833214691e68/scratch/webr-qualification/node_modules/webr';
+function resolveWebrPath() {
+  const env = process.env.WEBR_NODE_MODULES || process.env.WEBR_PATH;
+  if (env && fs.existsSync(env)) return env;
+  const candidates = [
+    path.resolve('experiments/cp-webr-00b/.cache/webr'),
+    path.resolve('node_modules/webr'),
+    path.resolve('../node_modules/webr')
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return path.resolve('experiments/cp-webr-00b/.cache/webr');
+}
+
+const webrPkgPath = resolveWebrPath();
 const { WebR } = await import(path.join(webrPkgPath, 'dist/webr.mjs'));
 
 const outFile = 'experiments/cp-webr-00b/privacy-audit.json';

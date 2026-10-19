@@ -1,27 +1,46 @@
 {
-  "qualified_at": "2026-10-19T09:24:43.774Z",
-  "browsers": {
-    "chromium": {
-      "engine": "Chromium (Brave Browser)",
+  "evaluated_at": "2026-10-19T17:03:59.797Z",
+  "matrix": [
+    {
+      "engine": "Chromium",
+      "browser": "Brave Browser",
       "version": "154.0.8037.93",
-      "os": "macOS (Darwin arm64)",
-      "cross_origin_isolated": true,
-      "webr_runtime": "R version 4.6.0 (2026-04-24)",
-      "matchit_execution": "PASS",
-      "cobalt_execution": "PASS",
-      "cancellation_supported": true,
-      "multi_tab_supported": true,
-      "offline_execution_supported": true,
-      "zero_egress_passed": true,
-      "status": "QUALIFIED"
+      "os": "macOS Darwin arm64",
+      "status": "QUALIFIED",
+      "execution_context": "DedicatedWorker (/worker.js)",
+      "cold_start_nav_ms": 535.17575,
+      "worker_init_ms": 2642.4950000001118,
+      "pkg_mount_ms": 2053.7700000000186,
+      "multi_tab_4_concurrent": "PASS",
+      "offline_zero_egress": "PASS",
+      "graceful_interrupt_ms": 1.7349999998696148,
+      "hard_worker_termination_ms": 0.10499999998137355,
+      "r_heap_memory_mb": 32.800000000000004,
+      "wasm_linear_memory": "UNMEASURED (Private to WebR worker)"
     },
-    "firefox": {
+    {
+      "engine": "Firefox (Gecko)",
+      "browser": "Firefox",
+      "version": "UNMEASURED",
+      "os": "macOS Darwin arm64",
       "status": "UNMEASURED",
-      "note": "Headless Firefox binary download skipped to prevent large download; desktop engine qualification pending"
+      "reason": "Firefox binary not installed in environment cache; cross-browser support strictly unmeasured"
     },
-    "webkit": {
+    {
+      "engine": "WebKit (Safari engine)",
+      "browser": "WebKit",
+      "version": "UNMEASURED",
+      "os": "macOS Darwin arm64",
       "status": "UNMEASURED",
-      "note": "WebKit binary download skipped; desktop macOS Safari unmeasured in headless automated harness"
+      "reason": "WebKit binary not installed in environment cache; cross-browser support strictly unmeasured"
+    },
+    {
+      "engine": "Native macOS Safari",
+      "browser": "Safari",
+      "version": "UNMEASURED",
+      "os": "macOS Darwin arm64",
+      "status": "UNMEASURED",
+      "reason": "Safari driver automation unmeasured; distinct browser target"
     }
-  }
+  ]
 }
