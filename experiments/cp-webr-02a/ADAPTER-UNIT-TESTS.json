@@ -1,7 +1,7 @@
 {
   "suite": "CP-WEBR-02A R1.1 Adapter Unit & Adversarial Suite",
-  "executed_at": "2026-10-20T17:39:10.272Z",
-  "tests_passed": 37,
+  "executed_at": "2026-10-20T18:20:52.089Z",
+  "tests_passed": 40,
   "tests_failed": 0,
   "cases": [
     {
@@ -176,6 +176,21 @@
     },
     {
       "name": "State transitions to RECOVERABLE_ERROR following hard termination",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Unrelated R error during interrupt window is classified as WORKER_ERROR, NOT graceful interrupt",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Failing job promise rejected with original error",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Stale or unknown worker message safely ignored",
       "status": "PASS",
       "details": ""
     },

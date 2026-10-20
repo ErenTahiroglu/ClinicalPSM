@@ -232,11 +232,13 @@ async function main() {
     return await window.Harness.runWorkerLifecycleSuite();
   });
 
-  console.log('Lifecycle initialization:', lifecycleResults.initialization.pass, `(${lifecycleResults.initialization.latencyMs.toFixed(1)} ms)`);
-  console.log('Lifecycle repeatedAnalyses:', lifecycleResults.repeatedAnalyses.pass);
-  console.log('Lifecycle singleJobConcurrency:', lifecycleResults.singleJobConcurrency.pass);
-  console.log('Lifecycle gracefulInterruption:', lifecycleResults.gracefulInterruption.pass);
-  console.log('Lifecycle hardTerminationAndRecovery:', lifecycleResults.hardTerminationAndRecovery.pass);
+  console.log('Lifecycle initialization:', lifecycleResults.initialization?.pass, `(${lifecycleResults.initialization?.latencyMs?.toFixed(1)} ms)`);
+  console.log('Lifecycle repeatedAnalyses:', lifecycleResults.repeatedAnalyses?.pass);
+  console.log('Lifecycle singleJobConcurrency:', lifecycleResults.singleJobConcurrency?.pass);
+  console.log('Lifecycle gracefulInterruption:', lifecycleResults.gracefulInterruption?.pass);
+  console.log('Lifecycle hardTerminationFallback:', lifecycleResults.hardTerminationFallback?.pass);
+  console.log('Lifecycle recoveryAndFreshAnalysis:', lifecycleResults.recoveryAndFreshAnalysis?.pass);
+  console.log('Lifecycle hardTerminationAndRecovery:', lifecycleResults.hardTerminationAndRecovery?.pass);
   console.log('Lifecycle overallPass:', lifecycleResults.overallPass);
 
   const workerLifecycleReport = {
@@ -449,49 +451,144 @@ async function main() {
   const unitData = JSON.parse(fs.readFileSync(unitPath, 'utf8'));
   const currentTemplateSha256 = crypto.createHash('sha256').update(fs.readFileSync(templatePath, 'utf8')).digest('hex');
 
-  function deriveScientificGates(pData, uData, mData, currentCommit, currentTmpl) {
+  function deriveScientificGates(pData, uData, mData, currentCommit, currentTmpl, matrixData, mutationAudit) {
     if (!pData || !uData || !mData) {
       throw new Error('Null evidence provided to deriveScientificGates');
     }
 
+    const FROZEN_MANIFEST_IDS = [
+      'fix_01_well_conditioned', 'fix_02_mixed_types', 'fix_03_ref_level_change',
+      'fix_04_input_row_order', 'fix_05_exact_distance_ties', 'fix_06_no_caliper_nearest',
+      'fix_07_prob_scale_caliper', 'fix_08_linear_logit_caliper', 'fix_09_standardized_caliper',
+      'fix_10_whole_vs_pooled_sd', 'fix_11_pre_match_discard', 'fix_12_caliper_unmatched',
+      'fix_13_more_treated_than_control', 'fix_14_more_controls_than_treated',
+      'fix_15_quasi_separation', 'fix_16_complete_separation', 'fix_17_rank_deficient',
+      'fix_18_zero_variance', 'fix_19_missing_values', 'fix_19b_missing_treatment',
+      'fix_20_malformed_category', 'fix_21_extreme_propensities', 'fix_22_small_sample',
+      'fix_23_no_eligible_match', 'fix_24_duplicate_ids'
+    ];
+
     const manifestIds = new Set(mData.fixtures.map(f => f.id));
     const testedMap = new Map(pData.fixtures_tested.map(f => [f.fixture_id, f]));
-    const allFixturesCovered = manifestIds.size === testedMap.size && [...manifestIds].every(id => testedMap.has(id));
-    const allFixturesPassed = pData.fixtures_tested.every(f => f.pass === true);
 
-    const unitPass = (uData.tests_passed === 37 && uData.tests_failed === 0);
+    // 1. Verify complete frozen manifest identity
+    const exactManifestMatch = FROZEN_MANIFEST_IDS.length === manifestIds.size &&
+      FROZEN_MANIFEST_IDS.every(id => manifestIds.has(id)) &&
+      FROZEN_MANIFEST_IDS.every(id => testedMap.has(id)) &&
+      testedMap.size === FROZEN_MANIFEST_IDS.length;
+
+    // 2. Unit tests passing
+    const unitPass = (uData.tests_passed >= 40 && uData.tests_failed === 0);
     const templateMatch = (pData.r_template_sha256 === currentTmpl);
 
-    const findFixture = (prefix) => pData.fixtures_tested.find(f => f.fixture_id === prefix || f.fixture_id.startsWith(prefix + '_'));
+    // Helper to find tested fixture
+    const findFixture = (id) => testedMap.get(id);
 
-    const singleEngine = templateMatch ? 'PASS' : 'FAIL';
-    const structuredBinding = (unitPass &&
-      findFixture('fix_02')?.pass &&
-      findFixture('fix_03')?.pass &&
-      findFixture('fix_20')?.pass) ? 'PASS' : 'FAIL';
+    // Every fixture must pass AND have non-empty executed assertions
+    const allFixturesPassed = exactManifestMatch && pData.fixtures_tested.every(f =>
+      f.pass === true && Array.isArray(f.assertions) && f.assertions.length > 0
+    );
 
-    const missingData = (unitPass &&
-      findFixture('fix_19')?.pass &&
-      findFixture('fix_19b')?.pass &&
-      findFixture('fix_20')?.pass) ? 'PASS' : 'FAIL';
+    // Check matrix data if provided
+    const matrixPass = !matrixData || (
+      matrixData.total_fixtures === 25 &&
+      Object.keys(matrixData.fixtures || {}).length === 25 &&
+      Object.values(matrixData.fixtures).every(f => f.pass === true && Array.isArray(f.assertions) && f.assertions.length > 0)
+    );
 
-    const canonicalIntegrity = (unitPass &&
-      allFixturesPassed &&
-      pData.classification_counts.SUCCESSFUL_ANALYSES === 18 &&
-      pData.verdict === 'PASS') ? 'PASS' : 'FAIL';
+    // Check mutations
+    const mutationsChecked = Array.isArray(pData.mutation_tests) &&
+      pData.mutation_tests.length === 7 &&
+      pData.mutation_tests.every(m => m.caught === true);
 
-    const requiredCaliperFixtures = ['fix_07', 'fix_08', 'fix_09', 'fix_10', 'fix_11', 'fix_12', 'fix_23'];
-    const pairCaliper = (unitPass && requiredCaliperFixtures.every(id => findFixture(id)?.pass)) ? 'PASS' : 'FAIL';
+    const mutationAuditPass = !mutationAudit || (
+      mutationAudit.total_mutations === 7 &&
+      Array.isArray(mutationAudit.mutations) &&
+      mutationAudit.mutations.length === 7 &&
+      mutationAudit.mutations.every(m => m.pass === true)
+    );
 
-    const cobaltBalance = (allFixturesPassed && pData.classification_counts.SUCCESSFUL_ANALYSES === 18) ? 'PASS' : 'FAIL';
+    // GATE 1: SINGLE_SCIENTIFIC_ENGINE
+    const singleEngine = (templateMatch && unitPass) ? 'PASS' : 'FAIL';
 
-    const fullFixture = (allFixturesCovered && allFixturesPassed && pData.verdict === 'PASS') ? 'PASS' : 'FAIL';
+    // GATE 2: STRUCTURED_BINDING_AND_FACTOR_SEMANTICS
+    const fix02 = findFixture('fix_02_mixed_types');
+    const fix03 = findFixture('fix_03_ref_level_change');
+    const fix20 = findFixture('fix_20_malformed_category');
+    const structuredBindingHasAssertions =
+      fix02?.assertions?.some(a => a.includes("reference level 'low'")) &&
+      fix02?.assertions?.some(a => a.includes('cov_02med') && a.includes('cov_02high')) &&
+      fix03?.assertions?.some(a => a.includes("reference level 'med'")) &&
+      fix03?.assertions?.some(a => a.includes('contrast transformation theorem')) &&
+      fix20?.assertions?.some(a => a.toLowerCase().includes('category'));
+    const structuredBinding = (unitPass && fix02?.pass && fix03?.pass && fix20?.pass && structuredBindingHasAssertions && mutationsChecked) ? 'PASS' : 'FAIL';
 
-    const exactPairWeight = (pData.mutation_tests?.length === 7 &&
-      pData.mutation_tests.every(m => m.caught === true) &&
-      findFixture('fix_01')?.pass) ? 'PASS' : 'FAIL';
+    // GATE 3: MISSING_DATA_FAIL_CLOSED
+    const fix19 = findFixture('fix_19_missing_values');
+    const fix19b = findFixture('fix_19b_missing_treatment');
+    const fix24 = findFixture('fix_24_duplicate_ids');
+    const missingDataHasAssertions =
+      fix19?.assertions?.some(a => a.includes('MISSING_COVARIATE') || a.toLowerCase().includes('missing covariate')) &&
+      fix19b?.assertions?.some(a => a.includes('MISSING_TREATMENT') || a.toLowerCase().includes('missing treatment')) &&
+      fix24?.assertions?.some(a => a.includes('duplicate unit ID') || a.includes('DUPLICATE_UNIT_ID'));
+    const missingData = (unitPass && fix19?.pass && fix19b?.pass && fix20?.pass && fix24?.pass && missingDataHasAssertions) ? 'PASS' : 'FAIL';
 
-    const ciEvidence = (templateMatch && allFixturesCovered && pData.commit_sha === currentCommit) ? 'PASS' : 'FAIL';
+    // GATE 4: CANONICAL_OUTPUT_INTEGRITY
+    const successfulFixtures = pData.fixtures_tested.filter(f => f.classification === 'SUCCESSFUL_ANALYSES');
+    const allSuccessfulHaveAccounting = successfulFixtures.every(f =>
+      f.assertions.some(a => a.includes('Sample accounting invariant verified')) &&
+      f.details?.pairDistancesValid === true
+    );
+    const canonicalIntegrity = (unitPass && allFixturesPassed && allSuccessfulHaveAccounting && pData.verdict === 'PASS') ? 'PASS' : 'FAIL';
+
+    // GATE 5: PAIR_AND_CALIPER_SEMANTICS
+    const requiredCaliperFixtures = [
+      'fix_07_prob_scale_caliper', 'fix_08_linear_logit_caliper', 'fix_09_standardized_caliper',
+      'fix_10_whole_vs_pooled_sd', 'fix_11_pre_match_discard', 'fix_12_caliper_unmatched',
+      'fix_23_no_eligible_match'
+    ];
+    const caliperAssertionsValid = requiredCaliperFixtures.every(id => {
+      const f = findFixture(id);
+      return f?.pass && f.assertions && f.assertions.length > 0;
+    }) && findFixture('fix_09_standardized_caliper')?.assertions?.some(a =>
+      a.toLowerCase().includes('standardized caliper')
+    );
+    const pairCaliper = (unitPass && caliperAssertionsValid && mutationsChecked) ? 'PASS' : 'FAIL';
+
+    // GATE 6: COBALT_BALANCE_PARITY
+    // Derived from executed numerical cobalt balance assertions, not arbitrary counts
+    const fix01 = findFixture('fix_01_well_conditioned');
+    const cobaltAssertionVerified = fix01?.assertions?.some(a =>
+      a.includes('Cobalt balance diagnostics verified: finite SMDs')
+    );
+    const cobaltBalanceMutCaught = pData.mutation_tests?.find(m => m.mutation_id === 'MUT_04_BALANCE_SMD')?.caught === true;
+    const cobaltBalance = (allFixturesPassed && cobaltAssertionVerified && cobaltBalanceMutCaught) ? 'PASS' : 'FAIL';
+
+    // GATE 7: FULL_FIXTURE_QUALIFICATION
+    // Requires exact manifest match, every fixture passing with specific non-empty assertions, and matching accounting
+    const fullFixture = (exactManifestMatch && allFixturesPassed && matrixPass && pData.verdict === 'PASS') ? 'PASS' : 'FAIL';
+
+    // GATE 8: EXACT_PAIR_AND_WEIGHT_PARITY
+    // Derived from complete keyed reference comparisons for fix_01 + mutation detections
+    const pairAssertionVerified = fix01?.assertions?.some(a => a.includes('exact bidirectional matched pair correspondence'));
+    const weightAssertionVerified = fix01?.assertions?.some(a => a.includes('keyed matching weights vector verified'));
+    const glmAssertionVerified = fix01?.assertions?.some(a => a.includes('Model coefficients match reference'));
+    const pairMutCaught = pData.mutation_tests?.find(m => m.mutation_id === 'MUT_01_PAIR_CONTROL_ID')?.caught === true;
+    const weightMutCaught = pData.mutation_tests?.find(m => m.mutation_id === 'MUT_02_UNIT_WEIGHT')?.caught === true;
+    const glmMutCaught = pData.mutation_tests?.find(m => m.mutation_id === 'MUT_03_GLM_COEFFICIENT')?.caught === true;
+    const exactPairWeight = (
+      pairAssertionVerified &&
+      weightAssertionVerified &&
+      glmAssertionVerified &&
+      pairMutCaught &&
+      weightMutCaught &&
+      glmMutCaught &&
+      fix01?.pass === true &&
+      mutationAuditPass
+    ) ? 'PASS' : 'FAIL';
+
+    // GATE 9: CI_EVIDENCE_PROVENANCE
+    const ciEvidence = (templateMatch && exactManifestMatch && pData.commit_sha === currentCommit) ? 'PASS' : 'FAIL';
 
     return {
       SINGLE_SCIENTIFIC_ENGINE: singleEngine,
@@ -506,26 +603,71 @@ async function main() {
     };
   }
 
-  // Run deliberate falsification checks
+  // Load auxiliary R1.2 audit artifacts
+  const matrixPath = path.resolve('experiments/cp-webr-02a/r1.2/FIXTURE-ASSERTION-MATRIX.json');
+  const mutationAuditPath = path.resolve('experiments/cp-webr-02a/r1.2/MUTATION-FALSIFICATION-AUDIT.json');
+  const matrixData = fs.existsSync(matrixPath) ? JSON.parse(fs.readFileSync(matrixPath, 'utf8')) : null;
+  const mutationAuditData = fs.existsSync(mutationAuditPath) ? JSON.parse(fs.readFileSync(mutationAuditPath, 'utf8')) : null;
+
+  // Run comprehensive semantic falsification tests
   console.log('Running gate falsification positive controls...');
+
+  // 1. Fixture pass flag corruption
   const mutatedParityFail = JSON.parse(JSON.stringify(parityData));
   mutatedParityFail.fixtures_tested[0].pass = false;
   mutatedParityFail.verdict = 'FAIL';
-  const falsifiedGates = deriveScientificGates(mutatedParityFail, unitData, manifest, commitSha, currentTemplateSha256);
-  if (falsifiedGates.FULL_FIXTURE_QUALIFICATION !== 'FAIL' || falsifiedGates.EXACT_PAIR_AND_WEIGHT_PARITY !== 'FAIL') {
+  const falsifiedGates1 = deriveScientificGates(mutatedParityFail, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData);
+  if (falsifiedGates1.FULL_FIXTURE_QUALIFICATION !== 'FAIL' || falsifiedGates1.EXACT_PAIR_AND_WEIGHT_PARITY !== 'FAIL') {
     throw new Error('FALSIFICATION_CHECK_FAILED: Gate evaluator accepted corrupted fixture pass state!');
   }
 
+  // 2. Template digest tampering
   const mutatedTemplateFail = JSON.parse(JSON.stringify(parityData));
   mutatedTemplateFail.r_template_sha256 = '0000000000000000000000000000000000000000000000000000000000000000';
-  const falsifiedTmplGates = deriveScientificGates(mutatedTemplateFail, unitData, manifest, commitSha, currentTemplateSha256);
-  if (falsifiedTmplGates.SINGLE_SCIENTIFIC_ENGINE !== 'FAIL' || falsifiedTmplGates.CI_EVIDENCE_PROVENANCE !== 'FAIL') {
+  const falsifiedGates2 = deriveScientificGates(mutatedTemplateFail, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData);
+  if (falsifiedGates2.SINGLE_SCIENTIFIC_ENGINE !== 'FAIL' || falsifiedGates2.CI_EVIDENCE_PROVENANCE !== 'FAIL') {
     throw new Error('FALSIFICATION_CHECK_FAILED: Gate evaluator accepted tampered template digest!');
   }
-  console.log('Falsification positive controls passed: tampering is caught deterministically.\n');
+
+  // 3. Cobalt balance assertion tampering (corrupting underlying cobalt proof)
+  const mutatedCobaltFail = JSON.parse(JSON.stringify(parityData));
+  const fix01Test = mutatedCobaltFail.fixtures_tested.find(f => f.fixture_id === 'fix_01_well_conditioned');
+  fix01Test.assertions = fix01Test.assertions.filter(a => !a.includes('Cobalt balance'));
+  const falsifiedGates3 = deriveScientificGates(mutatedCobaltFail, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData);
+  if (falsifiedGates3.COBALT_BALANCE_PARITY !== 'FAIL') {
+    throw new Error('FALSIFICATION_CHECK_FAILED: Gate evaluator accepted missing cobalt balance numerical verification!');
+  }
+
+  // 4. Keyed reference weights tampering (corrupting underlying weight proof)
+  const mutatedWeightFail = JSON.parse(JSON.stringify(parityData));
+  const fix01TestW = mutatedWeightFail.fixtures_tested.find(f => f.fixture_id === 'fix_01_well_conditioned');
+  fix01TestW.assertions = fix01TestW.assertions.filter(a => !a.includes('keyed matching weights'));
+  const falsifiedGates4 = deriveScientificGates(mutatedWeightFail, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData);
+  if (falsifiedGates4.EXACT_PAIR_AND_WEIGHT_PARITY !== 'FAIL') {
+    throw new Error('FALSIFICATION_CHECK_FAILED: Gate evaluator accepted missing keyed weights verification!');
+  }
+
+  // 5. Factor contrast theorem tampering
+  const mutatedFactorFail = JSON.parse(JSON.stringify(parityData));
+  const fix03Test = mutatedFactorFail.fixtures_tested.find(f => f.fixture_id === 'fix_03_ref_level_change');
+  fix03Test.assertions = fix03Test.assertions.filter(a => !a.includes('contrast transformation theorem'));
+  const falsifiedGates5 = deriveScientificGates(mutatedFactorFail, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData);
+  if (falsifiedGates5.STRUCTURED_BINDING_AND_FACTOR_SEMANTICS !== 'FAIL') {
+    throw new Error('FALSIFICATION_CHECK_FAILED: Gate evaluator accepted missing factor contrast theorem verification!');
+  }
+
+  // 6. Empty assertion array tampering (claiming pass without executed assertions)
+  const mutatedEmptyAssertionsFail = JSON.parse(JSON.stringify(parityData));
+  mutatedEmptyAssertionsFail.fixtures_tested[4].assertions = [];
+  const falsifiedGates6 = deriveScientificGates(mutatedEmptyAssertionsFail, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData);
+  if (falsifiedGates6.FULL_FIXTURE_QUALIFICATION !== 'FAIL') {
+    throw new Error('FALSIFICATION_CHECK_FAILED: Gate evaluator accepted fixture with empty assertions list!');
+  }
+
+  console.log('All 6 semantic falsification positive controls passed: tampering is caught deterministically.\n');
 
   // Derive genuine live gates
-  const scientificGates = deriveScientificGates(parityData, unitData, manifest, commitSha, currentTemplateSha256);
+  const scientificGates = deriveScientificGates(parityData, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData);
 
   const allScientificGatesPass = Object.values(scientificGates).every(v => v === 'PASS');
   const allBrowserSecurityGatesPass =
@@ -556,7 +698,7 @@ async function main() {
     },
     verdicts: {
       SINGLE_SCIENTIFIC_ENGINE: scientificGates.SINGLE_SCIENTIFIC_ENGINE,
-      BROWSER_PORTABLE_ADAPTER: (unitData.tests_passed === 37 && unitData.tests_failed === 0 && cspQualificationReport.matrix.profileC1_strict.pipelineSuccess) ? 'PASS' : 'FAIL',
+      BROWSER_PORTABLE_ADAPTER: (unitData.tests_passed >= 40 && unitData.tests_failed === 0 && cspQualificationReport.matrix.profileC1_strict.pipelineSuccess) ? 'PASS' : 'FAIL',
       STRUCTURED_BINDING_AND_FACTOR_SEMANTICS: scientificGates.STRUCTURED_BINDING_AND_FACTOR_SEMANTICS,
       MISSING_DATA_FAIL_CLOSED: scientificGates.MISSING_DATA_FAIL_CLOSED,
       CANONICAL_OUTPUT_INTEGRITY: scientificGates.CANONICAL_OUTPUT_INTEGRITY,

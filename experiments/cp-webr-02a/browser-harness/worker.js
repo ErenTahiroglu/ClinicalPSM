@@ -1,17 +1,16 @@
-// CP-WEBR-02A Dedicated Application Worker
-// Runs WebR 0.6.0 + MatchIt 4.8.1 + cobalt 5.0.0 inside DedicatedWorkerGlobalScope
-// Completely eliminates duplicate scientific algorithms: uses WebRStatisticalAdapter and /adapter/r_template.R
-// Conforms to R1.1 Requirements
+// Dedicated Worker for WebR Statistical Adapter
+// Loads authoritative R template from /adapter/r_template.R and initializes WebRStatisticalAdapter
 
 import { WebR } from '/webr/webr.js';
 import { WebRStatisticalAdapter } from '/adapter/webr_adapter.mjs';
 
-export const PINNED_TEMPLATE_SHA256 = '7989403c7d093031b93a9c971a6d4f055101bab83c0ec4417fc52e4dceee24a4';
-
-let webR = null;
 let adapter = null;
+let webR = null;
 let templateLoaded = false;
 let currentExecutionPromise = null;
+
+// Pinned cryptographic digest of the authoritative R template (CP-WEBR-02A R1.1/R1.2)
+const PINNED_TEMPLATE_SHA256 = '7989403c7d093031b93a9c971a6d4f055101bab83c0ec4417fc52e4dceee24a4';
 
 self.onmessage = async (event) => {
   const { type, id: msgId, payload, targetJobId } = event.data || {};
@@ -50,9 +49,11 @@ self.onmessage = async (event) => {
           type: 'INIT_COMPLETE',
           id: msgId,
           payload: {
+            success: true,
             initialized: true,
             templateLoaded: true,
             templateSha256,
+            adapterReady: true,
             webrVersion: '0.6.0',
             packages: ['MatchIt@4.8.1', 'cobalt@5.0.0']
           }
@@ -95,7 +96,7 @@ self.onmessage = async (event) => {
       }
 
       case 'RUN_LONG_WORKLOAD': {
-        // Runs an R computation with multiple bootstrap iterations to test genuine cancellation during execution
+        // Runs an R computation long enough (~1-2 seconds) to test genuine cancellation during active execution
         if (!webR) {
           throw new Error('WebR not initialized');
         }
@@ -107,11 +108,10 @@ self.onmessage = async (event) => {
 
         const longPromise = (async () => {
           try {
-            // An R loop that runs for ~1-2 seconds unless interrupted
             await webR.evalR(`
               local({
                 sum_val <- 0
-                for (i in 1:500000) {
+                for (i in 1:15000000) {
                   sum_val <- sum_val + sin(i) * cos(i)
                 }
                 sum_val
@@ -126,6 +126,68 @@ self.onmessage = async (event) => {
         currentExecutionPromise = longPromise;
         const res = await longPromise;
 
+        self.postMessage({
+          type: 'WORKLOAD_COMPLETE',
+          id: msgId,
+          payload: res
+        });
+        break;
+      }
+
+      case 'RUN_FAILING_WORKLOAD': {
+        // Simulates an R workload that encounters an unrelated execution error during the interrupt window
+        if (!webR) {
+          throw new Error('WebR not initialized');
+        }
+        if (currentExecutionPromise) {
+          const err = new Error('Worker is already executing a workload');
+          err.code = 'CONCURRENCY_ERROR';
+          throw err;
+        }
+
+        const failPromise = (async () => {
+          try {
+            // Delay 80ms so cancelCurrentJob() is actively in INTERRUPT_REQUESTED state
+            await new Promise((_, reject) => {
+              setTimeout(() => {
+                const err = new Error('Error in evalR: Deliberate R runtime exception during interrupt request');
+                err.code = 'WORKER_ERROR';
+                reject(err);
+              }, 80);
+            });
+            return { completed: false };
+          } finally {
+            currentExecutionPromise = null;
+          }
+        })();
+
+        currentExecutionPromise = failPromise;
+        await failPromise;
+        break;
+      }
+
+      case 'RUN_UNINTERRUPTIBLE_WORKLOAD': {
+        // Deliberately busy-waits ignoring webR.interrupt() to test timeout hard termination
+        if (currentExecutionPromise) {
+          const err = new Error('Worker is already executing a workload');
+          err.code = 'CONCURRENCY_ERROR';
+          throw err;
+        }
+
+        const unrefPromise = (async () => {
+          try {
+            const start = performance.now();
+            while (performance.now() - start < 3000) {
+              // Busy loop in JS unaffected by webR.interrupt()
+            }
+            return { completed: true };
+          } finally {
+            currentExecutionPromise = null;
+          }
+        })();
+
+        currentExecutionPromise = unrefPromise;
+        const res = await unrefPromise;
         self.postMessage({
           type: 'WORKLOAD_COMPLETE',
           id: msgId,
@@ -166,10 +228,12 @@ self.onmessage = async (event) => {
         }
 
         self.postMessage({
-          type: 'EVAL_TEST_RESULT',
+          type: 'TEST_WORKER_EVAL_RESULT',
           id: msgId,
           payload: {
+            eval_allowed: evalWorked,
             evalAllowed: evalWorked,
+            eval_error: evalError,
             evalError
           }
         });
@@ -180,10 +244,14 @@ self.onmessage = async (event) => {
         throw new Error(`Unknown message type: "${type}"`);
     }
   } catch (err) {
+    const isInterrupt =
+      err.code === 'OPERATION_CANCELLED' ||
+      err.name === 'UnwindProtectException' ||
+      /interrupted|operation cancelled|non-local transfer of control/i.test(err.message);
     self.postMessage({
       type: 'ERROR',
       id: msgId,
-      code: err.code || 'WORKER_ERROR',
+      code: isInterrupt ? 'OPERATION_CANCELLED' : (err.code || 'WORKER_ERROR'),
       error: err.message || String(err)
     });
   }

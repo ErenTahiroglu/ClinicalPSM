@@ -84,5 +84,6 @@ jobs:
           path: |
             experiments/cp-webr-02a/*.json
             experiments/cp-webr-02a/r1.1/*.json
+            experiments/cp-webr-02a/r1.2/*.json
             experiments/cp-webr-02a/fixtures/fix_01_oracle_full_precision.json
           retention-days: 90

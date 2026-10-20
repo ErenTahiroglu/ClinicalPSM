@@ -1,5 +1,5 @@
 // CP-WEBR-02A Dedicated Worker Lifecycle Manager & State Machine
-// Conforms to CP-WEBR-01 Production Architecture Section 3 & R1.1 Requirements
+// Conforms to CP-WEBR-01 Production Architecture Section 3 & R1.2 Requirements
 
 export class WorkerLifecycleManager {
   constructor(workerFactory, options = {}) {
@@ -43,7 +43,7 @@ export class WorkerLifecycleManager {
     if (this.state === 'READY') {
       return;
     }
-    if (this.state === 'RUNNING' || this.state === 'INITIALIZING') {
+    if (this.state === 'RUNNING' || this.state === 'INITIALIZING' || this.state === 'CANCELLING') {
       throw new Error(`Cannot initialize while worker is in state: ${this.state}`);
     }
 
@@ -92,11 +92,17 @@ export class WorkerLifecycleManager {
         return;
       }
 
-      // Handle unsolicited error or status reports from worker
+      // Handle unsolicited error reports from worker
       if (type === 'ERROR') {
         const err = new Error(error || 'Worker error event');
         if (data.code) err.code = data.code;
         this.handleWorkerLevelError(err);
+        return;
+      }
+
+      // Discard unexpected or stale messages
+      if (id) {
+        console.warn(`[WorkerLifecycle] Discarding stale or unhandled worker message id=${id}, type=${type}`);
       }
     };
 
@@ -111,6 +117,7 @@ export class WorkerLifecycleManager {
     if (this.currentJob && !this.currentJob.settled) {
       this.currentJob.settled = true;
       this.currentJob.state = 'WORKER_ERROR';
+      this.currentJob.error = err.message;
       this.currentJob.reject(err);
       this.currentJob = null;
     }
@@ -121,6 +128,20 @@ export class WorkerLifecycleManager {
    * Submits a statistical analysis job (Single-job concurrency enforcement)
    */
   async submitAnalysis(datasetInput) {
+    return this.executeJob('RUN_ANALYSIS', datasetInput);
+  }
+
+  /**
+   * Submits a custom test workload (e.g. RUN_LONG_WORKLOAD, RUN_FAILING_WORKLOAD)
+   */
+  async submitWorkload(type, payload = {}) {
+    return this.executeJob(type, payload);
+  }
+
+  /**
+   * Internal job execution harness with explicit state transitions & late result rejection
+   */
+  async executeJob(type, payload) {
     if (this.state !== 'READY') {
       if (this.state === 'RUNNING' || this.state === 'CANCELLING') {
         const err = new Error(`Concurrency violation: Worker is currently in state ${this.state} (job ${this.currentJob?.id}). Concurrent tasks prohibited.`);
@@ -139,6 +160,7 @@ export class WorkerLifecycleManager {
         state: 'RUNNING', // 'RUNNING' | 'INTERRUPT_REQUESTED' | 'GRACEFUL_INTERRUPT_CONFIRMED' | 'HARD_TERMINATED' | 'WORKER_ERROR' | 'COMPLETED'
         startTime: Date.now(),
         settled: false,
+        error: null,
         resolve: (val) => {
           if (jobRecord.settled) return;
           jobRecord.settled = true;
@@ -152,10 +174,17 @@ export class WorkerLifecycleManager {
       };
       this.currentJob = jobRecord;
 
-      this.sendMessage('RUN_ANALYSIS', datasetInput, jobId)
+      this.sendMessage(type, payload, jobId)
         .then((result) => {
           if (jobRecord.state === 'INTERRUPT_REQUESTED' || jobRecord.state === 'GRACEFUL_INTERRUPT_CONFIRMED' || jobRecord.state === 'HARD_TERMINATED') {
-            // Late result discarded after cancellation
+            // Late success received after cancellation was requested!
+            // Computation failed to cease upon interrupt request.
+            jobRecord.state = 'HARD_TERMINATED';
+            jobRecord.error = 'Late result rejected: computation ignored cancellation request';
+            this.terminateAndRecover('Late result received after cancellation');
+            const lateErr = new Error('LATE_RESULT_REJECTED: Computation did not cease upon interrupt');
+            lateErr.code = 'LATE_RESULT_REJECTED';
+            jobRecord.reject(lateErr);
             return;
           }
           jobRecord.state = 'COMPLETED';
@@ -166,17 +195,33 @@ export class WorkerLifecycleManager {
         })
         .catch((err) => {
           if (jobRecord.state === 'INTERRUPT_REQUESTED') {
-            // Confirmed graceful cessation from webR.interrupt()
-            jobRecord.state = 'GRACEFUL_INTERRUPT_CONFIRMED';
-            const cancelErr = new Error(`OPERATION_CANCELLED: Job ${jobId} was interrupted by user request`);
-            cancelErr.code = 'OPERATION_CANCELLED';
-            this.currentJob = null;
-            this.setState('READY');
-            jobRecord.reject(cancelErr);
+            // Explicitly validate that error is a genuine interruption, NOT an unrelated R runtime error
+            const isInterruptError =
+              err.code === 'OPERATION_CANCELLED' ||
+              err.name === 'UnwindProtectException' ||
+              /interrupted|operation cancelled|webR\.interrupt|non-local transfer of control/i.test(err.message);
+
+            if (isInterruptError) {
+              // Confirmed graceful cessation from webR.interrupt()
+              jobRecord.state = 'GRACEFUL_INTERRUPT_CONFIRMED';
+              const cancelErr = new Error(`OPERATION_CANCELLED: Job ${jobId} was interrupted by user request`);
+              cancelErr.code = 'OPERATION_CANCELLED';
+              this.currentJob = null;
+              this.setState('READY');
+              jobRecord.reject(cancelErr);
+            } else {
+              // Unrelated execution error during cancellation window! Must NOT be classified as graceful interrupt!
+              jobRecord.state = 'WORKER_ERROR';
+              jobRecord.error = err.message;
+              this.currentJob = null;
+              this.setState('RECOVERABLE_ERROR', { jobId, error: err.message });
+              jobRecord.reject(err);
+            }
           } else if (jobRecord.state === 'HARD_TERMINATED') {
             // Already handled in termination path
           } else {
             jobRecord.state = 'WORKER_ERROR';
+            jobRecord.error = err.message;
             this.currentJob = null;
             this.setState('RECOVERABLE_ERROR', { jobId, error: err.message });
             jobRecord.reject(err);
@@ -232,6 +277,7 @@ export class WorkerLifecycleManager {
       const timer = setTimeout(() => {
         if (this.state === 'CANCELLING') {
           activeJob.state = 'HARD_TERMINATED';
+          activeJob.error = 'Timeout exceeded waiting for graceful cessation';
           this.terminateAndRecover('Hard termination fallback after cancellation timeout');
           finishCancellation('HARD_TERMINATED', new Error('Timeout exceeded'));
         }
@@ -245,7 +291,7 @@ export class WorkerLifecycleManager {
         } else if (newState === 'READY' && activeJob.state === 'GRACEFUL_INTERRUPT_CONFIRMED') {
           finishCancellation('GRACEFUL_INTERRUPT_CONFIRMED');
         } else if (newState === 'RECOVERABLE_ERROR' || activeJob.state === 'WORKER_ERROR') {
-          finishCancellation('WORKER_ERROR', new Error('Worker execution error during cancellation'));
+          finishCancellation('WORKER_ERROR', new Error(activeJob.error || 'Worker execution error during cancellation'));
         }
       });
     });

@@ -1,10 +1,10 @@
 {
-  "executed_at": "2026-10-20T17:39:38.196Z",
-  "commit_sha": "0b80d3fed39aaad25a3cedcefa81a8c724c7888d",
+  "executed_at": "2026-10-20T18:21:07.272Z",
+  "commit_sha": "12f79579c6e59d174a8d2bc91f5cc5819acd6b64",
   "results": {
     "initialization": {
       "pass": true,
-      "latencyMs": 2050.439999997616
+      "latencyMs": 2043.2449999973178
     },
     "repeatedAnalyses": {
       "pass": true,
@@ -22,15 +22,27 @@
       "cancelStatus": "GRACEFUL_INTERRUPT_CONFIRMED",
       "interruptRequested": true,
       "cancellationCompleted": true,
-      "durationMs": 0.9549999982118607,
+      "durationMs": 1.2100000008940697,
       "statePostCancel": "READY"
     },
     "hardTerminationAndRecovery": {
-      "pass": true,
-      "recoveredState": "READY",
-      "recoveryPairs": 2
+      "pass": true
     },
     "overallPass": true,
+    "unrelatedErrorNegativeControl": {
+      "pass": true,
+      "status": "WORKER_ERROR",
+      "error": "Error in evalR: Deliberate R runtime exception during interrupt request"
+    },
+    "hardTerminationFallback": {
+      "pass": true,
+      "status": "HARD_TERMINATED",
+      "durationMs": 201.42000000178814
+    },
+    "recoveryAndFreshAnalysis": {
+      "pass": true,
+      "pairs": 2
+    },
     "templateIntegrity": {
       "pass": true,
       "tamperedCaught": true

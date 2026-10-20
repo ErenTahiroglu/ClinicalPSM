@@ -38,7 +38,9 @@ export function generateCiEvidenceManifest() {
         'experiments/cp-webr-02a/WORKER-LIFECYCLE-AUDIT.json',
         'experiments/cp-webr-02a/STORAGE-PRIVACY-AUDIT.json',
         'experiments/cp-webr-02a/BROWSER-CI-QUALIFICATION-REPORT.json',
-        'experiments/cp-webr-02a/r1.1/FIXTURE-ASSERTION-MATRIX.json'
+        'experiments/cp-webr-02a/r1.1/FIXTURE-ASSERTION-MATRIX.json',
+        'experiments/cp-webr-02a/r1.2/FIXTURE-ASSERTION-MATRIX.json',
+        'experiments/cp-webr-02a/r1.2/MUTATION-FALSIFICATION-AUDIT.json'
       ]
     },
     artifacts: {}
@@ -52,6 +54,8 @@ export function generateCiEvidenceManifest() {
     'experiments/cp-webr-02a/STORAGE-PRIVACY-AUDIT.json',
     'experiments/cp-webr-02a/BROWSER-CI-QUALIFICATION-REPORT.json',
     'experiments/cp-webr-02a/r1.1/FIXTURE-ASSERTION-MATRIX.json',
+    'experiments/cp-webr-02a/r1.2/FIXTURE-ASSERTION-MATRIX.json',
+    'experiments/cp-webr-02a/r1.2/MUTATION-FALSIFICATION-AUDIT.json',
     'experiments/cp-webr-02a/fixtures/fix_01_oracle_full_precision.json'
   ];
 

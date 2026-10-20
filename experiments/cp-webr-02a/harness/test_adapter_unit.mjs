@@ -580,6 +580,49 @@ assert(hangCancelStatus.status === 'HARD_TERMINATED', 'Worker ignoring interrupt
 assert(hangJobCaught, 'Pending job rejected during hard termination');
 assert(managerHang.getState() === 'RECOVERABLE_ERROR', 'State transitions to RECOVERABLE_ERROR following hard termination');
 
+// 5.4 Negative Control: Unrelated R error during cancellation window classified as WORKER_ERROR
+class FailingWorkerHarness extends MockWorkerHarness {
+  postMessage(msg) {
+    setTimeout(() => {
+      if (this.terminated) return;
+      if (msg.type === 'INIT') {
+        if (this.onmessage) this.onmessage({ data: { type: 'INIT_COMPLETE', id: msg.id, payload: { initialized: true } } });
+      } else if (msg.type === 'RUN_ANALYSIS') {
+        setTimeout(() => {
+          if (this.onmessage && !this.terminated) {
+            // Emits an unrelated R exception (NOT an interrupt)
+            this.onmessage({ data: { type: 'ERROR', id: msg.id, code: 'R_EVAL_ERROR', error: 'Error in library(nonexistent): there is no package' } });
+          }
+        }, 50);
+      } else if (msg.type === 'INTERRUPT') {
+        // Acknowledge interrupt receipt
+        if (this.onmessage) this.onmessage({ data: { type: 'INTERRUPT_ACK', id: msg.id } });
+      }
+    }, 10);
+  }
+}
+
+const managerFail = new WorkerLifecycleManager(() => new FailingWorkerHarness(), { cancelTimeoutMs: 200 });
+await managerFail.initialize();
+
+const pFailingJob = managerFail.submitAnalysis({ rows: [{ id: '1' }] });
+let failJobCaught = false;
+pFailingJob.catch(() => { failJobCaught = true; });
+
+// Request cancellation while failing job is running
+const failCancelStatus = await managerFail.cancelCurrentJob();
+try { await pFailingJob; } catch { failJobCaught = true; }
+
+assert(failCancelStatus.status === 'WORKER_ERROR', 'Unrelated R error during interrupt window is classified as WORKER_ERROR, NOT graceful interrupt');
+assert(failJobCaught, 'Failing job promise rejected with original error');
+
+// 5.5 Stale message ID safely ignored without corrupting state
+const managerStale = new WorkerLifecycleManager(() => new MockWorkerHarness());
+await managerStale.initialize();
+// Inject stale message with unknown id
+managerStale.worker.onmessage({ data: { type: 'ANALYSIS_COMPLETE', id: 'stale_unknown_id_999', payload: {} } });
+assert(managerStale.getState() === 'READY', 'Stale or unknown worker message safely ignored');
+
 // -------------------------------------------------------------
 // 6. Template Integrity Verification
 // -------------------------------------------------------------

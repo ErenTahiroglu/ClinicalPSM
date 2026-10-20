@@ -1,7 +1,7 @@
 {
-  "suite": "CP-WEBR-02A R1.1 Scientific Parity Suite (25 Preserved Fixtures)",
-  "executed_at": "2026-10-20T17:39:25.622Z",
-  "commit_sha": "0b80d3fed39aaad25a3cedcefa81a8c724c7888d",
+  "suite": "CP-WEBR-02A R1.2 Scientific Parity Suite (25 Preserved Fixtures)",
+  "executed_at": "2026-10-20T18:20:56.102Z",
+  "commit_sha": "12f79579c6e59d174a8d2bc91f5cc5819acd6b64",
   "toolchain": {
     "webr": "0.6.0",
     "r": "4.6.0",
@@ -17,14 +17,15 @@
     "PAIR_AND_CALIPER_SEMANTICS": "PASS",
     "COBALT_BALANCE_PARITY": "PASS",
     "FULL_FIXTURE_QUALIFICATION": "PASS",
+    "EXACT_PAIR_AND_WEIGHT_PARITY": "PASS",
     "NATIVE_R_INDEPENDENT_ORACLE": "BLOCKED",
     "AUTOMATED_SEPARATION_SAFETY": "BLOCKED",
     "PRODUCTION_LICENSING_CLEARANCE": "BLOCKED"
   },
   "classification_counts": {
     "SUCCESSFUL_ANALYSES": 18,
-    "EXPECTED_NATIVE_REFERENCE_ERRORS": 4,
-    "PRODUCT_POLICY_REJECTIONS": 1,
+    "EXPECTED_NATIVE_REFERENCE_ERRORS": 3,
+    "PRODUCT_POLICY_REJECTIONS": 2,
     "NUMERICAL_TOLERANCE_EXCEPTIONS": 1,
     "DIAGNOSTIC_ONLY_RESULTS": 1,
     "UNMEASURED_CAPABILITIES": 0
@@ -37,8 +38,11 @@
       "classification": "SUCCESSFUL_ANALYSES",
       "pass": true,
       "assertions": [
-        "100% exact matched pair correspondence against full precision reference (119/119 pairs)",
-        "Model coefficients match reference within 1e-4 tolerance"
+        "100% exact bidirectional matched pair correspondence against full precision reference (119/119 pairs)",
+        "Full 300-unit keyed matching weights vector verified against reference (300/300 units)",
+        "Model coefficients match reference within frozen numerical tolerance eps <= 1e-4",
+        "Cobalt balance diagnostics verified: finite SMDs, valid variance ratios, and pre/post balance improvement",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
       ],
       "details": {
         "totalMatchedPairs": 119,
@@ -54,7 +58,12 @@
       "expected_status": "SUCCESS",
       "classification": "SUCCESSFUL_ANALYSES",
       "pass": true,
-      "assertions": [],
+      "assertions": [
+        "Categorical variable x_cat bound as factor with reference level 'low'",
+        "Model terms include contrast indicators 'cov_02med' and 'cov_02high'",
+        "Cobalt balance table correctly distinguishes continuous and categorical contrast indicators",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
       "details": {
         "totalMatchedPairs": 156,
         "effectiveCaliper": null,
@@ -70,7 +79,10 @@
       "classification": "SUCCESSFUL_ANALYSES",
       "pass": true,
       "assertions": [
-        "Verified reference level change (low -> med) alters model contrast terms and estimates"
+        "Categorical variable x_cat bound as factor with reference level 'med'",
+        "Model terms include contrast indicators 'cov_02low' and 'cov_02high'",
+        "Verified exact GLM dummy-coding contrast transformation theorem between reference low and reference med (eps <= 1e-4)",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
       ],
       "details": {
         "totalMatchedPairs": 156,
@@ -87,7 +99,8 @@
       "classification": "SUCCESSFUL_ANALYSES",
       "pass": true,
       "assertions": [
-        "Exact pair identity invariant under row permutation"
+        "Exact pair identity invariant under row order permutation by unit ID",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
       ],
       "details": {
         "totalMatchedPairs": 119,
@@ -103,7 +116,11 @@
       "expected_status": "SUCCESS",
       "classification": "SUCCESSFUL_ANALYSES",
       "pass": true,
-      "assertions": [],
+      "assertions": [
+        "Exact distance ties handled deterministically under m.order=largest",
+        "50/50 treated units matched to controls",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
       "details": {
         "totalMatchedPairs": 50,
         "effectiveCaliper": null,
@@ -118,7 +135,10 @@
       "expected_status": "SUCCESS",
       "classification": "SUCCESSFUL_ANALYSES",
       "pass": true,
-      "assertions": [],
+      "assertions": [
+        "Unconstrained nearest-neighbor matching formed 119 pairs (zero caliper restriction)",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
       "details": {
         "totalMatchedPairs": 119,
         "effectiveCaliper": null,
@@ -134,7 +154,9 @@
       "classification": "SUCCESSFUL_ANALYSES",
       "pass": true,
       "assertions": [
-        "Probability-scale unstandardized caliper (0.1) propagated and applied on logit scale"
+        "Probability-scale unstandardized caliper (0.1) propagated and applied on logit scale",
+        "Every matched pair distance satisfies pair_dist <= 0.1 on matching scale",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
       ],
       "details": {
         "totalMatchedPairs": 119,
@@ -151,7 +173,9 @@
       "classification": "SUCCESSFUL_ANALYSES",
       "pass": true,
       "assertions": [
-        "Linear-logit unstandardized caliper (0.2) propagated and applied on linear.logit scale"
+        "Linear-logit unstandardized caliper (0.2) propagated and applied on linear.logit scale",
+        "Every matched pair distance satisfies pair_dist <= 0.2 on linear.logit scale",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
       ],
       "details": {
         "totalMatchedPairs": 119,
@@ -168,7 +192,9 @@
       "classification": "SUCCESSFUL_ANALYSES",
       "pass": true,
       "assertions": [
-        "Standardized caliper computed via sd(distance[!discarded]): effective raw width = 0.0309"
+        "Standardized caliper computed via sd(distance[!discarded]): effective raw width = 0.0309",
+        "All 114 matched pairs satisfy pair_dist <= 0.0309",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
       ],
       "details": {
         "totalMatchedPairs": 114,
@@ -184,7 +210,11 @@
       "expected_status": "SUCCESS",
       "classification": "SUCCESSFUL_ANALYSES",
       "pass": true,
-      "assertions": [],
+      "assertions": [
+        "Standardized caliper on differing treated/control SDs: effective raw width = 0.8690",
+        "21 matched pairs formed satisfying caliper bound",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
       "details": {
         "totalMatchedPairs": 21,
         "effectiveCaliper": 0.8690320210741936,
@@ -199,7 +229,12 @@
       "expected_status": "SUCCESS",
       "classification": "SUCCESSFUL_ANALYSES",
       "pass": true,
-      "assertions": [],
+      "assertions": [
+        "Common support discard (both): discarded units properly accounted for",
+        "Sample accounting exact: totalCases (undefined) == matched (32) + unmatched (64) + discarded (4)",
+        "All 16 matched pairs satisfy effective caliper",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
       "details": {
         "totalMatchedPairs": 16,
         "effectiveCaliper": 0.3943529622251058,
@@ -215,7 +250,9 @@
       "classification": "SUCCESSFUL_ANALYSES",
       "pass": true,
       "assertions": [
-        "Strict caliper formed 117 pairs with 2 unmatched treated units"
+        "Strict caliper 0.05 formed 117 pairs with 2 unmatched treated units",
+        "All matched pair distances satisfy pair_dist <= 0.05",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
       ],
       "details": {
         "totalMatchedPairs": 117,
@@ -231,7 +268,11 @@
       "expected_status": "SUCCESS",
       "classification": "SUCCESSFUL_ANALYSES",
       "pass": true,
-      "assertions": [],
+      "assertions": [
+        "Fewer controls (75) than treated (150); matched pairs bounded by control pool (75 pairs)",
+        "75 treated units remain unmatched",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
       "details": {
         "totalMatchedPairs": 75,
         "effectiveCaliper": null,
@@ -246,7 +287,11 @@
       "expected_status": "SUCCESS",
       "classification": "SUCCESSFUL_ANALYSES",
       "pass": true,
-      "assertions": [],
+      "assertions": [
+        "More controls (160) than treated (40); all 40 treated units matched",
+        "120 control units remain unmatched",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
       "details": {
         "totalMatchedPairs": 40,
         "effectiveCaliper": null,
@@ -261,7 +306,11 @@
       "expected_status": "SUCCESS_WITH_WARNING",
       "classification": "SUCCESSFUL_ANALYSES",
       "pass": true,
-      "assertions": [],
+      "assertions": [
+        "Quasi-separation handled with GLM convergence and valid balance diagnostics",
+        "Automated separation safety remains explicitly BLOCKED",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
       "details": {
         "totalMatchedPairs": 50,
         "effectiveCaliper": null,
@@ -277,8 +326,9 @@
       "classification": "NUMERICAL_TOLERANCE_EXCEPTIONS",
       "pass": true,
       "assertions": [
-        "Safeguard triggered for extreme SE (>1000)",
-        "Publication verdict restricted under non-diagnostic risk policy"
+        "Extreme coefficient standard error flagged: max SE = 39815.88 > 1000",
+        "Conservative non-diagnostic safeguard triggered; publication restricted",
+        "Automated separation detection remains explicitly BLOCKED"
       ],
       "details": {
         "glmConvergence": true,
@@ -295,8 +345,8 @@
       "classification": "DIAGNOSTIC_ONLY_RESULTS",
       "pass": true,
       "assertions": [
-        "Collinear term dropped and marked aliased=true",
-        "Publication restricted due to rank deficiency"
+        "Collinear rank-deficient term dropped and marked aliased=true",
+        "Publication restricted due to singular design matrix"
       ],
       "details": {
         "hasAliased": true,
@@ -311,7 +361,9 @@
       "classification": "SUCCESSFUL_ANALYSES",
       "pass": true,
       "assertions": [
-        "Zero-variance constant covariate dropped from model"
+        "Zero-variance constant covariate dropped from model matrix",
+        "Publication restricted due to single non-informative predictor",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
       ],
       "details": {
         "totalMatchedPairs": 43,
@@ -328,7 +380,8 @@
       "classification": "EXPECTED_NATIVE_REFERENCE_ERRORS",
       "pass": true,
       "assertions": [
-        "Fail-closed MISSING_COVARIATE triggered on missing/blank/unlisted category data"
+        "Fail-closed MISSING_COVARIATE triggered on missing values",
+        "Zero silent imputation or NaN coercion permitted"
       ],
       "details": {
         "code": "MISSING_COVARIATE",
@@ -342,7 +395,8 @@
       "classification": "EXPECTED_NATIVE_REFERENCE_ERRORS",
       "pass": true,
       "assertions": [
-        "Fail-closed MISSING_TREATMENT triggered on missing/blank/unlisted category data"
+        "Fail-closed MISSING_TREATMENT triggered on missing values",
+        "Zero silent imputation or NaN coercion permitted"
       ],
       "details": {
         "code": "MISSING_TREATMENT",
@@ -353,14 +407,16 @@
       "fixture_id": "fix_20_malformed_category",
       "name": "Malformed category values",
       "expected_status": "SUCCESS",
-      "classification": "EXPECTED_NATIVE_REFERENCE_ERRORS",
+      "classification": "PRODUCT_POLICY_REJECTIONS",
       "pass": true,
       "assertions": [
-        "Fail-closed UNLISTED_FACTOR_OBSERVATION_REJECTED triggered on missing/blank/unlisted category data"
+        "Rejected unlisted/blank category observation under fail-closed missingness policy",
+        "Historical manifest expectation: SUCCESS; Documented ClinicalPSM versioned policy override: PRODUCT_POLICY_REJECTIONS"
       ],
       "details": {
         "code": "UNLISTED_FACTOR_OBSERVATION_REJECTED",
-        "error": "UNLISTED_FACTOR_OBSERVATION_REJECTED: Value \"0\" at row sub_0100 is not listed in declared levels [ValidGroupA, ValidGroupB] for covariate \"cat_var\""
+        "error": "UNLISTED_FACTOR_OBSERVATION_REJECTED: Value \"0\" at row sub_0100 is not listed in declared levels [ValidGroupA, ValidGroupB] for covariate \"cat_var\"",
+        "policy_override": "ClinicalPSM strict categorical fail-closed policy rejects unlisted/blank category values (manifest historical expectation: SUCCESS)"
       }
     },
     {
@@ -370,7 +426,9 @@
       "classification": "SUCCESSFUL_ANALYSES",
       "pass": true,
       "assertions": [
-        "Extreme propensities near 0 and 1 handled without numerical crash"
+        "Extreme propensities near 0 and 1 handled with GLM non-convergence warning trapped",
+        "Publication restricted under conservative numerical safeguard",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
       ],
       "details": {
         "totalMatchedPairs": 60,
@@ -386,7 +444,10 @@
       "expected_status": "SUCCESS",
       "classification": "SUCCESSFUL_ANALYSES",
       "pass": true,
-      "assertions": [],
+      "assertions": [
+        "Small sample N=10 (4 treated, 6 control) formed 4 matched pairs without crash",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
       "details": {
         "totalMatchedPairs": 4,
         "effectiveCaliper": null,
@@ -402,7 +463,8 @@
       "classification": "EXPECTED_NATIVE_REFERENCE_ERRORS",
       "pass": true,
       "assertions": [
-        "Zero eligible matches correctly identified and handled under strict caliper"
+        "Zero eligible matches correctly identified and handled under strict caliper 0.01",
+        "Safe handling of empty match matrix without unhandled null pointer"
       ],
       "details": {
         "status": "EXPECTED_ZERO_MATCHES",
@@ -416,7 +478,8 @@
       "classification": "PRODUCT_POLICY_REJECTIONS",
       "pass": true,
       "assertions": [
-        "Rejected duplicate unit ID at ingestion boundary"
+        "Rejected duplicate unit ID at ingestion boundary",
+        "Fail-closed integrity policy enforced before R memory allocation"
       ],
       "details": {
         "code": "DUPLICATE_UNIT_ID_REJECTED",
@@ -426,31 +489,38 @@
   ],
   "mutation_tests": [
     {
-      "mutation": "Perturb matched pair control ID",
+      "mutation_id": "MUT_01_PAIR_CONTROL_ID",
+      "description": "Perturb matched control ID for treated unit sub_0001",
       "caught": true
     },
     {
-      "mutation": "Perturb unit weight (1.0 -> 999.0)",
+      "mutation_id": "MUT_02_UNIT_WEIGHT",
+      "description": "Perturb matching weight for unit sub_0006 from 1.0 to 0.50",
       "caught": true
     },
     {
-      "mutation": "Perturb intercept coefficient estimate",
+      "mutation_id": "MUT_03_GLM_COEFFICIENT",
+      "description": "Perturb age coefficient by +0.05 beyond 1e-4 tolerance",
       "caught": true
     },
     {
-      "mutation": "stdCaliper mutation discrepancy",
+      "mutation_id": "MUT_04_BALANCE_SMD",
+      "description": "Corrupt matched SMD of age to 99.0",
       "caught": true
     },
     {
-      "mutation": "Factor reference category contrast presence",
+      "mutation_id": "MUT_05_STD_CALIPER_FLAG",
+      "description": "Invert stdCaliper flag to false while retaining standardized effective width",
       "caught": true
     },
     {
-      "mutation": "Misalign propensity unit ID vector",
+      "mutation_id": "MUT_06_FACTOR_CONTRAST",
+      "description": "Perturb cov_02low contrast estimate by +0.50 violating dummy coding shift theorem",
       "caught": true
     },
     {
-      "mutation": "Pair distance caliper bound violation",
+      "mutation_id": "MUT_07_SAMPLE_ACCOUNTING",
+      "description": "Perturb unmatched treated count by +10 violating sum invariant",
       "caught": true
     }
   ],

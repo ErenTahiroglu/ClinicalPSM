@@ -849,26 +849,28 @@ export async function runWorkerLifecycleSuite() {
     statePostCompletion: manager.getState()
   };
 
-  // 4. Graceful Interruption
-  // Start job and trigger cancellation
-  console.log('[Lifecycle] Step 4: Interruption Test...');
-  const pCancel = manager.submitAnalysis(sampleDataset);
+  // 4. Graceful Interruption of Active Workload
+  console.log('[Lifecycle] Step 4: Interruption Test on Active Long Workload...');
+  const pCancel = manager.submitWorkload('RUN_LONG_WORKLOAD');
   let cancelCaught = false;
-  pCancel.catch(() => {
-    cancelCaught = true;
+  pCancel.catch((err) => {
+    cancelCaught = err.code === 'OPERATION_CANCELLED' || /interrupted|operation cancelled/i.test(err.message);
   });
+
+  // Wait 100ms so the intensive R computation is actively executing
+  await new Promise(r => setTimeout(r, 100));
 
   const cancelStatus = await manager.cancelCurrentJob();
 
   try {
     await pCancel;
-  } catch {
-    cancelCaught = true;
+  } catch (err) {
+    cancelCaught = err.code === 'OPERATION_CANCELLED' || /interrupted|operation cancelled/i.test(err.message);
   }
   console.log('[Lifecycle] Step 4 Complete: Cancel caught =', cancelCaught, 'Status =', cancelStatus.status);
 
   results.gracefulInterruption = {
-    pass: cancelCaught === true && cancelStatus.status === 'GRACEFUL_INTERRUPT_CONFIRMED' && cancelStatus.cancellationCompleted === true,
+    pass: cancelCaught === true && cancelStatus.status === 'GRACEFUL_INTERRUPT_CONFIRMED' && cancelStatus.cancellationCompleted === true && manager.getState() === 'READY',
     cancelStatus: cancelStatus.status,
     interruptRequested: cancelStatus.interruptRequested,
     cancellationCompleted: cancelStatus.cancellationCompleted,
@@ -876,38 +878,73 @@ export async function runWorkerLifecycleSuite() {
     statePostCancel: manager.getState()
   };
 
-  // 5. Hard Termination and Recovery
-  // Terminate active worker, verify rejection of pending work, reinitialize and run fresh analysis
-  console.log('[Lifecycle] Step 5: Termination & Recovery...');
-  const pTerm = manager.submitAnalysis(sampleDataset);
-  let termCaught = false;
-  pTerm.catch(() => {
-    termCaught = true;
-  });
+  // 4b. Negative Control: Unrelated R exception during cancellation request
+  console.log('[Lifecycle] Step 4b: Negative control - unrelated R exception during cancellation request...');
+  const pFail = manager.submitWorkload('RUN_FAILING_WORKLOAD');
+  let failCaught = false;
+  pFail.catch(() => { failCaught = true; });
 
-  manager.terminateAndRecover('Controlled hard termination probe');
+  await new Promise(r => setTimeout(r, 20));
+  const failCancelStatus = await manager.cancelCurrentJob();
+  try { await pFail; } catch { failCaught = true; }
 
-  try {
-    await pTerm;
-  } catch {
-    termCaught = true;
-  }
-  console.log('[Lifecycle] Step 5 Terminated caught =', termCaught);
+  // Must NOT be classified as GRACEFUL_INTERRUPT_CONFIRMED! Must be WORKER_ERROR!
+  const unrelatedErrorRejected = failCancelStatus.status === 'WORKER_ERROR';
+  console.log('[Lifecycle] Step 4b Complete: Status =', failCancelStatus.status, 'Correctly classified as WORKER_ERROR =', unrelatedErrorRejected);
 
-  await manager.initialize();
-  console.log('[Lifecycle] Step 5 Re-initialized');
-  const recRes = await manager.submitAnalysis(sampleDataset);
-  const recOk = Boolean(recRes?.payload?.matchedUnits && recRes.payload.matchedUnits.totalMatchedPairs > 0);
-  console.log('[Lifecycle] Step 5 Recovery analysis OK =', recOk);
-
-  results.hardTerminationAndRecovery = {
-    pass: termCaught === true && manager.getState() === 'READY' && recOk,
-    recoveredState: manager.getState(),
-    recoveryPairs: recRes?.payload?.matchedUnits?.totalMatchedPairs
+  results.unrelatedErrorNegativeControl = {
+    pass: unrelatedErrorRejected,
+    status: failCancelStatus.status,
+    error: failCancelStatus.error
   };
 
-  // 6. Template Integrity Verification
-  console.log('[Lifecycle] Step 6: Testing Template Integrity Verification...');
+  // Recover manager to READY state for subsequent tests
+  await manager.initialize();
+
+  // 5. Hard Termination Fallback on Worker Ignoring Interruption
+  console.log('[Lifecycle] Step 5: Hard Termination Fallback on Uninterruptible Workload...');
+  const timeoutManager = new WorkerLifecycleManager(
+    () => new Worker('/worker-strict.js?csp=strict-worker', { type: 'module' }),
+    { cancelTimeoutMs: 200 }
+  );
+  await timeoutManager.initialize();
+
+  const pUninterruptible = timeoutManager.submitWorkload('RUN_UNINTERRUPTIBLE_WORKLOAD');
+  let uninterruptibleCaught = false;
+  pUninterruptible.catch(() => { uninterruptibleCaught = true; });
+
+  await new Promise(r => setTimeout(r, 50));
+  const timeoutCancelStatus = await timeoutManager.cancelCurrentJob();
+
+  try { await pUninterruptible; } catch { uninterruptibleCaught = true; }
+
+  const hardTerminatedPass = timeoutCancelStatus.status === 'HARD_TERMINATED' && uninterruptibleCaught;
+  console.log('[Lifecycle] Step 5 Complete: Hard termination status =', timeoutCancelStatus.status, 'pass =', hardTerminatedPass);
+
+  results.hardTerminationFallback = {
+    pass: hardTerminatedPass,
+    status: timeoutCancelStatus.status,
+    durationMs: timeoutCancelStatus.durationMs
+  };
+
+  // 6. Recovery & Fresh Analysis
+  console.log('[Lifecycle] Step 6: Recovery and Fresh MatchIt Analysis...');
+  await timeoutManager.initialize();
+  const recRes = await timeoutManager.submitAnalysis(sampleDataset);
+  const recOk = Boolean(recRes?.payload?.matchedUnits && recRes.payload.matchedUnits.totalMatchedPairs > 0);
+  console.log('[Lifecycle] Step 6 Complete: Recovery analysis OK =', recOk, 'Pairs =', recRes?.payload?.matchedUnits?.totalMatchedPairs);
+
+  results.recoveryAndFreshAnalysis = {
+    pass: recOk && timeoutManager.getState() === 'READY',
+    pairs: recRes?.payload?.matchedUnits?.totalMatchedPairs
+  };
+
+  results.hardTerminationAndRecovery = {
+    pass: Boolean(results.hardTerminationFallback?.pass && results.recoveryAndFreshAnalysis?.pass)
+  };
+
+  // 7. Template Integrity Verification
+  console.log('[Lifecycle] Step 7: Testing Template Integrity Verification...');
   let tamperedCaught = false;
   try {
     const tamperedManager = new WorkerLifecycleManager(
@@ -920,20 +957,22 @@ export async function runWorkerLifecycleSuite() {
       tamperedCaught = true;
     }
   }
-  console.log('[Lifecycle] Step 6 Complete: Tampered template rejected =', tamperedCaught);
+  console.log('[Lifecycle] Step 7 Complete: Tampered template rejected =', tamperedCaught);
 
   results.templateIntegrity = {
     pass: tamperedCaught,
     tamperedCaught
   };
 
-  // Overall pass depends on ALL 6 lifecycle subgates passing
+  // Overall pass depends on ALL lifecycle subgates passing
   results.overallPass = Boolean(
     results.initialization.pass &&
     results.repeatedAnalyses.pass &&
     results.singleJobConcurrency.pass &&
     results.gracefulInterruption.pass &&
-    results.hardTerminationAndRecovery.pass &&
+    results.unrelatedErrorNegativeControl.pass &&
+    results.hardTerminationFallback.pass &&
+    results.recoveryAndFreshAnalysis.pass &&
     results.templateIntegrity.pass
   );
 

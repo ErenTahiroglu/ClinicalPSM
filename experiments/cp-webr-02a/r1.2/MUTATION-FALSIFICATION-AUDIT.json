@@ -1,0 +1,84 @@
+{
+  "suite": "CP-WEBR-02A R1.2 Genuine Falsifiable Mutation Audit",
+  "executed_at": "2026-10-20T18:21:02.955Z",
+  "total_mutations": 7,
+  "mutations": [
+    {
+      "mutation_id": "MUT_01_PAIR_CONTROL_ID",
+      "target_fixture": "fix_01_well_conditioned",
+      "mutation_description": "Perturb matched control ID for treated unit sub_0001",
+      "original_value": "sub_0265",
+      "mutated_value": "corrupted_control_id",
+      "verifier_invoked": "verifyMatchedPairs",
+      "expected_verifier_failure": "Control mismatch for treated unit sub_0001",
+      "observed_failure": "Control mismatch for treated unit sub_0001: got corrupted_control_id, expected sub_0265",
+      "pass": true
+    },
+    {
+      "mutation_id": "MUT_02_UNIT_WEIGHT",
+      "target_fixture": "fix_01_well_conditioned",
+      "mutation_description": "Perturb matching weight for unit sub_0006 from 1.0 to 0.50",
+      "original_value": 1,
+      "mutated_value": 0.5,
+      "verifier_invoked": "verifyKeyedWeights",
+      "expected_verifier_failure": "Weight mismatch for unit sub_0006",
+      "observed_failure": "Weight mismatch for unit sub_0006: got 0.5, expected 1",
+      "pass": true
+    },
+    {
+      "mutation_id": "MUT_03_GLM_COEFFICIENT",
+      "target_fixture": "fix_01_well_conditioned",
+      "mutation_description": "Perturb age coefficient by +0.05 beyond 1e-4 tolerance",
+      "original_value": 0.00012220530808610455,
+      "mutated_value": 0.05012220530808611,
+      "verifier_invoked": "verifyGlmCoefficients",
+      "expected_verifier_failure": "Coefficient age difference exceeds tolerance 0.0001",
+      "observed_failure": "Coefficient age difference 5.0000e-2 exceeds tolerance 0.0001",
+      "pass": true
+    },
+    {
+      "mutation_id": "MUT_04_BALANCE_SMD",
+      "target_fixture": "fix_01_well_conditioned",
+      "mutation_description": "Corrupt matched SMD of age to 99.0",
+      "original_value": -0.007499609443220876,
+      "mutated_value": 99,
+      "verifier_invoked": "verifyBalanceDiagnostics",
+      "expected_verifier_failure": "Matched SMD is unreasonably large",
+      "observed_failure": "Matched SMD for cov_00 is unreasonably large: 99",
+      "pass": true
+    },
+    {
+      "mutation_id": "MUT_05_STD_CALIPER_FLAG",
+      "target_fixture": "fix_09_standardized_caliper",
+      "mutation_description": "Invert stdCaliper flag to false while retaining standardized effective width",
+      "original_value": true,
+      "mutated_value": false,
+      "verifier_invoked": "verifyCaliperScale",
+      "expected_verifier_failure": "Unstandardized caliper mismatch",
+      "observed_failure": "Unstandardized caliper mismatch: effective=0.030861520481003147, requested=0.2",
+      "pass": true
+    },
+    {
+      "mutation_id": "MUT_06_FACTOR_CONTRAST",
+      "target_fixture": "fix_03_ref_level_change",
+      "mutation_description": "Perturb cov_02low contrast estimate by +0.50 violating dummy coding shift theorem",
+      "original_value": 0.027238848609138548,
+      "mutated_value": 0.5272388486091385,
+      "verifier_invoked": "verifyFactorContrasts",
+      "expected_verifier_failure": "Contrast transformation failure on beta_low",
+      "observed_failure": "Contrast transformation failure on beta_low: diff=5.0000e-1",
+      "pass": true
+    },
+    {
+      "mutation_id": "MUT_07_SAMPLE_ACCOUNTING",
+      "target_fixture": "fix_11_pre_match_discard",
+      "mutation_description": "Perturb unmatched treated count by +10 violating sum invariant",
+      "original_value": 7,
+      "mutated_value": 17,
+      "verifier_invoked": "verifySampleAccounting",
+      "expected_verifier_failure": "Treated sum != totalTreatedCases",
+      "observed_failure": "Treated sum (110) != treatedTotal (100)",
+      "pass": true
+    }
+  ]
+}
