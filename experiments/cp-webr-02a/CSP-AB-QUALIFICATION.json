@@ -1,12 +1,12 @@
 {
-  "executed_at": "2026-10-20T14:47:02.892Z",
-  "commit_sha": "92df0d2acd2973bf792b6a009b72e39656cf0c66",
+  "executed_at": "2026-10-20T17:39:38.196Z",
+  "commit_sha": "0b80d3fed39aaad25a3cedcefa81a8c724c7888d",
   "matrix": {
     "profileC1_strict": {
       "workerUrl": "/worker-strict.js",
       "csp": "default-src 'none'; script-src 'self' 'wasm-unsafe-eval' blob:; connect-src 'self' blob:; worker-src 'self' blob:;",
       "evalAllowed": false,
-      "evalError": "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'wasm-unsafe-eval' blob:\".\n",
+      "evalError": "Timeout waiting for eval probe",
       "webrInitSuccess": true,
       "webrInitError": null,
       "pipelineSuccess": true,

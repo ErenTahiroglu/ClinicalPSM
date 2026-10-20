@@ -1,7 +1,7 @@
 {
-  "suite": "CP-WEBR-02A Adapter Unit Suite",
-  "executed_at": "2026-10-20T14:52:12.954Z",
-  "tests_passed": 32,
+  "suite": "CP-WEBR-02A R1.1 Adapter Unit & Adversarial Suite",
+  "executed_at": "2026-10-20T17:39:10.272Z",
+  "tests_passed": 37,
   "tests_failed": 0,
   "cases": [
     {
@@ -20,122 +20,67 @@
       "details": "got cov_01"
     },
     {
-      "name": "Registering same treatment returns identical alias",
+      "name": "Exact raw header preserved: trt_00 -> \"Treatment Group\"",
       "status": "PASS",
       "details": ""
     },
     {
-      "name": "Registering same covariate returns identical alias",
+      "name": "Exact raw header preserved: cov_00 -> \"Patient Age\"",
       "status": "PASS",
       "details": ""
     },
     {
-      "name": "Reversible mapping: cov_00 -> Patient Age",
+      "name": "Repeated covariate registration rejected with REPEATED_COVARIATE_REJECTED",
       "status": "PASS",
       "details": ""
     },
     {
-      "name": "Reversible mapping: cov_01 -> Body Mass Index",
+      "name": "Covariate equal to treatment variable rejected with TREATMENT_AS_COVARIATE_REJECTED",
       "status": "PASS",
       "details": ""
     },
     {
-      "name": "Unicode NFC normalization maps NFD and NFC to same alias",
+      "name": "NFC/NFD header normalization collision rejected with HEADER_NORMALIZATION_COLLISION",
       "status": "PASS",
       "details": ""
     },
     {
-      "name": "256 code points header accepted",
+      "name": "Headers differing only by surrounding whitespace rejected with HEADER_NORMALIZATION_COLLISION",
       "status": "PASS",
       "details": ""
     },
     {
-      "name": "Header with 257 code points rejected with HEADER_LENGTH_EXCEEDED",
+      "name": "R-code injection string safely mapped to monotonic alias cov_00",
       "status": "PASS",
       "details": ""
     },
     {
-      "name": "Header with null byte rejected",
+      "name": "Original injection header safely preserved in mapper table",
       "status": "PASS",
       "details": ""
     },
     {
-      "name": "Header with escape control character rejected",
+      "name": "Unknown option \"standardizedCaliper\" rejected with UNKNOWN_OPTION_REJECTED",
       "status": "PASS",
       "details": ""
     },
     {
-      "name": "Keys sorted lexicographically at all nesting levels",
-      "status": "PASS",
-      "details": "{\"a\":2,\"m\":{\"b\":20,\"y\":10},\"z\":1}"
-    },
-    {
-      "name": "Non-finite numbers converted to null (never coerced to 0)",
+      "name": "Canonical options with stdCaliper and linear.logit validated successfully",
       "status": "PASS",
       "details": ""
     },
     {
-      "name": "Normal numbers preserved in defensive clone",
+      "name": "Invalid method \"optimal\" rejected with INVALID_OPTION",
       "status": "PASS",
       "details": ""
     },
     {
-      "name": "Envelope version is 1.0.0",
+      "name": "Negative caliper rejected with INVALID_OPTION",
       "status": "PASS",
       "details": ""
     },
     {
-      "name": "Envelope contains valid 64-char SHA-256",
-      "status": "PASS",
-      "details": ""
-    },
-    {
-      "name": "Envelope verification succeeds on untampered payload",
-      "status": "PASS",
-      "details": ""
-    },
-    {
-      "name": "Envelope verification traps payload tampering",
-      "status": "PASS",
-      "details": ""
-    },
-    {
-      "name": "Initial worker state is NOT_LOADED",
-      "status": "PASS",
-      "details": ""
-    },
-    {
-      "name": "Worker state transitions to READY after INIT",
-      "status": "PASS",
-      "details": ""
-    },
-    {
-      "name": "Worker state transitions to RUNNING on job submit",
-      "status": "PASS",
-      "details": ""
-    },
-    {
-      "name": "Single-job concurrency enforced: concurrent request throws CONCURRENCY_ERROR",
-      "status": "PASS",
-      "details": ""
-    },
-    {
-      "name": "First analysis completes successfully",
-      "status": "PASS",
-      "details": ""
-    },
-    {
-      "name": "Worker reverts to READY state post-completion",
-      "status": "PASS",
-      "details": ""
-    },
-    {
-      "name": "State is RECOVERABLE_ERROR after terminateAndRecover",
-      "status": "PASS",
-      "details": ""
-    },
-    {
-      "name": "Worker recovers cleanly to READY state after re-initialization",
+      "name": "Missing explicit row ID rejected with MISSING_ROW_ID",
       "status": "PASS",
       "details": ""
     },
@@ -145,22 +90,102 @@
       "details": ""
     },
     {
-      "name": "Missing treatment value rejected with MISSING_TREATMENT",
+      "name": "Blank factor level rejected with BLANK_FACTOR_LEVEL_REJECTED",
       "status": "PASS",
       "details": ""
     },
     {
-      "name": "Missing covariate value rejected with MISSING_COVARIATE",
+      "name": "Unknown reference category rejected with UNKNOWN_REFERENCE_CATEGORY_REJECTED",
       "status": "PASS",
       "details": ""
     },
     {
-      "name": "Factor reference level \"II\" preserved in factorMetadata",
+      "name": "Observation outside declared levels rejected with UNLISTED_FACTOR_OBSERVATION_REJECTED",
       "status": "PASS",
       "details": ""
     },
     {
-      "name": "Factor levels [\"I\", \"II\", \"III\"] preserved in factorMetadata",
+      "name": "Blank categorical observation rejected under fail-closed missingness policy",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Non-finite numeric value (Infinity) rejected with NON_FINITE_NUMERIC_REJECTED",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Malformed numeric string rejected with MALFORMED_NUMERIC_REJECTED",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Valid CanonicalPsmResult passes runtime schema validation",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Vector length mismatch caught with INVARIANT_VIOLATION",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Sample accounting mismatch caught with INVARIANT_VIOLATION",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Pair distance exceeding effective caliper width caught with INVARIANT_VIOLATION",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Non-self-referential hash calculation is invariant to existing canonicalResultSha256 value",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Concurrent job submission rejected with CONCURRENCY_ERROR",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "cancelCurrentJob returns GRACEFUL_INTERRUPT_CONFIRMED",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Active job promise rejected with OPERATION_CANCELLED upon graceful interrupt",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Lifecycle manager transitions back to READY state post-cancellation",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Worker ignoring interrupt triggers HARD_TERMINATED fallback after timeout",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Pending job rejected during hard termination",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "State transitions to RECOVERABLE_ERROR following hard termination",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Template initialized with valid SHA-256",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Tampered template rejected with TEMPLATE_INTEGRITY_MISMATCH",
       "status": "PASS",
       "details": ""
     }

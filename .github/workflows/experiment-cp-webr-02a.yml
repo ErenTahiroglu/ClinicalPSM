@@ -83,5 +83,6 @@ jobs:
           name: cp-webr-02a-qualification-evidence
           path: |
             experiments/cp-webr-02a/*.json
+            experiments/cp-webr-02a/r1.1/*.json
             experiments/cp-webr-02a/fixtures/fix_01_oracle_full_precision.json
           retention-days: 90

@@ -1,0 +1,375 @@
+{
+  "version": "1.1.0",
+  "generated_at": "2026-10-20T17:39:25.638Z",
+  "total_fixtures": 25,
+  "fixtures": {
+    "fix_01_well_conditioned": {
+      "name": "Well-conditioned logistic regression",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "100% exact matched pair correspondence against full precision reference (119/119 pairs)",
+        "Model coefficients match reference within 1e-4 tolerance"
+      ],
+      "details": {
+        "totalMatchedPairs": 119,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "REGRESSION_REFERENCE_VERIFIED"
+    },
+    "fix_02_mixed_types": {
+      "name": "Mixed factor types",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [],
+      "details": {
+        "totalMatchedPairs": 156,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_03_ref_level_change": {
+      "name": "Reference level change",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Verified reference level change (low -> med) alters model contrast terms and estimates"
+      ],
+      "details": {
+        "totalMatchedPairs": 156,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_04_input_row_order": {
+      "name": "Row order permutation",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Exact pair identity invariant under row permutation"
+      ],
+      "details": {
+        "totalMatchedPairs": 119,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_05_exact_distance_ties": {
+      "name": "Exact distance ties",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [],
+      "details": {
+        "totalMatchedPairs": 50,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_06_no_caliper_nearest": {
+      "name": "No-caliper nearest neighbor",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [],
+      "details": {
+        "totalMatchedPairs": 119,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_07_prob_scale_caliper": {
+      "name": "Probability scale caliper",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Probability-scale unstandardized caliper (0.1) propagated and applied on logit scale"
+      ],
+      "details": {
+        "totalMatchedPairs": 119,
+        "effectiveCaliper": 0.1,
+        "distanceScale": "logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_08_linear_logit_caliper": {
+      "name": "Linear-logit caliper",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Linear-logit unstandardized caliper (0.2) propagated and applied on linear.logit scale"
+      ],
+      "details": {
+        "totalMatchedPairs": 119,
+        "effectiveCaliper": 0.2,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_09_standardized_caliper": {
+      "name": "Standardized distance caliper",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Standardized caliper computed via sd(distance[!discarded]): effective raw width = 0.0309"
+      ],
+      "details": {
+        "totalMatchedPairs": 114,
+        "effectiveCaliper": 0.030861520481003147,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_10_whole_vs_pooled_sd": {
+      "name": "Whole-sample vs pooled SD difference",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [],
+      "details": {
+        "totalMatchedPairs": 21,
+        "effectiveCaliper": 0.8690320210741936,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_11_pre_match_discard": {
+      "name": "Pre-match discarded units with standardized caliper",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [],
+      "details": {
+        "totalMatchedPairs": 16,
+        "effectiveCaliper": 0.3943529622251058,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_12_caliper_unmatched": {
+      "name": "Caliper unmatched units",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Strict caliper formed 117 pairs with 2 unmatched treated units"
+      ],
+      "details": {
+        "totalMatchedPairs": 117,
+        "effectiveCaliper": 0.05,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_13_more_treated_than_control": {
+      "name": "More treated than control",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [],
+      "details": {
+        "totalMatchedPairs": 75,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_14_more_controls_than_treated": {
+      "name": "More controls than treated",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [],
+      "details": {
+        "totalMatchedPairs": 40,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_15_quasi_separation": {
+      "name": "Quasi-separation",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [],
+      "details": {
+        "totalMatchedPairs": 50,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_16_complete_separation": {
+      "name": "Complete separation",
+      "classification": "NUMERICAL_TOLERANCE_EXCEPTIONS",
+      "pass": true,
+      "assertions": [
+        "Safeguard triggered for extreme SE (>1000)",
+        "Publication verdict restricted under non-diagnostic risk policy"
+      ],
+      "details": {
+        "glmConvergence": true,
+        "maxCoefficientStandardError": 39815.87849877388,
+        "safeguardTriggered": true,
+        "publicationVerdict": "OUTPUT_GENERATION_RESTRICTED",
+        "outputGenerationAllowed": false
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_17_rank_deficient": {
+      "name": "Rank-deficient design matrix",
+      "classification": "DIAGNOSTIC_ONLY_RESULTS",
+      "pass": true,
+      "assertions": [
+        "Collinear term dropped and marked aliased=true",
+        "Publication restricted due to rank deficiency"
+      ],
+      "details": {
+        "hasAliased": true,
+        "matchedPairs": 39,
+        "publicationVerdict": "OUTPUT_GENERATION_RESTRICTED"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_18_zero_variance": {
+      "name": "Zero-variance covariate",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Zero-variance constant covariate dropped from model"
+      ],
+      "details": {
+        "totalMatchedPairs": 43,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_GENERATION_RESTRICTED"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_19_missing_values": {
+      "name": "Missing covariate values",
+      "classification": "EXPECTED_NATIVE_REFERENCE_ERRORS",
+      "pass": true,
+      "assertions": [
+        "Fail-closed MISSING_COVARIATE triggered on missing/blank/unlisted category data"
+      ],
+      "details": {
+        "code": "MISSING_COVARIATE",
+        "error": "MISSING_DATA_REJECTED: Missing values detected in covariate \"x1\" at rows: [sub_0005]"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_19b_missing_treatment": {
+      "name": "Missing treatment value",
+      "classification": "EXPECTED_NATIVE_REFERENCE_ERRORS",
+      "pass": true,
+      "assertions": [
+        "Fail-closed MISSING_TREATMENT triggered on missing/blank/unlisted category data"
+      ],
+      "details": {
+        "code": "MISSING_TREATMENT",
+        "error": "MISSING_DATA_REJECTED: Missing value detected in treatment column \"treat\" at rows: [sub_0012]"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_20_malformed_category": {
+      "name": "Malformed category values",
+      "classification": "EXPECTED_NATIVE_REFERENCE_ERRORS",
+      "pass": true,
+      "assertions": [
+        "Fail-closed UNLISTED_FACTOR_OBSERVATION_REJECTED triggered on missing/blank/unlisted category data"
+      ],
+      "details": {
+        "code": "UNLISTED_FACTOR_OBSERVATION_REJECTED",
+        "error": "UNLISTED_FACTOR_OBSERVATION_REJECTED: Value \"0\" at row sub_0100 is not listed in declared levels [ValidGroupA, ValidGroupB] for covariate \"cat_var\""
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_21_extreme_propensities": {
+      "name": "Extreme propensity scores",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Extreme propensities near 0 and 1 handled without numerical crash"
+      ],
+      "details": {
+        "totalMatchedPairs": 60,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_GENERATION_RESTRICTED"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_22_small_sample": {
+      "name": "Small degenerate sample",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [],
+      "details": {
+        "totalMatchedPairs": 4,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_23_no_eligible_match": {
+      "name": "No eligible match",
+      "classification": "EXPECTED_NATIVE_REFERENCE_ERRORS",
+      "pass": true,
+      "assertions": [
+        "Zero eligible matches correctly identified and handled under strict caliper"
+      ],
+      "details": {
+        "status": "EXPECTED_ZERO_MATCHES",
+        "error": "Error in unknown source: No units were matched."
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_24_duplicate_ids": {
+      "name": "Duplicate unit IDs",
+      "classification": "PRODUCT_POLICY_REJECTIONS",
+      "pass": true,
+      "assertions": [
+        "Rejected duplicate unit ID at ingestion boundary"
+      ],
+      "details": {
+        "code": "DUPLICATE_UNIT_ID_REJECTED",
+        "error": "DUPLICATE_UNIT_ID_REJECTED: Duplicate row identifier detected: \"sub_0001\""
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    }
+  }
+}

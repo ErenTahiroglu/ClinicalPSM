@@ -1,8 +1,8 @@
 {
   "manifest_type": "POST_RUN_CI_EVIDENCE_MANIFEST",
   "manifest_version": "2.0.0",
-  "generated_at": "2026-10-20T14:54:16.423Z",
-  "commit_sha": "357b39ec7a66a5159040ff866800c5dd81656bf5",
+  "generated_at": "2026-10-20T17:41:20.498Z",
+  "commit_sha": "a193db2cbf08430aa9d95814aa9269f564531a63",
   "environment": {
     "operating_system": "darwin 27.0.0 (arm64)",
     "node_version": "v26.12.0",
@@ -18,33 +18,38 @@
       "experiments/cp-webr-02a/CSP-AB-QUALIFICATION.json",
       "experiments/cp-webr-02a/WORKER-LIFECYCLE-AUDIT.json",
       "experiments/cp-webr-02a/STORAGE-PRIVACY-AUDIT.json",
-      "experiments/cp-webr-02a/BROWSER-CI-QUALIFICATION-REPORT.json"
+      "experiments/cp-webr-02a/BROWSER-CI-QUALIFICATION-REPORT.json",
+      "experiments/cp-webr-02a/r1.1/FIXTURE-ASSERTION-MATRIX.json"
     ]
   },
   "artifacts": {
     "experiments/cp-webr-02a/ADAPTER-UNIT-TESTS.json": {
-      "bytes": 4137,
-      "sha256": "6e3a55b567f19db4ea108d3fbb144286d88a4e559ffe4e364fcbb299d3beb8d6"
+      "bytes": 5306,
+      "sha256": "042a6971afe4146e64f4059e40ba66d11bccaf7f9bbca7c9db87fb03dca62de5"
     },
     "experiments/cp-webr-02a/SCIENTIFIC-PARITY-RESULTS.json": {
-      "bytes": 10375,
-      "sha256": "f92640ab78d0a9bed3ecf666c42abcb611618fc9403d712a96c30f3de4e63e04"
+      "bytes": 14644,
+      "sha256": "bf72d02bc92b771457eb82b68b67b3c1886704dd7a5c332b0f8704ae9136d233"
     },
     "experiments/cp-webr-02a/CSP-AB-QUALIFICATION.json": {
-      "bytes": 1552,
-      "sha256": "250f7d6b21869d98f6f64fcf6f50810bb24c662b24bc410ab96e51327e8613c4"
+      "bytes": 1386,
+      "sha256": "6504d0d998ba5ef3237959ecfabacb71ad5d775ccf2365ee8b39bf429d80a068"
     },
     "experiments/cp-webr-02a/WORKER-LIFECYCLE-AUDIT.json": {
-      "bytes": 885,
-      "sha256": "46e15d0fbf2af7b04913fc659a70591c31a155735b82cd1860f47530f5810263"
+      "bytes": 980,
+      "sha256": "c952e04410fedbbf64ac39f0b368b7afa2169c9eb75e5dec54ae00b69daa046a"
     },
     "experiments/cp-webr-02a/STORAGE-PRIVACY-AUDIT.json": {
       "bytes": 7873,
-      "sha256": "6f8481b102be0f404571c42ea4a619d2a0bf5cc4c8316ee4fad8d20e77bc1581"
+      "sha256": "6513d7e03efd012cdf79c684aa1693e725525d62f61e7dd96ae4ccfe230f34e7"
     },
     "experiments/cp-webr-02a/BROWSER-CI-QUALIFICATION-REPORT.json": {
       "bytes": 1455,
-      "sha256": "0b41b2576062407f085ed0936c36c11c18a92997ee9a41ff67ef04b379919267"
+      "sha256": "7d9dd4d4d73813482bb17a9191881f871eb306961894587d970d1cdcc3aea781"
+    },
+    "experiments/cp-webr-02a/r1.1/FIXTURE-ASSERTION-MATRIX.json": {
+      "bytes": 12755,
+      "sha256": "ee92e798d9da1fc6d8203a6c2897afcf5723041082814db8f2a9c84aeff6c301"
     },
     "experiments/cp-webr-02a/fixtures/fix_01_oracle_full_precision.json": {
       "bytes": 29484,

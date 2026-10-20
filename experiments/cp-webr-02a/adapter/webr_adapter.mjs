@@ -1,5 +1,5 @@
 // CP-WEBR-02A High-Level WebR Statistical Adapter
-// Conforms to CP-WEBR-01 Production Architecture & Canonical Result Contract
+// Conforms to CP-WEBR-01 Production Architecture & Canonical Result Contract & R1.1 Requirements
 // Completely environment-neutral: runs seamlessly in both Node.js and Chromium Workers
 
 import { SymbolMapper } from './symbol_mapper.mjs';
@@ -56,7 +56,8 @@ export class WebRStatisticalAdapter {
     this.webR = webRInstance;
     this.options = options;
     this.rTemplateSource = options.rTemplateSource || null;
-    this.rTemplateSha256 = options.rTemplateSha256 || null;
+    this.expectedTemplateSha256 = options.rTemplateSha256 || null;
+    this.rTemplateSha256 = null;
     this.templateLoaded = false;
   }
 
@@ -70,8 +71,11 @@ export class WebRStatisticalAdapter {
       throw new Error('Valid R template source string required');
     }
     const actualSha = await sha256Hex(rTemplateSource);
-    if (expectedSha256 && actualSha !== expectedSha256) {
-      throw new Error(`R template integrity mismatch: expected ${expectedSha256}, got ${actualSha}`);
+    const targetSha = expectedSha256 || this.expectedTemplateSha256;
+    if (targetSha && actualSha !== targetSha) {
+      const err = new Error(`R template integrity mismatch: expected ${targetSha}, got ${actualSha}`);
+      err.code = 'TEMPLATE_INTEGRITY_MISMATCH';
+      throw err;
     }
     this.rTemplateSource = rTemplateSource;
     this.rTemplateSha256 = actualSha;
@@ -99,54 +103,50 @@ export class WebRStatisticalAdapter {
     const startTime = Date.now();
     await this.ensureTemplateLoaded();
 
-    if (!datasetInput.treatmentVariable) {
-      throw new Error('Treatment variable must be specified');
+    if (!datasetInput || typeof datasetInput !== 'object') {
+      throw new Error('Invalid datasetInput: expected object');
     }
-    if (!datasetInput.covariates || datasetInput.covariates.length === 0) {
-      throw new Error('At least one covariate must be specified');
-    }
-    if (!datasetInput.rows || datasetInput.rows.length === 0) {
-      throw new Error('Dataset contains zero rows');
+    if (!Array.isArray(datasetInput.rows) || datasetInput.rows.length === 0) {
+      throw new Error('Invalid datasetInput: rows array must be non-empty');
     }
 
-    // 1. Build bidirectional symbol mapper
-    const mapper = new SymbolMapper();
-    mapper.registerTreatment(datasetInput.treatmentVariable);
-    const covAliases = [];
-    for (const cov of datasetInput.covariates) {
-      covAliases.push(mapper.registerCovariate(cov));
-    }
-
-    // Compute input dataset hash asynchronously using Web Crypto
+    // 1. Compute input dataset SHA-256 fingerprint deterministically
     const datasetJson = JSON.stringify(datasetInput.rows);
     const datasetSha256 = await sha256Hex(datasetJson);
 
-    // 2. Safe WebR Parameter Binding & Object Construction
-    const { analysisEnv, factorMetadata, rProxies } = await constructWebREnvironment(
-      this.webR,
-      datasetInput,
-      mapper
-    );
+    // 2. Initialize reversible symbol mapper
+    const mapper = new SymbolMapper();
+
+    // 3. Construct isolated R environment and bind data structures safely
+    const {
+      analysisEnv,
+      factorMetadata,
+      rProxies
+    } = await constructWebREnvironment(this.webR, datasetInput, mapper);
+
+    // Assemble data frame in child environment with factor transformations
+    let factorProcessingCode = '';
+    for (const [covAlias, meta] of Object.entries(factorMetadata)) {
+      factorProcessingCode += `
+        ${covAlias}_fac <- factor(
+          ${covAlias}_raw,
+          levels = ${covAlias}_levels
+        )
+        ${covAlias} <- stats::relevel(${covAlias}_fac, ref = ${covAlias}_ref)
+      `;
+    }
 
     const assembleDfCode = `
       local({
-        df_bound <- data.frame(row.names = row_ids)
-        df_bound[[target_trt_name]] <- as.integer(get(target_trt_name))
-        for (ca in target_cov_names) {
-          if (ca %in% target_categorical_covs) {
-            levs <- get(paste0(ca, "_levels"))
-            df_bound[[ca]] <- factor(get(paste0(ca, "_raw")), levels = levs)
-            if (exists(paste0(ca, "_ref"))) {
-              ref_val <- get(paste0(ca, "_ref"))
-              if (!is.null(ref_val) && nchar(ref_val) > 0 && ref_val %in% levs) {
-                df_bound[[ca]] <- stats::relevel(df_bound[[ca]], ref = ref_val)
-              }
-            }
-          } else {
-            df_bound[[ca]] <- as.numeric(get(ca))
-          }
+        ${factorProcessingCode}
+        df_cols <- list()
+        df_cols[[target_trt_name]] <- get(target_trt_name)
+        for (cov in target_cov_names) {
+          df_cols[[cov]] <- get(cov)
         }
-        # Invoke authoritative pure analysis function
+        df_bound <- as.data.frame(df_cols, stringsAsFactors = FALSE)
+        rownames(df_bound) <- row_ids
+
         raw_res <- run_psm_analysis(
           df = df_bound,
           trt_name = target_trt_name,
@@ -210,8 +210,9 @@ export class WebRStatisticalAdapter {
     const runId = `run_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
     // Build factor configuration ledger
+    const rawCovHeaders = input.covariates.map(c => typeof c === 'string' ? c : c?.name);
     const factorConfig = {};
-    for (const origHeader of [input.treatmentVariable, ...input.covariates]) {
+    for (const origHeader of [input.treatmentVariable, ...rawCovHeaders]) {
       const alias = mapper.getAlias(origHeader);
       if (origHeader === input.treatmentVariable) {
         factorConfig[alias] = {
@@ -226,11 +227,14 @@ export class WebRStatisticalAdapter {
       } else if (factorMetadata && factorMetadata[alias]) {
         factorConfig[alias] = { ...factorMetadata[alias] };
       } else {
+        const declaredType = input.covariateDefinitions?.[origHeader]?.inferredType ||
+          (input.covariates.find(c => typeof c === 'object' && c?.name === origHeader)?.inferredType) ||
+          'continuous';
         factorConfig[alias] = {
           originalHeader: origHeader,
           internalAlias: alias,
           displayName: origHeader,
-          inferredType: 'continuous',
+          inferredType: declaredType,
           levels: [],
           referenceLevel: null,
           droppedLevel: null
@@ -267,7 +271,21 @@ export class WebRStatisticalAdapter {
       };
     });
 
-    const unitIds = input.rows.map((r, idx) => r.id !== undefined && r.id !== null ? String(r.id) : String(idx + 1));
+    const unitIds = input.rows.map(r => String(r.id).trim());
+    const totalUnits = input.rows.length;
+
+    const distanceMetric = input.options?.distanceMetric || 'linear.logit';
+    const caliperVal = input.options?.caliper ?? null;
+    const stdCaliper = input.options?.stdCaliper ?? true;
+    const discardOpt = input.options?.discard || 'none';
+
+    const caliperClause = caliperVal !== null && caliperVal !== undefined
+      ? `, caliper = ${caliperVal}, std.caliper = ${stdCaliper}`
+      : '';
+    const discardClause = discardOpt && discardOpt !== 'none'
+      ? `, discard = "${discardOpt}"`
+      : '';
+    const rCallMatchIt = `MatchIt::matchit(formula = ${input.treatmentVariable} ~ ${rawCovHeaders.join(' + ')}, data = df, method = "nearest", distance = "glm", link = "${distanceMetric}", estimand = "ATT", m.order = "largest", replace = FALSE, ratio = 1${caliperClause}${discardClause})`;
 
     return {
       metadata: {
@@ -283,9 +301,9 @@ export class WebRStatisticalAdapter {
       },
       inputFingerprint: {
         datasetSha256,
-        canonicalResultSha256: '', // Calculated by envelope wrapper
-        totalRows: input.rows.length,
-        completeCases: input.rows.length,
+        canonicalResultSha256: '', // Populated by wrapInVersionedEnvelope via computeCanonicalResultHash
+        totalRows: totalUnits,
+        completeCases: totalUnits,
         excludedRows: 0,
         exclusionReasonSummary: {}
       },
@@ -295,20 +313,27 @@ export class WebRStatisticalAdapter {
         emscriptenVersion: '5.0.7',
         matchItVersion: '4.8.1',
         cobaltVersion: '5.0.0',
-        dependencySha256s: {}
+        packageVersions: {
+          matchIt: '4.8.1',
+          cobalt: '5.0.0',
+          webr: '0.6.0',
+          r: '4.6.0'
+        },
+        dependencyVerificationStatus: 'PACKAGE_VERSION_PINNED_WASM_PRECOMPILED'
       },
       matchingConfiguration: {
         treatmentVariable: input.treatmentVariable,
-        covariates: input.covariates,
-        distanceMetric: input.options?.distanceMetric || 'linear.logit',
+        covariates: rawCovHeaders,
+        distanceMetric,
         method: 'nearest',
         ratio: 1,
         replace: false,
         matchingOrder: 'largest',
-        caliper: input.options?.caliper ?? null,
-        stdCaliper: input.options?.stdCaliper ?? true,
-        discard: input.options?.discard || 'none',
+        caliper: caliperVal,
+        stdCaliper,
+        discard: discardOpt,
         effectiveCaliperWidthRaw: toScalar(matching.effectiveCaliperWidth),
+        matchingDistanceScale: toScalar(matching.matchingDistanceScale, distanceMetric),
         caliperScaleDescription: toScalar(matching.caliperScaleDescription, 'none')
       },
       factorConfiguration: factorConfig,
@@ -326,7 +351,7 @@ export class WebRStatisticalAdapter {
       matchedUnits: {
         matchedTreatedIds: toArray(matching.matchedTreatedIds).map(String),
         matchedControlIds: toArray(matching.matchedControlIds).map(String),
-        totalMatchedPairs: toScalar(matching.totalMatchedPairs, 0),
+        totalMatchedPairs: Number(matching.totalMatchedPairs),
         pairDistances: toArray(matching.pairDistances).map(d => d !== null && d !== undefined ? Number(d) : null)
       },
       matchingWeights: {
@@ -335,17 +360,17 @@ export class WebRStatisticalAdapter {
         subclass: toArray(matching.subclasses).map(s => s !== null && s !== undefined ? Number(s) : null)
       },
       sampleAccounting: {
-        importedTotal: toScalar(sampleAcc.importedTotal, input.rows.length),
-        completeCases: toScalar(sampleAcc.completeCases, input.rows.length),
-        treatedTotal: toScalar(sampleAcc.treatedTotal, 0),
-        controlTotal: toScalar(sampleAcc.controlTotal, 0),
-        matchedTreatedCount: toScalar(sampleAcc.matchedTreatedCount, 0),
-        matchedControlCount: toScalar(sampleAcc.matchedControlCount, 0),
-        unmatchedTreatedCount: toScalar(sampleAcc.unmatchedTreatedCount, 0),
-        unmatchedControlCount: toScalar(sampleAcc.unmatchedControlCount, 0),
-        discardedTreatedCount: toScalar(sampleAcc.discardedTreatedCount, 0),
-        discardedControlCount: toScalar(sampleAcc.discardedControlCount, 0),
-        treatedRetentionRate: toScalar(sampleAcc.treatedRetentionRate, 0.0)
+        importedTotal: Number(sampleAcc.importedTotal),
+        completeCases: Number(sampleAcc.completeCases),
+        treatedTotal: Number(sampleAcc.treatedTotal),
+        controlTotal: Number(sampleAcc.controlTotal),
+        matchedTreatedCount: Number(sampleAcc.matchedTreatedCount),
+        matchedControlCount: Number(sampleAcc.matchedControlCount),
+        unmatchedTreatedCount: Number(sampleAcc.unmatchedTreatedCount),
+        unmatchedControlCount: Number(sampleAcc.unmatchedControlCount),
+        discardedTreatedCount: Number(sampleAcc.discardedTreatedCount),
+        discardedControlCount: Number(sampleAcc.discardedControlCount),
+        treatedRetentionRate: Number(sampleAcc.treatedRetentionRate)
       },
       balanceTable,
       numericalDiagnostics: {
@@ -384,14 +409,14 @@ export class WebRStatisticalAdapter {
         impactDescription: toScalar(w.impactDescription)
       })) : [],
       methodProvenance: {
-        rCallMatchIt: 'MatchIt::matchit(formula, data, method = "nearest", distance = "glm", link = "linear.logit", estimand = "ATT", m.order = "largest", replace = FALSE, ratio = 1)',
+        rCallMatchIt,
         rCallCobalt: 'cobalt::bal.tab(m_out, s.d.denom = "treated", binary = "raw", un = TRUE)',
         citationBibtexMatchIt: '@article{ho2011matchit, title={MatchIt: Nonparametric Preprocessing for Parametric Causal Inference}, author={Ho, Daniel E and Imai, Kosuke and King, Gary and Stuart, Elizabeth A}, journal={Journal of Statistical Software}, year={2011}}',
         citationBibtexCobalt: '@manual{greifer2024cobalt, title={cobalt: Covariate Balance Tables and Plots}, author={Greifer, Noah}, year={2024}}'
       },
       publicationStatus: {
-        verdict: toScalar(pubStatus.verdict, 'OUTPUT_READY'),
-        reasons: toArray(pubStatus.reasons).map(r => toScalar(r)),
+        verdict: toScalar(pubStatus.verdict, 'COMPUTATION_FAILED'),
+        reasons: toArray(pubStatus.reasons).map(String),
         outputGenerationAllowed: isTRUE(toScalar(pubStatus.outputGenerationAllowed))
       }
     };

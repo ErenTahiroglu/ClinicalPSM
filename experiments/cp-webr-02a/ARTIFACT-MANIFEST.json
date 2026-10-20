@@ -1,8 +1,8 @@
 {
-  "manifest_version": "2.1.0",
-  "generated_at": "2026-10-20T14:52:06.061Z",
-  "phase": "CP-WEBR-02A-R1",
-  "baseline_sha": "92df0d2acd2973bf792b6a009b72e39656cf0c66",
+  "manifest_version": "2.2.0",
+  "generated_at": "2026-10-20T17:40:33.300Z",
+  "phase": "CP-WEBR-02A-R1.1",
+  "baseline_sha": "0b80d3fed39aaad25a3cedcefa81a8c724c7888d",
   "manifest_classification": "COMMITTED_BASELINE_IMMUTABLE_INPUTS",
   "artifacts": {
     "experiments/cp-webr-02a/CP-WEBR-02A-EXPERIMENT-CONTRACT.md": {
@@ -17,61 +17,73 @@
       "bytes": 15799,
       "sha256": "08477da3709c67aec2d183cf154881f318e655aa27e0d163b30b862d83a8d8f1"
     },
+    "experiments/cp-webr-02a/CP-WEBR-02A-R1.1-TEST-CONTRACT.md": {
+      "bytes": 8770,
+      "sha256": "d86bf3ce5d43ee22d4291ef1de758466e3793764d1bc384c1a2c7df525c186ef"
+    },
+    "experiments/cp-webr-02a/CP-WEBR-02A-R1.1-RED-TEAM-REMEDIATION.md": {
+      "bytes": 15176,
+      "sha256": "71a92f037d0cd5429d8c0811e3f84105bcbdf18fb2e5105d80cbb55ebcdc3320"
+    },
+    "experiments/cp-webr-02a/CP-WEBR-02A-R1.1-RESULT.md": {
+      "bytes": 8702,
+      "sha256": "dc73c21a170d509fb3bd548d90dc0d599cbb5c29bae12bea12d3b511254f721d"
+    },
     "experiments/cp-webr-02a/adapter/types.ts": {
-      "bytes": 6133,
-      "sha256": "6499ede3bbd84fb20b3825da3c76010bfadcab0b1d61ec47f970fb992f81dd32"
+      "bytes": 6259,
+      "sha256": "a74a076d9a65cb05516a4adc3118c06492f5039fffc2c7daf45e42f6d42b510b"
     },
     "experiments/cp-webr-02a/adapter/symbol_mapper.mjs": {
-      "bytes": 2978,
-      "sha256": "951de520b248222e1ce342c85813961996b93d506f46183100c1c6be78d4717b"
+      "bytes": 5642,
+      "sha256": "3eabe17c955199c82494d2a9e8cdd52bda58ee2d79476db21f99bf3899d991c0"
     },
     "experiments/cp-webr-02a/adapter/r_template.R": {
-      "bytes": 14149,
-      "sha256": "1295f9ad736b53cbaf3e22f07f8ab0bb7fcec5dd22fd27071932f858de09619a"
+      "bytes": 14709,
+      "sha256": "7989403c7d093031b93a9c971a6d4f055101bab83c0ec4417fc52e4dceee24a4"
     },
     "experiments/cp-webr-02a/adapter/webr_binding.mjs": {
-      "bytes": 7421,
-      "sha256": "373a6559746f0225f0f951fce8ce158be009ab8c97f8eae89516e69622dd248d"
+      "bytes": 14486,
+      "sha256": "22d5d538cf053f01730d06efed2091c9fa25b16816c0824ac3d05574755d109b"
     },
     "experiments/cp-webr-02a/adapter/canonical_serializer.mjs": {
-      "bytes": 3310,
-      "sha256": "68cc86cc2ef16c4894a30cf343277e4e08c6e2e6467d5305f58b19f9da9a689a"
+      "bytes": 11401,
+      "sha256": "1418570d7be417297a7cac65257917632703fecb17af3f197c572e389f4dee43"
     },
     "experiments/cp-webr-02a/adapter/webr_adapter.mjs": {
-      "bytes": 16297,
-      "sha256": "64bf7d6e3a8d07969fbf02230a6bab3af0b783a8a49e575d26b17b604c3a61fd"
+      "bytes": 17173,
+      "sha256": "e049959ad24fb916c8892c270ebe05745a07b86a2bd3c1e5dbe65cf2c5c0df29"
     },
     "experiments/cp-webr-02a/adapter/worker_manager.mjs": {
-      "bytes": 8620,
-      "sha256": "9fc627931a04eb718c700342b0914864db9d254a8e2156cbe6f7f379d734b5e8"
+      "bytes": 9870,
+      "sha256": "d4dabf082607e56e197786407869b6a2fd6fe776613403643de237c66d84c77f"
     },
     "experiments/cp-webr-02a/browser-harness/server.mjs": {
       "bytes": 8010,
       "sha256": "bf81c0612429ee0236d0e14d702bdcd5310771100ac49b7c7294360d5155acb4"
     },
     "experiments/cp-webr-02a/browser-harness/worker.js": {
-      "bytes": 4207,
-      "sha256": "e969ed5e5aea70ec74b94486a4f69fdbc9d7e83461df876c49c155dcc79827d6"
+      "bytes": 5703,
+      "sha256": "f006971eb8e03c1f476768b46ffc1aaef31c4cf254aacce3eac603c60117808c"
     },
     "experiments/cp-webr-02a/browser-harness/harness.js": {
-      "bytes": 34291,
-      "sha256": "b0037c6b09810bc41a92fcd04fe23b4cac777bf7086429ff256c0e2a2a9a85a0"
+      "bytes": 35632,
+      "sha256": "0076961b96f50fdbe9c2199209a902d04c630e7e3a22c359c0e1f314f57c069d"
     },
     "experiments/cp-webr-02a/browser-harness/index.html": {
       "bytes": 306,
       "sha256": "49ba3b04774d6ea5cb3e614056316ff6855952a5b0bfa0a30858faeb67393408"
     },
     "experiments/cp-webr-02a/harness/test_adapter_unit.mjs": {
-      "bytes": 11633,
-      "sha256": "f900df355b49ebf39489523d1930517cce77d50bb45b006ac283bf9f5a7cb3c1"
+      "bytes": 21627,
+      "sha256": "16a68b20ecfcfac08943153e920f01f0ee6403131b9130d67e7304b6a2cd75fa"
     },
     "experiments/cp-webr-02a/harness/test_scientific_parity.mjs": {
-      "bytes": 16178,
-      "sha256": "448823761689ba7d7785863e4bab2158a93c82c32759c9d0cfabeda4afd2225d"
+      "bytes": 27602,
+      "sha256": "852f3025f2c12f3a02481c2a040f93a31c374c6a00a20eed2989ce5031e473a6"
     },
     "experiments/cp-webr-02a/harness/test_browser_qualification.mjs": {
-      "bytes": 20048,
-      "sha256": "7fc684442a7146fe07fccaf14ee41ef33126ad2515326c4cce681a6a3b052138"
+      "bytes": 25965,
+      "sha256": "2deca161747aa29a0d0e3a4b3a6808895eeb256317349c8bb9deef0165d0deaa"
     },
     "experiments/cp-webr-02a/fixtures/fix_01_oracle_full_precision.json": {
       "bytes": 29484,

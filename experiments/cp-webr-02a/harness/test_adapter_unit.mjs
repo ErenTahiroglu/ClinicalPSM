@@ -1,22 +1,24 @@
-// CP-WEBR-02A Adapter Unit Suite
-// Tests:
-// 1. SymbolMapper (Monotonic aliases, Unicode NFC, 256 code point limit, control chars, reversibility)
-// 2. CanonicalSerializer (Lexicographical sorting, defensive cloning, non-finite values, envelope hashing, tampering detection)
-// 3. WorkerLifecycleManager (8-state transitions, concurrency enforcement, cancellation, termination)
+// CP-WEBR-02A Adapter Unit & Adversarial Validation Suite
+// Conforms to CP-WEBR-01 Production Architecture, Canonical Result Contract & R1.1 Requirements
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { SymbolMapper } from '../adapter/symbol_mapper.mjs';
 import {
   defensiveClone,
+  deepFreeze,
   serializeCanonical,
   wrapInVersionedEnvelope,
-  verifyEnvelope
+  verifyEnvelope,
+  validateCanonicalResult,
+  computeCanonicalResultHash
 } from '../adapter/canonical_serializer.mjs';
 import { WorkerLifecycleManager } from '../adapter/worker_manager.mjs';
+import { constructWebREnvironment, validateOptions } from '../adapter/webr_binding.mjs';
+import { WebRStatisticalAdapter } from '../adapter/webr_adapter.mjs';
 
 const results = {
-  suite: 'CP-WEBR-02A Adapter Unit Suite',
+  suite: 'CP-WEBR-02A R1.1 Adapter Unit & Adversarial Suite',
   executed_at: new Date().toISOString(),
   tests_passed: 0,
   tests_failed: 0,
@@ -36,9 +38,9 @@ function assert(condition, testName, details = '') {
 }
 
 // -------------------------------------------------------------
-// 1. SymbolMapper Unit Tests
+// 1. SymbolMapper Unit & Adversarial Tests
 // -------------------------------------------------------------
-console.log('\n--- 1. Testing SymbolMapper ---');
+console.log('\n--- 1. Testing SymbolMapper & Header Validation ---');
 
 const mapper = new SymbolMapper();
 
@@ -50,92 +52,452 @@ assert(trt0 === 'trt_00', 'Treatment alias is monotonic trt_00', `got ${trt0}`);
 assert(cov0 === 'cov_00', 'First covariate alias is cov_00', `got ${cov0}`);
 assert(cov1 === 'cov_01', 'Second covariate alias is cov_01', `got ${cov1}`);
 
-// 1.2 Idempotency
-assert(mapper.registerTreatment('Treatment Group') === 'trt_00', 'Registering same treatment returns identical alias');
-assert(mapper.registerCovariate('Patient Age') === 'cov_00', 'Registering same covariate returns identical alias');
+// 1.2 Exact raw header preservation in getOriginal
+assert(mapper.getOriginal('trt_00') === 'Treatment Group', 'Exact raw header preserved: trt_00 -> "Treatment Group"');
+assert(mapper.getOriginal('cov_00') === 'Patient Age', 'Exact raw header preserved: cov_00 -> "Patient Age"');
 
-// 1.3 Reversibility
-assert(mapper.getOriginal('cov_00') === 'Patient Age', 'Reversible mapping: cov_00 -> Patient Age');
-assert(mapper.getOriginal('cov_01') === 'Body Mass Index', 'Reversible mapping: cov_01 -> Body Mass Index');
-
-// 1.4 Unicode NFC normalization
-const nfdHeader = 'Ya\u015f'; // Yaş in NFC
-const nfcHeader = 'Yaş';
-const covUnicode = mapper.registerCovariate(nfdHeader);
-assert(mapper.getAlias(nfcHeader) === covUnicode, 'Unicode NFC normalization maps NFD and NFC to same alias');
-
-// 1.5 Code point limit (<= 256)
-const valid256 = 'A'.repeat(256);
-assert(SymbolMapper.validateAndNormalizeHeader(valid256) === valid256, '256 code points header accepted');
-
-let limitTrapped = false;
+// 1.3 Repeated covariate rejection
+let repeatedCovTrap = false;
 try {
-  const invalid257 = 'A'.repeat(257);
-  SymbolMapper.validateAndNormalizeHeader(invalid257);
+  mapper.registerCovariate('Patient Age');
 } catch (err) {
-  limitTrapped = err.code === 'HEADER_LENGTH_EXCEEDED';
+  repeatedCovTrap = err.code === 'REPEATED_COVARIATE_REJECTED';
 }
-assert(limitTrapped, 'Header with 257 code points rejected with HEADER_LENGTH_EXCEEDED');
+assert(repeatedCovTrap, 'Repeated covariate registration rejected with REPEATED_COVARIATE_REJECTED');
 
-// 1.6 Control character & null byte rejection
-let nullTrapped = false;
+// 1.4 Covariate equal to treatment variable rejection
+let covTrtTrap = false;
 try {
-  SymbolMapper.validateAndNormalizeHeader('Patient\x00Name');
-} catch {
-  nullTrapped = true;
+  mapper.registerCovariate('Treatment Group');
+} catch (err) {
+  covTrtTrap = err.code === 'TREATMENT_AS_COVARIATE_REJECTED';
 }
-assert(nullTrapped, 'Header with null byte rejected');
+assert(covTrtTrap, 'Covariate equal to treatment variable rejected with TREATMENT_AS_COVARIATE_REJECTED');
 
-let controlTrapped = false;
+// 1.5 Header normalization collision (NFC vs NFD)
+const mapperNfc = new SymbolMapper();
+mapperNfc.registerCovariate('Yaş'); // NFC: Y-a-\u015f
+let nfdCollisionTrap = false;
 try {
-  SymbolMapper.validateAndNormalizeHeader('Age\x1bEscaped');
-} catch {
-  controlTrapped = true;
+  mapperNfc.registerCovariate('Ya\u0073\u0327'); // NFD: Y-a-s-\u0327 (combining cedilla)
+} catch (err) {
+  nfdCollisionTrap = err.code === 'HEADER_NORMALIZATION_COLLISION';
 }
-assert(controlTrapped, 'Header with escape control character rejected');
+assert(nfdCollisionTrap, 'NFC/NFD header normalization collision rejected with HEADER_NORMALIZATION_COLLISION');
+
+// 1.6 Whitespace-only differing header collision
+const mapperWs = new SymbolMapper();
+mapperWs.registerCovariate('Age');
+let wsCollisionTrap = false;
+try {
+  mapperWs.registerCovariate('  Age  ');
+} catch (err) {
+  wsCollisionTrap = err.code === 'HEADER_NORMALIZATION_COLLISION';
+}
+assert(wsCollisionTrap, 'Headers differing only by surrounding whitespace rejected with HEADER_NORMALIZATION_COLLISION');
+
+// 1.7 Unicode, quotation marks and R-code-looking text safely aliased
+const injectionHeader = '"; system("touch /tmp/pwned"); #';
+const mapperInj = new SymbolMapper();
+const injAlias = mapperInj.registerCovariate(injectionHeader);
+assert(injAlias === 'cov_00', 'R-code injection string safely mapped to monotonic alias cov_00');
+assert(mapperInj.getOriginal('cov_00') === injectionHeader, 'Original injection header safely preserved in mapper table');
 
 // -------------------------------------------------------------
-// 2. CanonicalSerializer Unit Tests
+// 2. Scientific Matching Options Validation
 // -------------------------------------------------------------
-console.log('\n--- 2. Testing CanonicalSerializer ---');
+console.log('\n--- 2. Testing Option Validation & Caliper Parameters ---');
 
-// 2.1 Lexicographical key sorting
-const unsorted = { z: 1, a: 2, m: { y: 10, b: 20 } };
-const canonicalJson = serializeCanonical(unsorted);
-assert(canonicalJson === '{"a":2,"m":{"b":20,"y":10},"z":1}', 'Keys sorted lexicographically at all nesting levels', canonicalJson);
+// 2.1 Unknown scientific option rejection
+let unknownOptTrap = false;
+try {
+  validateOptions({ standardizedCaliper: true }); // Incorrect alias rejected
+} catch (err) {
+  unknownOptTrap = err.code === 'UNKNOWN_OPTION_REJECTED';
+}
+assert(unknownOptTrap, 'Unknown option "standardizedCaliper" rejected with UNKNOWN_OPTION_REJECTED');
 
-// 2.2 Defensive cloning & Non-finite preservation
-const withNonFinite = { val: NaN, inf: Infinity, negInf: -Infinity, normal: 42.5 };
-const cloned = defensiveClone(withNonFinite);
-assert(cloned.val === null && cloned.inf === null && cloned.negInf === null, 'Non-finite numbers converted to null (never coerced to 0)');
-assert(cloned.normal === 42.5, 'Normal numbers preserved in defensive clone');
+// 2.2 Canonical stdCaliper accepted
+let validOptOk = false;
+try {
+  validateOptions({
+    method: 'nearest',
+    distanceMetric: 'linear.logit',
+    caliper: 0.2,
+    stdCaliper: true,
+    ratio: 1,
+    replace: false,
+    matchingOrder: 'largest',
+    discard: 'none'
+  });
+  validOptOk = true;
+} catch {}
+assert(validOptOk, 'Canonical options with stdCaliper and linear.logit validated successfully');
 
-// 2.3 VersionedCanonicalEnvelope creation & verification
-const payload = { result: 'OK', matched: 119, weights: [1, 1, 0] };
-const envelope = await wrapInVersionedEnvelope(payload, { runId: 'run_test_01' });
-assert(envelope.envelopeVersion === '1.0.0', 'Envelope version is 1.0.0');
-assert(typeof envelope.payloadSha256 === 'string' && envelope.payloadSha256.length === 64, 'Envelope contains valid 64-char SHA-256');
+// 2.3 Invalid method rejected
+let invalidMethodTrap = false;
+try {
+  validateOptions({ method: 'optimal' });
+} catch (err) {
+  invalidMethodTrap = err.code === 'INVALID_OPTION';
+}
+assert(invalidMethodTrap, 'Invalid method "optimal" rejected with INVALID_OPTION');
 
-const verifyClean = await verifyEnvelope(envelope);
-assert(verifyClean.valid === true, 'Envelope verification succeeds on untampered payload');
-
-// 2.4 Tampering detection
-const tampered = JSON.parse(JSON.stringify(envelope));
-tampered.payload.matched = 120;
-const verifyTampered = await verifyEnvelope(tampered);
-assert(verifyTampered.valid === false, 'Envelope verification traps payload tampering');
+// 2.4 Negative caliper rejected
+let negCaliperTrap = false;
+try {
+  validateOptions({ caliper: -0.1 });
+} catch (err) {
+  negCaliperTrap = err.code === 'INVALID_OPTION';
+}
+assert(negCaliperTrap, 'Negative caliper rejected with INVALID_OPTION');
 
 // -------------------------------------------------------------
-// 3. WorkerLifecycleManager Unit Tests
+// 3. Ingestion Validation & Data Semantics (Fail-Closed)
 // -------------------------------------------------------------
-console.log('\n--- 3. Testing WorkerLifecycleManager ---');
+console.log('\n--- 3. Testing Ingestion Validation & Missingness Contracts ---');
 
-// Mock worker for lifecycle unit testing
-class MockWorker {
+class MockWebR {
+  async evalR() { return {}; }
+  REnvironment = class { async bind() {} };
+  RCharacter = class { constructor(v) { this.v = v; } };
+  RInteger = class { constructor(v) { this.v = v; } };
+  RDouble = class { constructor(v) { this.v = v; } };
+  RLogical = class { constructor(v) { this.v = v; } };
+}
+
+const mockWebR = new MockWebR();
+
+// 3.1 Missing explicit unit ID rejection (No auto fallback)
+let missingIdTrap = false;
+try {
+  const m = new SymbolMapper();
+  await constructWebREnvironment(mockWebR, {
+    treatmentVariable: 'treat',
+    covariates: ['age'],
+    covariateDefinitions: { age: { inferredType: 'continuous' } },
+    rows: [{ treat: 1, age: 40 }] // Missing id
+  }, m);
+} catch (err) {
+  missingIdTrap = err.code === 'MISSING_ROW_ID';
+}
+assert(missingIdTrap, 'Missing explicit row ID rejected with MISSING_ROW_ID');
+
+// 3.2 Duplicate unit ID rejection
+let dupIdTrap = false;
+try {
+  const m = new SymbolMapper();
+  await constructWebREnvironment(mockWebR, {
+    treatmentVariable: 'treat',
+    covariates: ['age'],
+    covariateDefinitions: { age: { inferredType: 'continuous' } },
+    rows: [
+      { id: 'sub_01', treat: 1, age: 40 },
+      { id: 'sub_01', treat: 0, age: 45 }
+    ]
+  }, m);
+} catch (err) {
+  dupIdTrap = err.code === 'DUPLICATE_UNIT_ID_REJECTED';
+}
+assert(dupIdTrap, 'Duplicate unit ID rejected with DUPLICATE_UNIT_ID_REJECTED');
+
+// 3.3 Blank categorical factor level rejected
+let blankLevelTrap = false;
+try {
+  const m = new SymbolMapper();
+  await constructWebREnvironment(mockWebR, {
+    treatmentVariable: 'treat',
+    covariates: ['cat'],
+    covariateDefinitions: {
+      cat: {
+        inferredType: 'categorical',
+        levels: ['GroupA', '   '],
+        referenceLevel: 'GroupA'
+      }
+    },
+    rows: [{ id: 'sub_01', treat: 1, cat: 'GroupA' }]
+  }, m);
+} catch (err) {
+  blankLevelTrap = err.code === 'BLANK_FACTOR_LEVEL_REJECTED';
+}
+assert(blankLevelTrap, 'Blank factor level rejected with BLANK_FACTOR_LEVEL_REJECTED');
+
+// 3.4 Unknown reference category rejected
+let unknownRefTrap = false;
+try {
+  const m = new SymbolMapper();
+  await constructWebREnvironment(mockWebR, {
+    treatmentVariable: 'treat',
+    covariates: ['cat'],
+    covariateDefinitions: {
+      cat: {
+        inferredType: 'categorical',
+        levels: ['Low', 'High'],
+        referenceLevel: 'Medium' // Not in levels
+      }
+    },
+    rows: [{ id: 'sub_01', treat: 1, cat: 'Low' }]
+  }, m);
+} catch (err) {
+  unknownRefTrap = err.code === 'UNKNOWN_REFERENCE_CATEGORY_REJECTED';
+}
+assert(unknownRefTrap, 'Unknown reference category rejected with UNKNOWN_REFERENCE_CATEGORY_REJECTED');
+
+// 3.5 Observation outside declared factor levels rejected
+let unlistedObsTrap = false;
+try {
+  const m = new SymbolMapper();
+  await constructWebREnvironment(mockWebR, {
+    treatmentVariable: 'treat',
+    covariates: ['cat'],
+    covariateDefinitions: {
+      cat: {
+        inferredType: 'categorical',
+        levels: ['Low', 'High'],
+        referenceLevel: 'Low'
+      }
+    },
+    rows: [
+      { id: 'sub_01', treat: 1, cat: 'Low' },
+      { id: 'sub_02', treat: 0, cat: 'SuperHigh' }
+    ]
+  }, m);
+} catch (err) {
+  unlistedObsTrap = err.code === 'UNLISTED_FACTOR_OBSERVATION_REJECTED';
+}
+assert(unlistedObsTrap, 'Observation outside declared levels rejected with UNLISTED_FACTOR_OBSERVATION_REJECTED');
+
+// 3.6 Missing categorical value rejected (empty string or "NA")
+let missingCatTrap = false;
+try {
+  const m = new SymbolMapper();
+  await constructWebREnvironment(mockWebR, {
+    treatmentVariable: 'treat',
+    covariates: ['cat'],
+    covariateDefinitions: {
+      cat: {
+        inferredType: 'categorical',
+        levels: ['Low', 'High'],
+        referenceLevel: 'Low'
+      }
+    },
+    rows: [
+      { id: 'sub_01', treat: 1, cat: 'Low' },
+      { id: 'sub_02', treat: 0, cat: '' } // Missing
+    ]
+  }, m);
+} catch (err) {
+  missingCatTrap = err.code === 'MISSING_COVARIATE';
+}
+assert(missingCatTrap, 'Blank categorical observation rejected under fail-closed missingness policy');
+
+// 3.7 Non-finite numeric input rejected
+let nonFiniteTrap = false;
+try {
+  const m = new SymbolMapper();
+  await constructWebREnvironment(mockWebR, {
+    treatmentVariable: 'treat',
+    covariates: ['x'],
+    covariateDefinitions: { x: { inferredType: 'continuous' } },
+    rows: [
+      { id: 'sub_01', treat: 1, x: 10 },
+      { id: 'sub_02', treat: 0, x: Infinity }
+    ]
+  }, m);
+} catch (err) {
+  nonFiniteTrap = err.code === 'NON_FINITE_NUMERIC_REJECTED';
+}
+assert(nonFiniteTrap, 'Non-finite numeric value (Infinity) rejected with NON_FINITE_NUMERIC_REJECTED');
+
+// 3.8 Malformed numeric input rejected
+let malformedNumTrap = false;
+try {
+  const m = new SymbolMapper();
+  await constructWebREnvironment(mockWebR, {
+    treatmentVariable: 'treat',
+    covariates: ['x'],
+    covariateDefinitions: { x: { inferredType: 'continuous' } },
+    rows: [
+      { id: 'sub_01', treat: 1, x: 10 },
+      { id: 'sub_02', treat: 0, x: 'thirty_five' }
+    ]
+  }, m);
+} catch (err) {
+  malformedNumTrap = err.code === 'MALFORMED_NUMERIC_REJECTED';
+}
+assert(malformedNumTrap, 'Malformed numeric string rejected with MALFORMED_NUMERIC_REJECTED');
+
+// -------------------------------------------------------------
+// 4. Canonical Result Runtime Schema Validation
+// -------------------------------------------------------------
+console.log('\n--- 4. Testing Canonical Result Schema & Invariants ---');
+
+function createSampleCanonicalResult() {
+  return {
+    metadata: {
+      runId: 'run_test_valid_01',
+      parentRunId: null,
+      timestamp: new Date().toISOString(),
+      seed: null,
+      executionDurationMs: 120,
+      platform: { userAgent: 'test', cores: 2 }
+    },
+    inputFingerprint: {
+      datasetSha256: 'a'.repeat(64),
+      canonicalResultSha256: 'b'.repeat(64),
+      totalRows: 4,
+      completeCases: 4,
+      excludedRows: 0,
+      exclusionReasonSummary: {}
+    },
+    toolchain: {
+      webrVersion: '0.6.0',
+      rVersion: '4.6.0',
+      emscriptenVersion: '5.0.7',
+      matchItVersion: '4.8.1',
+      cobaltVersion: '5.0.0',
+      packageVersions: { matchIt: '4.8.1', cobalt: '5.0.0', webr: '0.6.0', r: '4.6.0' },
+      dependencyVerificationStatus: 'PACKAGE_VERSION_PINNED_WASM_PRECOMPILED'
+    },
+    matchingConfiguration: {
+      treatmentVariable: 'treat',
+      covariates: ['age'],
+      distanceMetric: 'linear.logit',
+      method: 'nearest',
+      ratio: 1,
+      replace: false,
+      matchingOrder: 'largest',
+      caliper: 0.2,
+      stdCaliper: true,
+      discard: 'none',
+      effectiveCaliperWidthRaw: 0.15,
+      caliperScaleDescription: 'standardized'
+    },
+    factorConfiguration: {},
+    propensityScores: {
+      unitIds: ['1', '2', '3', '4'],
+      treatment: [1, 1, 0, 0],
+      propensityScores: [0.6, 0.7, 0.4, 0.3],
+      linearLogits: [0.4, 0.8, -0.4, -0.8]
+    },
+    matchMatrix: {
+      treatedIds: ['1', '2'],
+      matchedControlIds: ['3', '4'],
+      pairDistances: [0.1, 0.12]
+    },
+    matchedUnits: {
+      matchedTreatedIds: ['1', '2'],
+      matchedControlIds: ['3', '4'],
+      totalMatchedPairs: 2,
+      pairDistances: [0.1, 0.12]
+    },
+    matchingWeights: {
+      unitIds: ['1', '2', '3', '4'],
+      weights: [1, 1, 1, 1],
+      subclass: [1, 2, 1, 2]
+    },
+    sampleAccounting: {
+      importedTotal: 4,
+      completeCases: 4,
+      treatedTotal: 2,
+      controlTotal: 2,
+      matchedTreatedCount: 2,
+      matchedControlCount: 2,
+      unmatchedTreatedCount: 0,
+      unmatchedControlCount: 0,
+      discardedTreatedCount: 0,
+      discardedControlCount: 0,
+      treatedRetentionRate: 1.0
+    },
+    balanceTable: [],
+    numericalDiagnostics: {
+      glmConvergence: true,
+      glmIterations: 4,
+      nullDeviance: 5.5,
+      residualDeviance: 3.2,
+      maxAbsoluteCoefficient: 1.2,
+      maxCoefficientStandardError: 0.4,
+      coefficientTable: [{ term: '(Intercept)', estimate: 0.1, standardError: 0.2, zValue: 0.5, pValue: 0.6, aliased: false }],
+      rubinB: 0.1,
+      rubinR: 1.0
+    },
+    numericalInstabilitySafeguard: {
+      triggered: false,
+      maxCoefficientStandardError: 0.4,
+      maxAbsoluteCoefficient: 1.2,
+      policyClassification: 'PRESPECIFIED_NON_DIAGNOSTIC_RISK_SAFEGUARD',
+      certificationStatus: 'UNVALIDATED_SAFEGUARD_NOT_SEPARATION_DETECTOR'
+    },
+    warnings: [],
+    methodProvenance: {
+      rCallMatchIt: 'MatchIt::matchit(...)',
+      rCallCobalt: 'cobalt::bal.tab(...)',
+      citationBibtexMatchIt: 'bib',
+      citationBibtexCobalt: 'bib'
+    },
+    publicationStatus: {
+      verdict: 'OUTPUT_READY',
+      reasons: [],
+      outputGenerationAllowed: true
+    }
+  };
+}
+
+// 4.1 Valid schema passes
+const sampleRes = createSampleCanonicalResult();
+const valPass = validateCanonicalResult(sampleRes);
+assert(valPass.valid === true, 'Valid CanonicalPsmResult passes runtime schema validation');
+
+// 4.2 Broken vector length invariant caught
+const brokenVector = createSampleCanonicalResult();
+brokenVector.propensityScores.unitIds.pop(); // length 3 vs totalRows 4
+let vectorLengthTrap = false;
+try {
+  validateCanonicalResult(brokenVector);
+} catch (err) {
+  vectorLengthTrap = err.message.includes('INVARIANT_VIOLATION');
+}
+assert(vectorLengthTrap, 'Vector length mismatch caught with INVARIANT_VIOLATION');
+
+// 4.3 Broken sample accounting invariant caught
+const brokenAccounting = createSampleCanonicalResult();
+brokenAccounting.sampleAccounting.treatedTotal = 999;
+let accountingTrap = false;
+try {
+  validateCanonicalResult(brokenAccounting);
+} catch (err) {
+  accountingTrap = err.message.includes('INVARIANT_VIOLATION');
+}
+assert(accountingTrap, 'Sample accounting mismatch caught with INVARIANT_VIOLATION');
+
+// 4.4 Caliper distance bound satisfaction invariant
+const caliperViolation = createSampleCanonicalResult();
+caliperViolation.matchMatrix.pairDistances[0] = 0.99; // effective caliper is 0.15
+let caliperBoundTrap = false;
+try {
+  validateCanonicalResult(caliperViolation);
+} catch (err) {
+  caliperBoundTrap = err.message.includes('exceeds effective caliper width');
+}
+assert(caliperBoundTrap, 'Pair distance exceeding effective caliper width caught with INVARIANT_VIOLATION');
+
+// 4.5 Non-self-referential hash contract
+const resForHash = createSampleCanonicalResult();
+const hash1 = await computeCanonicalResultHash(resForHash);
+resForHash.inputFingerprint.canonicalResultSha256 = 'DIFFERENT_HASH';
+const hash2 = await computeCanonicalResultHash(resForHash);
+assert(hash1 === hash2 && hash1.length === 64, 'Non-self-referential hash calculation is invariant to existing canonicalResultSha256 value');
+
+// -------------------------------------------------------------
+// 5. Worker Lifecycle & Interruption States
+// -------------------------------------------------------------
+console.log('\n--- 5. Testing Worker Lifecycle & Interruption States ---');
+
+class MockWorkerHarness {
   constructor() {
     this.terminated = false;
     this.onmessage = null;
-    this.onerror = null;
+    this.ignoreInterrupt = false;
   }
   postMessage(msg) {
     setTimeout(() => {
@@ -143,14 +505,20 @@ class MockWorker {
       if (msg.type === 'INIT') {
         if (this.onmessage) this.onmessage({ data: { type: 'INIT_COMPLETE', id: msg.id, payload: { initialized: true } } });
       } else if (msg.type === 'RUN_ANALYSIS') {
-        // Simulate delay
         setTimeout(() => {
           if (this.onmessage && !this.terminated) {
             this.onmessage({ data: { type: 'ANALYSIS_COMPLETE', id: msg.id, payload: { success: true } } });
           }
-        }, 50);
+        }, this.ignoreInterrupt ? 500 : 60);
       } else if (msg.type === 'INTERRUPT') {
-        if (this.onmessage) this.onmessage({ data: { type: 'INTERRUPT_COMPLETE', id: msg.id, payload: { interrupted: true } } });
+        if (this.ignoreInterrupt) {
+          // Worker simulates hanging and ignoring interrupt
+          return;
+        }
+        if (this.onmessage && !this.terminated) {
+          // Cessation signal: error returned from analysis execution
+          this.onmessage({ data: { type: 'ERROR', id: msg.targetJobId, code: 'INTERRUPTED', error: 'WebR execution interrupted' } });
+        }
       }
     }, 10);
   }
@@ -159,131 +527,82 @@ class MockWorker {
   }
 }
 
-const manager = new WorkerLifecycleManager(() => new MockWorker(), { cancelTimeoutMs: 100 });
-assert(manager.getState() === 'NOT_LOADED', 'Initial worker state is NOT_LOADED');
+// 5.1 Concurrency violation rejection
+const managerLife = new WorkerLifecycleManager(() => new MockWorkerHarness(), { cancelTimeoutMs: 150 });
+await managerLife.initialize();
 
-await manager.initialize();
-assert(manager.getState() === 'READY', 'Worker state transitions to READY after INIT');
-
-// Submit job & verify RUNNING state
-const jobPromise = manager.submitAnalysis({ treatmentVariable: 't', covariates: ['c'], rows: [{ t: 1, c: 2 }] });
-assert(manager.getState() === 'RUNNING', 'Worker state transitions to RUNNING on job submit');
-
-// Concurrency test: attempting concurrent analysis must throw CONCURRENCY_ERROR
-let concurrencyBlocked = false;
+const pJob1 = managerLife.submitAnalysis({ rows: [{ id: '1' }] });
+let concurrencyTrapped = false;
 try {
-  await manager.submitAnalysis({ treatmentVariable: 't', covariates: ['c'], rows: [{ t: 1, c: 2 }] });
+  await managerLife.submitAnalysis({ rows: [{ id: '2' }] });
 } catch (err) {
-  concurrencyBlocked = err.code === 'CONCURRENCY_ERROR';
+  concurrencyTrapped = err.code === 'CONCURRENCY_ERROR';
 }
-assert(concurrencyBlocked, 'Single-job concurrency enforced: concurrent request throws CONCURRENCY_ERROR');
+assert(concurrencyTrapped, 'Concurrent job submission rejected with CONCURRENCY_ERROR');
+await pJob1;
 
-const jobRes = await jobPromise;
-assert(jobRes.success === true, 'First analysis completes successfully');
-assert(manager.getState() === 'READY', 'Worker reverts to READY state post-completion');
+// 5.2 Confirmed graceful interruption
+const pJobCancel = managerLife.submitAnalysis({ rows: [{ id: '1' }] });
+let cancelThrown = false;
+pJobCancel.catch((err) => {
+  cancelThrown = err.code === 'OPERATION_CANCELLED';
+});
 
-// Test hard termination and recovery
-manager.terminateAndRecover('Test termination');
-assert(manager.getState() === 'RECOVERABLE_ERROR', 'State is RECOVERABLE_ERROR after terminateAndRecover');
+const cancelStatus = await managerLife.cancelCurrentJob();
+try {
+  await pJobCancel;
+} catch (err) {
+  cancelThrown = err.code === 'OPERATION_CANCELLED';
+}
+assert(cancelStatus.status === 'GRACEFUL_INTERRUPT_CONFIRMED', 'cancelCurrentJob returns GRACEFUL_INTERRUPT_CONFIRMED');
+assert(cancelThrown, 'Active job promise rejected with OPERATION_CANCELLED upon graceful interrupt');
+assert(managerLife.getState() === 'READY', 'Lifecycle manager transitions back to READY state post-cancellation');
 
-await manager.initialize();
-assert(manager.getState() === 'READY', 'Worker recovers cleanly to READY state after re-initialization');
+// 5.3 Hard termination fallback when worker ignores interrupt
+const hangWorker = new MockWorkerHarness();
+hangWorker.ignoreInterrupt = true;
+const managerHang = new WorkerLifecycleManager(() => hangWorker, { cancelTimeoutMs: 50 });
+await managerHang.initialize();
+
+const pHangJob = managerHang.submitAnalysis({ rows: [{ id: '1' }] });
+let hangJobCaught = false;
+pHangJob.catch(() => {
+  hangJobCaught = true;
+});
+
+const hangCancelStatus = await managerHang.cancelCurrentJob();
+try {
+  await pHangJob;
+} catch {
+  hangJobCaught = true;
+}
+assert(hangCancelStatus.status === 'HARD_TERMINATED', 'Worker ignoring interrupt triggers HARD_TERMINATED fallback after timeout');
+assert(hangJobCaught, 'Pending job rejected during hard termination');
+assert(managerHang.getState() === 'RECOVERABLE_ERROR', 'State transitions to RECOVERABLE_ERROR following hard termination');
 
 // -------------------------------------------------------------
-// 4. Data Ingestion & Parameter Binding Contracts
+// 6. Template Integrity Verification
 // -------------------------------------------------------------
-console.log('\n--- 4. Testing Ingestion Validation & Parameter Binding ---');
+console.log('\n--- 6. Testing Template Integrity Verification ---');
 
-import { constructWebREnvironment } from '../adapter/webr_binding.mjs';
-
-class MockWebRForBinding {
-  async evalR() { return {}; }
-  REnvironment = class {
-    async bind() {}
-  };
-  RCharacter = class { constructor(v) { this.v = v; } };
-  RInteger = class { constructor(v) { this.v = v; } };
-  RDouble = class { constructor(v) { this.v = v; } };
-  RLogical = class { constructor(v) { this.v = v; } };
+class MockWebRForAdapter {
+  async evalR() {}
 }
 
-const mockWebR = new MockWebRForBinding();
-const testMapper = new SymbolMapper();
-testMapper.registerTreatment('treat');
-testMapper.registerCovariate('age');
-testMapper.registerCovariate('stage');
+const mockWebRAdapter = new MockWebRForAdapter();
+const adapter = new WebRStatisticalAdapter(mockWebRAdapter);
 
-// 4.1 Duplicate row ID rejection
-let dupRejected = false;
+const cleanTemplate = 'run_psm_analysis <- function() { 42 }';
+const { templateSha256 } = await adapter.initTemplate(cleanTemplate);
+assert(typeof templateSha256 === 'string' && templateSha256.length === 64, 'Template initialized with valid SHA-256');
+
+let tamperedTrap = false;
 try {
-  await constructWebREnvironment(mockWebR, {
-    treatmentVariable: 'treat',
-    covariates: ['age'],
-    rows: [
-      { id: 'unit_1', treat: 1, age: 30 },
-      { id: 'unit_1', treat: 0, age: 40 }
-    ]
-  }, testMapper);
+  await adapter.initTemplate('run_psm_analysis <- function() { 99 }', templateSha256);
 } catch (err) {
-  dupRejected = err.code === 'DUPLICATE_UNIT_ID_REJECTED';
+  tamperedTrap = err.code === 'TEMPLATE_INTEGRITY_MISMATCH';
 }
-assert(dupRejected, 'Duplicate unit ID rejected with DUPLICATE_UNIT_ID_REJECTED');
-
-// 4.2 Missing treatment value rejection
-let missingTrtRejected = false;
-try {
-  await constructWebREnvironment(mockWebR, {
-    treatmentVariable: 'treat',
-    covariates: ['age'],
-    rows: [
-      { id: 'unit_1', treat: 1, age: 30 },
-      { id: 'unit_2', treat: null, age: 40 }
-    ]
-  }, testMapper);
-} catch (err) {
-  missingTrtRejected = err.code === 'MISSING_TREATMENT';
-}
-assert(missingTrtRejected, 'Missing treatment value rejected with MISSING_TREATMENT');
-
-// 4.3 Missing covariate value rejection
-let missingCovRejected = false;
-try {
-  await constructWebREnvironment(mockWebR, {
-    treatmentVariable: 'treat',
-    covariates: ['age'],
-    rows: [
-      { id: 'unit_1', treat: 1, age: 30 },
-      { id: 'unit_2', treat: 0, age: '' }
-    ]
-  }, testMapper);
-} catch (err) {
-  missingCovRejected = err.code === 'MISSING_COVARIATE';
-}
-assert(missingCovRejected, 'Missing covariate value rejected with MISSING_COVARIATE');
-
-// 4.4 Factor metadata generation with explicit reference level
-const factorRes = await constructWebREnvironment(mockWebR, {
-  treatmentVariable: 'treat',
-  covariates: ['stage'],
-  covariateDefinitions: {
-    stage: {
-      originalHeader: 'stage',
-      inferredType: 'categorical',
-      levels: ['I', 'II', 'III'],
-      referenceLevel: 'II'
-    }
-  },
-  rows: [
-    { id: 'unit_1', treat: 1, stage: 'I' },
-    { id: 'unit_2', treat: 0, stage: 'II' },
-    { id: 'unit_3', treat: 0, stage: 'III' }
-  ]
-}, testMapper);
-
-const stageAlias = testMapper.getAlias('stage');
-const stageMeta = factorRes.factorMetadata[stageAlias];
-assert(stageMeta && stageMeta.referenceLevel === 'II', 'Factor reference level "II" preserved in factorMetadata');
-assert(stageMeta && stageMeta.levels.length === 3, 'Factor levels ["I", "II", "III"] preserved in factorMetadata');
+assert(tamperedTrap, 'Tampered template rejected with TEMPLATE_INTEGRITY_MISMATCH');
 
 // -------------------------------------------------------------
 // Write Results

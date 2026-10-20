@@ -10,6 +10,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { execSync } from 'node:child_process';
 import os from 'node:os';
 import { chromium } from 'playwright';
@@ -264,7 +265,10 @@ async function main() {
 
   const sampleDataset = {
     treatmentVariable: 'trt',
-    covariates: ['age', 'sbp'],
+    covariates: [
+      { name: 'age', inferredType: 'continuous' },
+      { name: 'sbp', inferredType: 'continuous' }
+    ],
     rows: [
       { trt: 1, age: 50, sbp: 120, id: SENTINELS.PT_01 },
       { trt: 1, age: 55, sbp: 130, id: SENTINELS.PT_02 },
@@ -427,9 +431,104 @@ async function main() {
   server.close();
 
   // -------------------------------------------------------------
-  // Part 7: Final Browser CI Qualification Report
   // -------------------------------------------------------------
-  const allTestsPassed =
+  // Part 7: Verification of Scientific Parity & Evidence Provenance
+  // -------------------------------------------------------------
+  console.log('\n--- Phase 7: Verifying Scientific Parity & Evidence Provenance ---');
+  const manifestPath = path.resolve('experiments/cp-webr-02a/fixtures/fixtures_manifest.json');
+  const parityPath = path.resolve('experiments/cp-webr-02a/SCIENTIFIC-PARITY-RESULTS.json');
+  const unitPath = path.resolve('experiments/cp-webr-02a/ADAPTER-UNIT-TESTS.json');
+  const templatePath = path.resolve('experiments/cp-webr-02a/adapter/r_template.R');
+
+  if (!fs.existsSync(manifestPath) || !fs.existsSync(parityPath) || !fs.existsSync(unitPath) || !fs.existsSync(templatePath)) {
+    throw new Error('EVIDENCE_MISSING: Required evidence files missing for browser qualification');
+  }
+
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  const parityData = JSON.parse(fs.readFileSync(parityPath, 'utf8'));
+  const unitData = JSON.parse(fs.readFileSync(unitPath, 'utf8'));
+  const currentTemplateSha256 = crypto.createHash('sha256').update(fs.readFileSync(templatePath, 'utf8')).digest('hex');
+
+  function deriveScientificGates(pData, uData, mData, currentCommit, currentTmpl) {
+    if (!pData || !uData || !mData) {
+      throw new Error('Null evidence provided to deriveScientificGates');
+    }
+
+    const manifestIds = new Set(mData.fixtures.map(f => f.id));
+    const testedMap = new Map(pData.fixtures_tested.map(f => [f.fixture_id, f]));
+    const allFixturesCovered = manifestIds.size === testedMap.size && [...manifestIds].every(id => testedMap.has(id));
+    const allFixturesPassed = pData.fixtures_tested.every(f => f.pass === true);
+
+    const unitPass = (uData.tests_passed === 37 && uData.tests_failed === 0);
+    const templateMatch = (pData.r_template_sha256 === currentTmpl);
+
+    const findFixture = (prefix) => pData.fixtures_tested.find(f => f.fixture_id === prefix || f.fixture_id.startsWith(prefix + '_'));
+
+    const singleEngine = templateMatch ? 'PASS' : 'FAIL';
+    const structuredBinding = (unitPass &&
+      findFixture('fix_02')?.pass &&
+      findFixture('fix_03')?.pass &&
+      findFixture('fix_20')?.pass) ? 'PASS' : 'FAIL';
+
+    const missingData = (unitPass &&
+      findFixture('fix_19')?.pass &&
+      findFixture('fix_19b')?.pass &&
+      findFixture('fix_20')?.pass) ? 'PASS' : 'FAIL';
+
+    const canonicalIntegrity = (unitPass &&
+      allFixturesPassed &&
+      pData.classification_counts.SUCCESSFUL_ANALYSES === 18 &&
+      pData.verdict === 'PASS') ? 'PASS' : 'FAIL';
+
+    const requiredCaliperFixtures = ['fix_07', 'fix_08', 'fix_09', 'fix_10', 'fix_11', 'fix_12', 'fix_23'];
+    const pairCaliper = (unitPass && requiredCaliperFixtures.every(id => findFixture(id)?.pass)) ? 'PASS' : 'FAIL';
+
+    const cobaltBalance = (allFixturesPassed && pData.classification_counts.SUCCESSFUL_ANALYSES === 18) ? 'PASS' : 'FAIL';
+
+    const fullFixture = (allFixturesCovered && allFixturesPassed && pData.verdict === 'PASS') ? 'PASS' : 'FAIL';
+
+    const exactPairWeight = (pData.mutation_tests?.length === 7 &&
+      pData.mutation_tests.every(m => m.caught === true) &&
+      findFixture('fix_01')?.pass) ? 'PASS' : 'FAIL';
+
+    const ciEvidence = (templateMatch && allFixturesCovered && pData.commit_sha === currentCommit) ? 'PASS' : 'FAIL';
+
+    return {
+      SINGLE_SCIENTIFIC_ENGINE: singleEngine,
+      STRUCTURED_BINDING_AND_FACTOR_SEMANTICS: structuredBinding,
+      MISSING_DATA_FAIL_CLOSED: missingData,
+      CANONICAL_OUTPUT_INTEGRITY: canonicalIntegrity,
+      PAIR_AND_CALIPER_SEMANTICS: pairCaliper,
+      COBALT_BALANCE_PARITY: cobaltBalance,
+      FULL_FIXTURE_QUALIFICATION: fullFixture,
+      EXACT_PAIR_AND_WEIGHT_PARITY: exactPairWeight,
+      CI_EVIDENCE_PROVENANCE: ciEvidence
+    };
+  }
+
+  // Run deliberate falsification checks
+  console.log('Running gate falsification positive controls...');
+  const mutatedParityFail = JSON.parse(JSON.stringify(parityData));
+  mutatedParityFail.fixtures_tested[0].pass = false;
+  mutatedParityFail.verdict = 'FAIL';
+  const falsifiedGates = deriveScientificGates(mutatedParityFail, unitData, manifest, commitSha, currentTemplateSha256);
+  if (falsifiedGates.FULL_FIXTURE_QUALIFICATION !== 'FAIL' || falsifiedGates.EXACT_PAIR_AND_WEIGHT_PARITY !== 'FAIL') {
+    throw new Error('FALSIFICATION_CHECK_FAILED: Gate evaluator accepted corrupted fixture pass state!');
+  }
+
+  const mutatedTemplateFail = JSON.parse(JSON.stringify(parityData));
+  mutatedTemplateFail.r_template_sha256 = '0000000000000000000000000000000000000000000000000000000000000000';
+  const falsifiedTmplGates = deriveScientificGates(mutatedTemplateFail, unitData, manifest, commitSha, currentTemplateSha256);
+  if (falsifiedTmplGates.SINGLE_SCIENTIFIC_ENGINE !== 'FAIL' || falsifiedTmplGates.CI_EVIDENCE_PROVENANCE !== 'FAIL') {
+    throw new Error('FALSIFICATION_CHECK_FAILED: Gate evaluator accepted tampered template digest!');
+  }
+  console.log('Falsification positive controls passed: tampering is caught deterministically.\n');
+
+  // Derive genuine live gates
+  const scientificGates = deriveScientificGates(parityData, unitData, manifest, commitSha, currentTemplateSha256);
+
+  const allScientificGatesPass = Object.values(scientificGates).every(v => v === 'PASS');
+  const allBrowserSecurityGatesPass =
     cspQualificationReport.verdict === 'PASS' &&
     workerLifecycleReport.verdict === 'PASS' &&
     offlinePass &&
@@ -437,6 +536,8 @@ async function main() {
     pagePreventionRes.aborted_pre_egress === true &&
     pageServerRejectionRes.status === 403 &&
     sinkMatched;
+
+  const allTestsPassed = allScientificGatesPass && allBrowserSecurityGatesPass;
 
   const browserCiReport = {
     executed_at: EXECUTION_TIMESTAMP,
@@ -454,22 +555,22 @@ async function main() {
       cobalt: '5.0.0'
     },
     verdicts: {
-      SINGLE_SCIENTIFIC_ENGINE: 'PASS',
-      BROWSER_PORTABLE_ADAPTER: 'PASS',
-      STRUCTURED_BINDING_AND_FACTOR_SEMANTICS: 'PASS',
-      MISSING_DATA_FAIL_CLOSED: 'PASS',
-      CANONICAL_OUTPUT_INTEGRITY: 'PASS',
-      PAIR_AND_CALIPER_SEMANTICS: 'PASS',
-      COBALT_BALANCE_PARITY: 'PASS',
-      FULL_FIXTURE_QUALIFICATION: 'PASS',
+      SINGLE_SCIENTIFIC_ENGINE: scientificGates.SINGLE_SCIENTIFIC_ENGINE,
+      BROWSER_PORTABLE_ADAPTER: (unitData.tests_passed === 37 && unitData.tests_failed === 0 && cspQualificationReport.matrix.profileC1_strict.pipelineSuccess) ? 'PASS' : 'FAIL',
+      STRUCTURED_BINDING_AND_FACTOR_SEMANTICS: scientificGates.STRUCTURED_BINDING_AND_FACTOR_SEMANTICS,
+      MISSING_DATA_FAIL_CLOSED: scientificGates.MISSING_DATA_FAIL_CLOSED,
+      CANONICAL_OUTPUT_INTEGRITY: scientificGates.CANONICAL_OUTPUT_INTEGRITY,
+      PAIR_AND_CALIPER_SEMANTICS: scientificGates.PAIR_AND_CALIPER_SEMANTICS,
+      COBALT_BALANCE_PARITY: scientificGates.COBALT_BALANCE_PARITY,
+      FULL_FIXTURE_QUALIFICATION: scientificGates.FULL_FIXTURE_QUALIFICATION,
       WORKER_LIFECYCLE_CORRECTNESS: workerLifecycleReport.verdict,
       STRICT_CSP_EXECUTION: cspQualificationReport.matrix.profileC1_strict.pipelineSuccess ? 'PASS' : 'FAIL',
       CHROMIUM_SHARED_ADAPTER_E2E: allTestsPassed ? 'PASS' : 'FAIL',
-      CI_EVIDENCE_PROVENANCE: 'PASS',
+      CI_EVIDENCE_PROVENANCE: scientificGates.CI_EVIDENCE_PROVENANCE,
       NATIVE_R_INDEPENDENT_ORACLE: 'BLOCKED',
       AUTOMATED_SEPARATION_SAFETY: 'BLOCKED',
       PRODUCTION_LICENSING_CLEARANCE: 'BLOCKED',
-      EXACT_PAIR_AND_WEIGHT_PARITY: 'PASS',
+      EXACT_PAIR_AND_WEIGHT_PARITY: scientificGates.EXACT_PAIR_AND_WEIGHT_PARITY,
       WORKER_CSP_QUALIFICATION: cspQualificationReport.verdict,
       WORKER_LIFECYCLE_SUITE: workerLifecycleReport.verdict,
       TRUE_OFFLINE_EXECUTION: offlinePass ? 'PASS' : 'FAIL',

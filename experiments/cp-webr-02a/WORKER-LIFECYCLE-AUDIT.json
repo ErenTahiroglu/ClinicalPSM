@@ -1,10 +1,10 @@
 {
-  "executed_at": "2026-10-20T14:47:02.892Z",
-  "commit_sha": "92df0d2acd2973bf792b6a009b72e39656cf0c66",
+  "executed_at": "2026-10-20T17:39:38.196Z",
+  "commit_sha": "0b80d3fed39aaad25a3cedcefa81a8c724c7888d",
   "results": {
     "initialization": {
       "pass": true,
-      "latencyMs": 2178.47500000149
+      "latencyMs": 2050.439999997616
     },
     "repeatedAnalyses": {
       "pass": true,
@@ -19,10 +19,10 @@
     },
     "gracefulInterruption": {
       "pass": true,
-      "cancelStatus": "GRACEFUL_INTERRUPT",
+      "cancelStatus": "GRACEFUL_INTERRUPT_CONFIRMED",
       "interruptRequested": true,
       "cancellationCompleted": true,
-      "durationMs": 0.989999994635582,
+      "durationMs": 0.9549999982118607,
       "statePostCancel": "READY"
     },
     "hardTerminationAndRecovery": {
@@ -30,7 +30,11 @@
       "recoveredState": "READY",
       "recoveryPairs": 2
     },
-    "overallPass": true
+    "overallPass": true,
+    "templateIntegrity": {
+      "pass": true,
+      "tamperedCaught": true
+    }
   },
   "verdict": "PASS"
 }

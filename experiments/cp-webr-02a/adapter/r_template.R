@@ -1,6 +1,6 @@
 # CP-WEBR-02A Trusted Static R Computation Template
 # Pinned to: R 4.6.0, MatchIt 4.8.1, cobalt 5.0.0
-# Governing standard: docs/science/CP-WEBR-01-CANONICAL-RESULT-CONTRACT.md
+# Governing standard: docs/science/CP-WEBR-01-CANONICAL-RESULT-CONTRACT.md & R1.1 Requirements
 
 run_psm_analysis <- function(df, trt_name, cov_names, caliper_val = NULL, std_caliper = TRUE, discard_opt = "none", link_opt = "linear.logit") {
   # 1. Validation & Formula Construction
@@ -119,7 +119,12 @@ run_psm_analysis <- function(df, trt_name, cov_names, caliper_val = NULL, std_ca
     rep(NA_integer_, nrow(df))
   }
 
-  # Match matrix parsing & genuine pair distance calculation
+  # Match matrix parsing & genuine pair distance calculation on actual matching distance scale
+  match_dist_named <- m_out$distance
+  if (is.null(names(match_dist_named))) {
+    names(match_dist_named) <- rownames(df)
+  }
+
   mm <- m_out$match.matrix
   treated_row_names <- rownames(mm)
   matched_treated_ids <- character(0)
@@ -133,8 +138,8 @@ run_psm_analysis <- function(df, trt_name, cov_names, caliper_val = NULL, std_ca
       if (!is.na(ctrl_id)) {
         matched_treated_ids <- c(matched_treated_ids, tr_id)
         matched_control_ids <- c(matched_control_ids, ctrl_id)
-        pair_dist <- if (!is.null(names(lp_named)) && tr_id %in% names(lp_named) && ctrl_id %in% names(lp_named)) {
-          as.numeric(abs(lp_named[tr_id] - lp_named[ctrl_id]))
+        pair_dist <- if (!is.null(names(match_dist_named)) && tr_id %in% names(match_dist_named) && ctrl_id %in% names(match_dist_named)) {
+          as.numeric(abs(match_dist_named[tr_id] - match_dist_named[ctrl_id]))
         } else {
           NA_real_
         }
@@ -145,11 +150,14 @@ run_psm_analysis <- function(df, trt_name, cov_names, caliper_val = NULL, std_ca
 
   total_matched_pairs <- length(matched_treated_ids)
   effective_caliper_width <- if (!is.null(m_out$caliper)) as.numeric(m_out$caliper) else NULL
+  matching_dist_scale <- if (link_arg == "linear.logit") "linear.logit" else "logit"
   caliper_scale_desc <- if (!is.null(caliper_arg)) {
     if (std_caliper_bool) {
       "standardized (MatchIt std.caliper: sd(distance[!discarded]))"
-    } else {
+    } else if (link_arg == "linear.logit") {
       "unstandardized linear logit"
+    } else {
+      "unstandardized probability"
     }
   } else {
     "none"
@@ -161,10 +169,10 @@ run_psm_analysis <- function(df, trt_name, cov_names, caliper_val = NULL, std_ca
   total_control <- sum(trt_vec == 0, na.rm = TRUE)
   matched_treated_count <- total_matched_pairs
   matched_control_count <- length(unique(matched_control_ids))
-  unmatched_treated_count <- total_treated - matched_treated_count
-  unmatched_control_count <- total_control - matched_control_count
   discarded_treated_count <- if (!is.null(m_out$discarded)) sum(m_out$discarded[trt_vec == 1]) else 0
   discarded_control_count <- if (!is.null(m_out$discarded)) sum(m_out$discarded[trt_vec == 0]) else 0
+  unmatched_treated_count <- total_treated - matched_treated_count - discarded_treated_count
+  unmatched_control_count <- total_control - matched_control_count - discarded_control_count
   treated_retention_rate <- if (total_treated > 0) matched_treated_count / total_treated else 0.0
 
   # 4. cobalt Balance Diagnostics (ATT, binary raw vs std distinguishable)
@@ -315,7 +323,10 @@ run_psm_analysis <- function(df, trt_name, cov_names, caliper_val = NULL, std_ca
       pairDistances = pair_distances,
       weights = weights,
       subclasses = subclasses,
+      userCaliper = caliper_arg,
+      stdCaliper = std_caliper_bool,
       effectiveCaliperWidth = effective_caliper_width,
+      matchingDistanceScale = matching_dist_scale,
       caliperScaleDescription = caliper_scale_desc
     ),
     sampleAccounting = list(

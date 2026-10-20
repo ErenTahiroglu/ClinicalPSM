@@ -78,7 +78,9 @@ export interface CanonicalPsmResult {
     emscriptenVersion: '5.0.7';
     matchItVersion: '4.8.1';
     cobaltVersion: '5.0.0';
-    dependencySha256s: Record<string, string>;
+    packageVersions?: Record<string, string>;
+    dependencyVerificationStatus?: string;
+    dependencySha256s?: Record<string, string>;
   };
   matchingConfiguration: {
     treatmentVariable: string;
@@ -92,6 +94,7 @@ export interface CanonicalPsmResult {
     stdCaliper: boolean;
     discard?: string;
     effectiveCaliperWidthRaw: number | null;
+    matchingDistanceScale?: string;
     caliperScaleDescription: string;
   };
   factorConfiguration: Record<string, {

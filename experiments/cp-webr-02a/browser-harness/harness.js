@@ -635,13 +635,16 @@ export async function runWorkerCspAbMatrix() {
       // Run complete synthetic matching pipeline under strict worker CSP
       const sampleDataset = {
         treatmentVariable: 'trt',
-        covariates: ['age', 'sbp'],
+        covariates: [
+          { name: 'age', inferredType: 'continuous' },
+          { name: 'sbp', inferredType: 'continuous' }
+        ],
         rows: [
-          { trt: 1, age: 50, sbp: 120 },
-          { trt: 1, age: 55, sbp: 130 },
-          { trt: 0, age: 49, sbp: 122 },
-          { trt: 0, age: 56, sbp: 128 },
-          { trt: 0, age: 70, sbp: 150 }
+          { id: 'sub_01', trt: 1, age: 50, sbp: 120 },
+          { id: 'sub_02', trt: 1, age: 55, sbp: 130 },
+          { id: 'sub_03', trt: 0, age: 49, sbp: 122 },
+          { id: 'sub_04', trt: 0, age: 56, sbp: 128 },
+          { id: 'sub_05', trt: 0, age: 70, sbp: 150 }
         ]
       };
       const runRes = await new Promise((resolve, reject) => {
@@ -713,13 +716,16 @@ export async function runWorkerCspAbMatrix() {
       // Run matching pipeline
       const sampleDataset = {
         treatmentVariable: 'trt',
-        covariates: ['age', 'sbp'],
+        covariates: [
+          { name: 'age', inferredType: 'continuous' },
+          { name: 'sbp', inferredType: 'continuous' }
+        ],
         rows: [
-          { trt: 1, age: 50, sbp: 120 },
-          { trt: 1, age: 55, sbp: 130 },
-          { trt: 0, age: 49, sbp: 122 },
-          { trt: 0, age: 56, sbp: 128 },
-          { trt: 0, age: 70, sbp: 150 }
+          { id: 'sub_01', trt: 1, age: 50, sbp: 120 },
+          { id: 'sub_02', trt: 1, age: 55, sbp: 130 },
+          { id: 'sub_03', trt: 0, age: 49, sbp: 122 },
+          { id: 'sub_04', trt: 0, age: 56, sbp: 128 },
+          { id: 'sub_05', trt: 0, age: 70, sbp: 150 }
         ]
       };
       const runRes = await new Promise((resolve, reject) => {
@@ -773,13 +779,16 @@ export async function runWorkerLifecycleSuite() {
 
   const sampleDataset = {
     treatmentVariable: 'trt',
-    covariates: ['age', 'sbp'],
+    covariates: [
+      { name: 'age', inferredType: 'continuous' },
+      { name: 'sbp', inferredType: 'continuous' }
+    ],
     rows: [
-      { trt: 1, age: 50, sbp: 120 },
-      { trt: 1, age: 55, sbp: 130 },
-      { trt: 0, age: 49, sbp: 122 },
-      { trt: 0, age: 56, sbp: 128 },
-      { trt: 0, age: 70, sbp: 150 }
+      { id: 'sub_01', trt: 1, age: 50, sbp: 120 },
+      { id: 'sub_02', trt: 1, age: 55, sbp: 130 },
+      { id: 'sub_03', trt: 0, age: 49, sbp: 122 },
+      { id: 'sub_04', trt: 0, age: 56, sbp: 128 },
+      { id: 'sub_05', trt: 0, age: 70, sbp: 150 }
     ]
   };
 
@@ -859,7 +868,7 @@ export async function runWorkerLifecycleSuite() {
   console.log('[Lifecycle] Step 4 Complete: Cancel caught =', cancelCaught, 'Status =', cancelStatus.status);
 
   results.gracefulInterruption = {
-    pass: cancelCaught === true && cancelStatus.interruptRequested === true && cancelStatus.cancellationCompleted === true,
+    pass: cancelCaught === true && cancelStatus.status === 'GRACEFUL_INTERRUPT_CONFIRMED' && cancelStatus.cancellationCompleted === true,
     cancelStatus: cancelStatus.status,
     interruptRequested: cancelStatus.interruptRequested,
     cancellationCompleted: cancelStatus.cancellationCompleted,
@@ -897,13 +906,35 @@ export async function runWorkerLifecycleSuite() {
     recoveryPairs: recRes?.payload?.matchedUnits?.totalMatchedPairs
   };
 
-  // Overall pass depends on ALL 5 lifecycle subgates passing
+  // 6. Template Integrity Verification
+  console.log('[Lifecycle] Step 6: Testing Template Integrity Verification...');
+  let tamperedCaught = false;
+  try {
+    const tamperedManager = new WorkerLifecycleManager(
+      () => new Worker('/worker-strict.js?csp=strict-worker', { type: 'module' }),
+      { cancelTimeoutMs: 1500 }
+    );
+    await tamperedManager.initialize({ tampered: true });
+  } catch (err) {
+    if ((err.code && err.code === 'TEMPLATE_INTEGRITY_MISMATCH') || (err.message && err.message.toLowerCase().includes('integrity mismatch'))) {
+      tamperedCaught = true;
+    }
+  }
+  console.log('[Lifecycle] Step 6 Complete: Tampered template rejected =', tamperedCaught);
+
+  results.templateIntegrity = {
+    pass: tamperedCaught,
+    tamperedCaught
+  };
+
+  // Overall pass depends on ALL 6 lifecycle subgates passing
   results.overallPass = Boolean(
     results.initialization.pass &&
     results.repeatedAnalyses.pass &&
     results.singleJobConcurrency.pass &&
     results.gracefulInterruption.pass &&
-    results.hardTerminationAndRecovery.pass
+    results.hardTerminationAndRecovery.pass &&
+    results.templateIntegrity.pass
   );
 
   return results;
