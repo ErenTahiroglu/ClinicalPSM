@@ -2,7 +2,7 @@
 # Pinned to: R 4.6.0, MatchIt 4.8.1, cobalt 5.0.0
 # Governing standard: docs/science/CP-WEBR-01-CANONICAL-RESULT-CONTRACT.md
 
-run_psm_analysis <- function(df, trt_name, cov_names, caliper_val = NULL, std_caliper = TRUE) {
+run_psm_analysis <- function(df, trt_name, cov_names, caliper_val = NULL, std_caliper = TRUE, discard_opt = "none", link_opt = "linear.logit") {
   # 1. Validation & Formula Construction
   if (!trt_name %in% names(df)) {
     stop(paste("Treatment column not found in data frame:", trt_name))
@@ -70,34 +70,46 @@ run_psm_analysis <- function(df, trt_name, cov_names, caliper_val = NULL, std_ca
     )
   }
 
-  # Linear logit predictors and response probabilities
-  lp <- as.numeric(stats::predict(glm_fit, type = "link"))
-  ps <- as.numeric(stats::predict(glm_fit, type = "response"))
+  # Linear logit predictors and response probabilities (preserving row names)
+  lp_named <- stats::predict(glm_fit, type = "link")
+  if (is.null(names(lp_named))) {
+    names(lp_named) <- rownames(df)
+  }
+  ps_named <- stats::predict(glm_fit, type = "response")
+  if (is.null(names(ps_named))) {
+    names(ps_named) <- rownames(df)
+  }
+  lp <- as.numeric(lp_named)
+  ps <- as.numeric(ps_named)
 
-  # Separation symptoms detection (CP-WEBR-01 §3.2)
-  # Note: Algorithmic convergence (deviance delta < 1e-8) is decoupled from mathematical separation!
+  # 2b. Numerical Instability Safeguard (CP-WEBR-02A R1 Non-Diagnostic Risk Policy)
+  # IMPORTANT: These empirical thresholds (e.g. SE > 1000) are a prespecified conservative
+  # risk safeguard requiring independent mathematical validation, NOT a certified separation detector.
   max_se <- max(coef_mat[, "Std. Error"], na.rm = TRUE)
   max_abs_beta <- max(abs(coef_mat[, "Estimate"]), na.rm = TRUE)
-  has_extreme_se <- max_se > 1000
-  has_boundary_ps <- any(ps < 1e-6 | ps > (1 - 1e-6), na.rm = TRUE)
-  suspected_separation <- has_extreme_se || (has_boundary_ps && max_se > 500)
+  has_extreme_se <- !is.na(max_se) && max_se > 1000
+  has_boundary_ps <- any(ps_named < 1e-6 | ps_named > (1 - 1e-6), na.rm = TRUE)
+  numerical_instability_safeguard_triggered <- has_extreme_se || (has_boundary_ps && !is.na(max_se) && max_se > 500)
 
   # 3. MatchIt 1:1 Nearest-Neighbor Matching
   caliper_arg <- if (!is.null(caliper_val) && !is.na(caliper_val)) as.numeric(caliper_val) else NULL
   std_caliper_bool <- isTRUE(std_caliper)
+  discard_arg <- if (!is.null(discard_opt) && discard_opt %in% c("none", "both", "hull", "control", "treat")) discard_opt else "none"
+  link_arg <- if (!is.null(link_opt) && link_opt %in% c("linear.logit", "logit")) link_opt else "linear.logit"
 
   m_out <- MatchIt::matchit(
     formula = formula_psm,
     data = df,
     method = "nearest",
     distance = "glm",
-    link = "linear.logit",
+    link = link_arg,
     estimand = "ATT",
     m.order = "largest",
     replace = FALSE,
     ratio = 1,
     caliper = caliper_arg,
-    std.caliper = std_caliper_bool
+    std.caliper = std_caliper_bool,
+    discard = discard_arg
   )
 
   weights <- as.numeric(m_out$weights)
@@ -107,7 +119,7 @@ run_psm_analysis <- function(df, trt_name, cov_names, caliper_val = NULL, std_ca
     rep(NA_integer_, nrow(df))
   }
 
-  # Match matrix parsing
+  # Match matrix parsing & genuine pair distance calculation
   mm <- m_out$match.matrix
   treated_row_names <- rownames(mm)
   matched_treated_ids <- character(0)
@@ -121,8 +133,8 @@ run_psm_analysis <- function(df, trt_name, cov_names, caliper_val = NULL, std_ca
       if (!is.na(ctrl_id)) {
         matched_treated_ids <- c(matched_treated_ids, tr_id)
         matched_control_ids <- c(matched_control_ids, ctrl_id)
-        pair_dist <- if (!is.null(names(lp)) && tr_id %in% names(lp) && ctrl_id %in% names(lp)) {
-          as.numeric(abs(lp[tr_id] - lp[ctrl_id]))
+        pair_dist <- if (!is.null(names(lp_named)) && tr_id %in% names(lp_named) && ctrl_id %in% names(lp_named)) {
+          as.numeric(abs(lp_named[tr_id] - lp_named[ctrl_id]))
         } else {
           NA_real_
         }
@@ -132,6 +144,16 @@ run_psm_analysis <- function(df, trt_name, cov_names, caliper_val = NULL, std_ca
   }
 
   total_matched_pairs <- length(matched_treated_ids)
+  effective_caliper_width <- if (!is.null(m_out$caliper)) as.numeric(m_out$caliper) else NULL
+  caliper_scale_desc <- if (!is.null(caliper_arg)) {
+    if (std_caliper_bool) {
+      "standardized (MatchIt std.caliper: sd(distance[!discarded]))"
+    } else {
+      "unstandardized linear logit"
+    }
+  } else {
+    "none"
+  }
 
   # Sample accounting
   total_units <- nrow(df)
@@ -234,14 +256,14 @@ run_psm_analysis <- function(df, trt_name, cov_names, caliper_val = NULL, std_ca
   publication_reasons <- character(0)
   verdict <- "OUTPUT_READY"
 
-  if (suspected_separation) {
+  if (numerical_instability_safeguard_triggered) {
     warnings_ledger[[length(warnings_ledger) + 1]] <- list(
-      code = "WARN_SUSPECTED_SEPARATION",
-      message = "Suspected complete or quasi-complete separation in propensity model: extreme coefficients or standard errors observed.",
+      code = "WARN_NUMERICAL_INSTABILITY_SAFEGUARD",
+      message = "Prespecified non-diagnostic conservative risk policy: extreme coefficients or standard errors observed (SE > 1000). Publication output restricted under fail-closed policy (requires independent mathematical validation; not a certified separation detector).",
       severity = "fatal",
-      impactDescription = "Propensity scores collapse to boundaries; model coefficients unstable. Publication output restricted."
+      impactDescription = "Extreme standard errors indicate ill-conditioned propensity model. Publication output restricted under prespecified risk safeguard."
     )
-    publication_reasons <- c(publication_reasons, "Suspected complete separation: numerical instability prevents certified publication.")
+    publication_reasons <- c(publication_reasons, "Prespecified numerical-instability risk safeguard triggered (extreme coefficient standard error).")
     verdict <- "OUTPUT_GENERATION_RESTRICTED"
   }
 
@@ -283,8 +305,8 @@ run_psm_analysis <- function(df, trt_name, cov_names, caliper_val = NULL, std_ca
       maxAbsoluteCoefficient = max_abs_beta,
       maxCoefficientStandardError = max_se,
       coefficients = coef_table,
-      linearLogits = lp,
-      propensityScores = ps
+      linearLogits = as.numeric(lp_named),
+      propensityScores = as.numeric(ps_named)
     ),
     matching = list(
       totalMatchedPairs = total_matched_pairs,
@@ -292,7 +314,9 @@ run_psm_analysis <- function(df, trt_name, cov_names, caliper_val = NULL, std_ca
       matchedControlIds = matched_control_ids,
       pairDistances = pair_distances,
       weights = weights,
-      subclasses = subclasses
+      subclasses = subclasses,
+      effectiveCaliperWidth = effective_caliper_width,
+      caliperScaleDescription = caliper_scale_desc
     ),
     sampleAccounting = list(
       importedTotal = total_units,
@@ -318,6 +342,12 @@ run_psm_analysis <- function(df, trt_name, cov_names, caliper_val = NULL, std_ca
       outputGenerationAllowed = (verdict == "OUTPUT_READY")
     ),
     warnings = warnings_ledger,
-    suspectedSeparation = suspected_separation
+    numericalInstabilitySafeguard = list(
+      triggered = numerical_instability_safeguard_triggered,
+      maxCoefficientStandardError = if (is.finite(max_se)) max_se else NULL,
+      maxAbsoluteCoefficient = if (is.finite(max_abs_beta)) max_abs_beta else NULL,
+      policyClassification = "PRESPECIFIED_NON_DIAGNOSTIC_RISK_SAFEGUARD",
+      certificationStatus = "UNVALIDATED_SAFEGUARD_NOT_SEPARATION_DETECTOR"
+    )
   )
 }

@@ -1,17 +1,10 @@
 // CP-WEBR-02A High-Level WebR Statistical Adapter
 // Conforms to CP-WEBR-01 Production Architecture & Canonical Result Contract
+// Completely environment-neutral: runs seamlessly in both Node.js and Chromium Workers
 
-import fs from 'node:fs';
-import path from 'node:path';
-import crypto from 'node:crypto';
 import { SymbolMapper } from './symbol_mapper.mjs';
 import { constructWebREnvironment } from './webr_binding.mjs';
-import { defensiveClone, wrapInVersionedEnvelope } from './canonical_serializer.mjs';
-
-const rTemplateSource = fs.readFileSync(
-  path.resolve('experiments/cp-webr-02a/adapter/r_template.R'),
-  'utf-8'
-);
+import { wrapInVersionedEnvelope, sha256Hex } from './canonical_serializer.mjs';
 
 export function unpackWebR(node) {
   if (node === null || node === undefined) return null;
@@ -62,13 +55,38 @@ export class WebRStatisticalAdapter {
   constructor(webRInstance, options = {}) {
     this.webR = webRInstance;
     this.options = options;
+    this.rTemplateSource = options.rTemplateSource || null;
+    this.rTemplateSha256 = options.rTemplateSha256 || null;
     this.templateLoaded = false;
+  }
+
+  /**
+   * Initializes or verifies the authoritative R computation template
+   * @param {string} rTemplateSource - Exact UTF-8 source string of r_template.R
+   * @param {string} [expectedSha256] - Optional expected SHA-256 for integrity verification
+   */
+  async initTemplate(rTemplateSource, expectedSha256 = null) {
+    if (!rTemplateSource || typeof rTemplateSource !== 'string') {
+      throw new Error('Valid R template source string required');
+    }
+    const actualSha = await sha256Hex(rTemplateSource);
+    if (expectedSha256 && actualSha !== expectedSha256) {
+      throw new Error(`R template integrity mismatch: expected ${expectedSha256}, got ${actualSha}`);
+    }
+    this.rTemplateSource = rTemplateSource;
+    this.rTemplateSha256 = actualSha;
+    await this.webR.evalR(rTemplateSource);
+    this.templateLoaded = true;
+    return { loaded: true, templateSha256: actualSha };
   }
 
   async ensureTemplateLoaded() {
     if (!this.templateLoaded) {
-      await this.webR.evalR(rTemplateSource);
-      this.templateLoaded = true;
+      if (this.rTemplateSource) {
+        await this.initTemplate(this.rTemplateSource, this.rTemplateSha256);
+      } else {
+        throw new Error('R template not loaded. Call adapter.initTemplate(templateSource) before running analysis.');
+      }
     }
   }
 
@@ -93,47 +111,58 @@ export class WebRStatisticalAdapter {
 
     // 1. Build bidirectional symbol mapper
     const mapper = new SymbolMapper();
-    const trtAlias = mapper.registerTreatment(datasetInput.treatmentVariable);
+    mapper.registerTreatment(datasetInput.treatmentVariable);
     const covAliases = [];
     for (const cov of datasetInput.covariates) {
       covAliases.push(mapper.registerCovariate(cov));
     }
 
-    // Compute input dataset hash
+    // Compute input dataset hash asynchronously using Web Crypto
     const datasetJson = JSON.stringify(datasetInput.rows);
-    const datasetSha256 = crypto.createHash('sha256').update(datasetJson).digest('hex');
+    const datasetSha256 = await sha256Hex(datasetJson);
 
-    // 2. Safe WebR Parameter Binding
-    const { analysisEnv, rProxies } = await constructWebREnvironment(
+    // 2. Safe WebR Parameter Binding & Object Construction
+    const { analysisEnv, factorMetadata, rProxies } = await constructWebREnvironment(
       this.webR,
       datasetInput,
       mapper
     );
 
     const assembleDfCode = `
-      df_bound <- data.frame(row.names = row_ids)
-      df_bound[[target_trt_name]] <- as.integer(get(target_trt_name))
-      for (ca in target_cov_names) {
-        if (exists(paste0(ca, "_raw"), inherits = FALSE)) {
-          df_bound[[ca]] <- factor(get(paste0(ca, "_raw")))
-        } else {
-          df_bound[[ca]] <- as.numeric(get(ca))
+      local({
+        df_bound <- data.frame(row.names = row_ids)
+        df_bound[[target_trt_name]] <- as.integer(get(target_trt_name))
+        for (ca in target_cov_names) {
+          if (ca %in% target_categorical_covs) {
+            levs <- get(paste0(ca, "_levels"))
+            df_bound[[ca]] <- factor(get(paste0(ca, "_raw")), levels = levs)
+            if (exists(paste0(ca, "_ref"))) {
+              ref_val <- get(paste0(ca, "_ref"))
+              if (!is.null(ref_val) && nchar(ref_val) > 0 && ref_val %in% levs) {
+                df_bound[[ca]] <- stats::relevel(df_bound[[ca]], ref = ref_val)
+              }
+            }
+          } else {
+            df_bound[[ca]] <- as.numeric(get(ca))
+          }
         }
-      }
-      # Invoke pure analysis function
-      raw_res <- run_psm_analysis(
-        df = df_bound,
-        trt_name = target_trt_name,
-        cov_names = target_cov_names,
-        caliper_val = target_caliper_val,
-        std_caliper = target_std_caliper
-      )
+        # Invoke authoritative pure analysis function
+        raw_res <- run_psm_analysis(
+          df = df_bound,
+          trt_name = target_trt_name,
+          cov_names = target_cov_names,
+          caliper_val = target_caliper_val,
+          std_caliper = target_std_caliper,
+          discard_opt = target_discard_opt,
+          link_opt = target_link_opt
+        )
+        return(raw_res)
+      })
     `;
 
     let rOutputProxy;
     try {
-      await this.webR.evalR(assembleDfCode, { env: analysisEnv });
-      rOutputProxy = await this.webR.evalR('raw_res', { env: analysisEnv });
+      rOutputProxy = await this.webR.evalR(assembleDfCode, { env: analysisEnv });
       const rawRes = await rOutputProxy.toJs();
       const unpackedRes = unpackWebR(rawRes);
 
@@ -149,30 +178,34 @@ export class WebRStatisticalAdapter {
         unpackedRes,
         datasetInput,
         mapper,
+        factorMetadata,
         datasetSha256,
         durationMs
       );
 
-      // 5. Wrap into VersionedCanonicalEnvelope with defensive copy
-      return wrapInVersionedEnvelope(canonicalResult, {
+      // 5. Wrap into VersionedCanonicalEnvelope with defensive copy and cryptographic hash
+      return await wrapInVersionedEnvelope(canonicalResult, {
         runId: canonicalResult.metadata.runId,
-        executionDurationMs: durationMs
+        executionDurationMs: durationMs,
+        rTemplateSha256: this.rTemplateSha256
       });
     } catch (err) {
       // Clean up proxies on error
       for (const p of rProxies) {
         try { if (p && p.destroy) await p.destroy(); } catch {}
       }
+      try { if (analysisEnv && analysisEnv.destroy) await analysisEnv.destroy(); } catch {}
       throw err;
     }
   }
 
-  buildCanonicalResult(unpacked, input, mapper, datasetSha256, durationMs) {
+  buildCanonicalResult(unpacked, input, mapper, factorMetadata = {}, datasetSha256, durationMs) {
     const glm = unpacked.glm || {};
     const matching = unpacked.matching || {};
     const sampleAcc = unpacked.sampleAccounting || {};
     const pubStatus = unpacked.publicationStatus || {};
     const rubin = unpacked.rubin || {};
+    const numSafeguard = unpacked.numericalInstabilitySafeguard || {};
 
     const runId = `run_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
@@ -180,15 +213,29 @@ export class WebRStatisticalAdapter {
     const factorConfig = {};
     for (const origHeader of [input.treatmentVariable, ...input.covariates]) {
       const alias = mapper.getAlias(origHeader);
-      factorConfig[alias] = {
-        originalHeader: origHeader,
-        internalAlias: alias,
-        displayName: origHeader,
-        inferredType: origHeader === input.treatmentVariable ? 'binary' : 'continuous',
-        levels: origHeader === input.treatmentVariable ? ['0', '1'] : [],
-        referenceLevel: origHeader === input.treatmentVariable ? '0' : null,
-        droppedLevel: null
-      };
+      if (origHeader === input.treatmentVariable) {
+        factorConfig[alias] = {
+          originalHeader: origHeader,
+          internalAlias: alias,
+          displayName: origHeader,
+          inferredType: 'binary',
+          levels: ['0', '1'],
+          referenceLevel: '0',
+          droppedLevel: null
+        };
+      } else if (factorMetadata && factorMetadata[alias]) {
+        factorConfig[alias] = { ...factorMetadata[alias] };
+      } else {
+        factorConfig[alias] = {
+          originalHeader: origHeader,
+          internalAlias: alias,
+          displayName: origHeader,
+          inferredType: 'continuous',
+          levels: [],
+          referenceLevel: null,
+          droppedLevel: null
+        };
+      }
     }
 
     // Map balance table rows back to original clinical headers
@@ -231,12 +278,12 @@ export class WebRStatisticalAdapter {
         executionDurationMs: durationMs,
         platform: {
           userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Node.js test environment',
-          cores: 1
+          cores: typeof navigator !== 'undefined' && navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 1
         }
       },
       inputFingerprint: {
         datasetSha256,
-        canonicalResultSha256: '', // Will be calculated by envelope wrapper
+        canonicalResultSha256: '', // Calculated by envelope wrapper
         totalRows: input.rows.length,
         completeCases: input.rows.length,
         excludedRows: 0,
@@ -260,30 +307,32 @@ export class WebRStatisticalAdapter {
         matchingOrder: 'largest',
         caliper: input.options?.caliper ?? null,
         stdCaliper: input.options?.stdCaliper ?? true,
-        effectiveCaliperWidthRaw: null,
-        caliperScaleDescription: input.options?.caliper ? 'pooled standard deviation of linear logit' : 'none'
+        discard: input.options?.discard || 'none',
+        effectiveCaliperWidthRaw: toScalar(matching.effectiveCaliperWidth),
+        caliperScaleDescription: toScalar(matching.caliperScaleDescription, 'none')
       },
       factorConfiguration: factorConfig,
       propensityScores: {
         unitIds,
         treatment: input.rows.map(r => Number(r[input.treatmentVariable])),
-        propensityScores: toArray(glm.propensityScores),
-        linearLogits: toArray(glm.linearLogits)
+        propensityScores: toArray(glm.propensityScores).map(Number),
+        linearLogits: toArray(glm.linearLogits).map(Number)
       },
       matchMatrix: {
-        treatedIds: toArray(matching.matchedTreatedIds),
-        matchedControlIds: toArray(matching.matchedControlIds),
-        pairDistances: toArray(matching.pairDistances)
+        treatedIds: toArray(matching.matchedTreatedIds).map(String),
+        matchedControlIds: toArray(matching.matchedControlIds).map(String),
+        pairDistances: toArray(matching.pairDistances).map(d => d !== null && d !== undefined ? Number(d) : null)
       },
       matchedUnits: {
-        matchedTreatedIds: toArray(matching.matchedTreatedIds),
-        matchedControlIds: toArray(matching.matchedControlIds),
-        totalMatchedPairs: toScalar(matching.totalMatchedPairs, 0)
+        matchedTreatedIds: toArray(matching.matchedTreatedIds).map(String),
+        matchedControlIds: toArray(matching.matchedControlIds).map(String),
+        totalMatchedPairs: toScalar(matching.totalMatchedPairs, 0),
+        pairDistances: toArray(matching.pairDistances).map(d => d !== null && d !== undefined ? Number(d) : null)
       },
       matchingWeights: {
         unitIds,
-        weights: toArray(matching.weights),
-        subclass: toArray(matching.subclasses)
+        weights: toArray(matching.weights).map(Number),
+        subclass: toArray(matching.subclasses).map(s => s !== null && s !== undefined ? Number(s) : null)
       },
       sampleAccounting: {
         importedTotal: toScalar(sampleAcc.importedTotal, input.rows.length),
@@ -320,6 +369,13 @@ export class WebRStatisticalAdapter {
         }) : [],
         rubinB: toScalar(rubin.b),
         rubinR: toScalar(rubin.r)
+      },
+      numericalInstabilitySafeguard: {
+        triggered: isTRUE(toScalar(numSafeguard.triggered)),
+        maxCoefficientStandardError: toScalar(numSafeguard.maxCoefficientStandardError),
+        maxAbsoluteCoefficient: toScalar(numSafeguard.maxAbsoluteCoefficient),
+        policyClassification: toScalar(numSafeguard.policyClassification, 'PRESPECIFIED_NON_DIAGNOSTIC_RISK_SAFEGUARD'),
+        certificationStatus: toScalar(numSafeguard.certificationStatus, 'UNVALIDATED_SAFEGUARD_NOT_SEPARATION_DETECTOR')
       },
       warnings: Array.isArray(unpacked.warnings) ? unpacked.warnings.map(w => ({
         code: toScalar(w.code),

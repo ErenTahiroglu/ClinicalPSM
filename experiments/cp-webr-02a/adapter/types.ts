@@ -9,6 +9,7 @@ export type CovariateType = 'continuous' | 'binary' | 'categorical';
 export interface CovariateDefinition {
   originalHeader: string;
   inferredType: CovariateType;
+  levels?: string[];
   referenceLevel?: string;
 }
 
@@ -20,6 +21,8 @@ export interface MatchingOptions {
   matchingOrder?: 'largest';
   caliper?: number | null;
   stdCaliper?: boolean;
+  discard?: 'none' | 'both' | 'hull' | 'control' | 'treat';
+  missingDataPolicy?: 'fail_closed' | 'complete_cases';
 }
 
 export interface DatasetInput {
@@ -28,6 +31,7 @@ export interface DatasetInput {
   rows: Array<Record<string, string | number | null>>;
   treatmentVariable: string;
   covariates: string[];
+  covariateDefinitions?: Record<string, CovariateDefinition>;
   options?: MatchingOptions;
 }
 
@@ -86,6 +90,7 @@ export interface CanonicalPsmResult {
     matchingOrder: 'largest';
     caliper: number | null;
     stdCaliper: boolean;
+    discard?: string;
     effectiveCaliperWidthRaw: number | null;
     caliperScaleDescription: string;
   };
@@ -172,8 +177,15 @@ export interface CanonicalPsmResult {
     rubinB: number | null;
     rubinR: number | null;
   };
+  numericalInstabilitySafeguard: {
+    triggered: boolean;
+    maxCoefficientStandardError: number | null;
+    maxAbsoluteCoefficient: number | null;
+    policyClassification: string;
+    certificationStatus: string;
+  };
   warnings: Array<{
-    code: 'WARN_SUSPECTED_SEPARATION' | 'WARN_OFF_SUPPORT' | 'WARN_CALIPER_ATTRITION' | 'WARN_RANK_DEFICIENT' | 'WARN_MISSING_EXCLUSION';
+    code: 'WARN_NUMERICAL_INSTABILITY_SAFEGUARD' | 'WARN_OFF_SUPPORT' | 'WARN_CALIPER_ATTRITION' | 'WARN_RANK_DEFICIENT' | 'WARN_MISSING_EXCLUSION' | 'WARN_DUPLICATE_ID';
     message: string;
     severity: 'informational' | 'warning' | 'fatal';
     impactDescription: string;

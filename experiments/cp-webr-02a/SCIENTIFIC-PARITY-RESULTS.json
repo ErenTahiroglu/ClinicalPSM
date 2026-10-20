@@ -1,53 +1,337 @@
 {
-  "suite": "CP-WEBR-02A Scientific Parity Suite",
-  "executed_at": "2026-10-20T12:01:04.022Z",
+  "suite": "CP-WEBR-02A R1 Scientific Parity Suite (25 Preserved Fixtures)",
+  "executed_at": "2026-10-20T14:52:19.787Z",
   "toolchain": {
     "webr": "0.6.0",
     "r": "4.6.0",
     "matchit": "4.8.1",
     "cobalt": "5.0.0"
   },
+  "r_template_sha256": "1295f9ad736b53cbaf3e22f07f8ab0bb7fcec5dd22fd27071932f858de09619a",
   "gates": {
-    "FULL_PRECISION_NATIVE_R_ORACLE": "BLOCKED",
-    "EXACT_PAIR_AND_WEIGHT_PARITY": "PASS",
-    "AUTOMATED_SEPARATION_SAFETY": "BLOCKED"
+    "SINGLE_SCIENTIFIC_ENGINE": "PASS",
+    "STRUCTURED_BINDING_AND_FACTOR_SEMANTICS": "PASS",
+    "MISSING_DATA_FAIL_CLOSED": "PASS",
+    "CANONICAL_OUTPUT_INTEGRITY": "PASS",
+    "PAIR_AND_CALIPER_SEMANTICS": "PASS",
+    "COBALT_BALANCE_PARITY": "PASS",
+    "FULL_FIXTURE_QUALIFICATION": "PASS",
+    "NATIVE_R_INDEPENDENT_ORACLE": "BLOCKED",
+    "AUTOMATED_SEPARATION_SAFETY": "BLOCKED",
+    "PRODUCTION_LICENSING_CLEARANCE": "BLOCKED"
+  },
+  "classification_counts": {
+    "SUCCESSFUL_ANALYSES": 19,
+    "EXPECTED_NATIVE_REFERENCE_ERRORS": 3,
+    "PRODUCT_POLICY_REJECTIONS": 1,
+    "NUMERICAL_TOLERANCE_EXCEPTIONS": 1,
+    "DIAGNOSTIC_ONLY_RESULTS": 1,
+    "UNMEASURED_CAPABILITIES": 0
   },
   "fixtures_tested": [
     {
-      "fixture": "fix_01_well_conditioned",
-      "matched_pairs": 119,
-      "pair_mismatches": 0,
-      "weight_mismatches": 0,
-      "max_coefficient_diff": 0,
-      "publication_verdict": "OUTPUT_READY",
-      "pass": true
-    },
-    {
-      "fixture": "fix_16_complete_separation",
-      "glm_converged": true,
-      "max_se": 39815.87849877388,
-      "publication_verdict": "OUTPUT_GENERATION_RESTRICTED",
-      "output_allowed": false,
+      "fixture_id": "fix_01_well_conditioned",
+      "name": "Well-conditioned logistic regression",
+      "expected_status": "SUCCESS",
+      "classification": "SUCCESSFUL_ANALYSES",
       "pass": true,
-      "note": "Algorithmic convergence verified with complete separation parameter instability; publication restricted."
+      "details": {
+        "oracleComparison": {
+          "pairMismatches": 0,
+          "weightMismatches": 0,
+          "maxCoefDiff": 0,
+          "oracleParityPass": true
+        },
+        "totalMatchedPairs": 119,
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      }
     },
     {
-      "fixture": "fix_17_rank_deficient",
-      "has_aliased": true,
-      "publication_verdict": "OUTPUT_GENERATION_RESTRICTED",
-      "pass": true
+      "fixture_id": "fix_02_mixed_types",
+      "name": "Mixed factor types",
+      "expected_status": "SUCCESS",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "details": {
+        "totalMatchedPairs": 156,
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      }
     },
     {
-      "fixture": "fix_06_no_caliper_nearest",
-      "matched_pairs": 119,
-      "publication_verdict": "OUTPUT_READY",
-      "pass": true
+      "fixture_id": "fix_03_ref_level_change",
+      "name": "Reference level change",
+      "expected_status": "SUCCESS",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "details": {
+        "totalMatchedPairs": 156,
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      }
     },
     {
-      "fixture": "fix_13_more_treated_than_control",
-      "matched_pairs": 75,
-      "unmatched_treated": 75,
-      "pass": true
+      "fixture_id": "fix_04_input_row_order",
+      "name": "Row order permutation",
+      "expected_status": "SUCCESS",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "details": {
+        "totalMatchedPairs": 119,
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      }
+    },
+    {
+      "fixture_id": "fix_05_exact_distance_ties",
+      "name": "Exact distance ties",
+      "expected_status": "SUCCESS",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "details": {
+        "totalMatchedPairs": 50,
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      }
+    },
+    {
+      "fixture_id": "fix_06_no_caliper_nearest",
+      "name": "No-caliper nearest neighbor",
+      "expected_status": "SUCCESS",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "details": {
+        "totalMatchedPairs": 119,
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      }
+    },
+    {
+      "fixture_id": "fix_07_prob_scale_caliper",
+      "name": "Probability scale caliper",
+      "expected_status": "SUCCESS",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "details": {
+        "totalMatchedPairs": 111,
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      }
+    },
+    {
+      "fixture_id": "fix_08_linear_logit_caliper",
+      "name": "Linear-logit caliper",
+      "expected_status": "SUCCESS",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "details": {
+        "totalMatchedPairs": 114,
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      }
+    },
+    {
+      "fixture_id": "fix_09_standardized_caliper",
+      "name": "Standardized distance caliper",
+      "expected_status": "SUCCESS",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "details": {
+        "totalMatchedPairs": 114,
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      }
+    },
+    {
+      "fixture_id": "fix_10_whole_vs_pooled_sd",
+      "name": "Whole-sample vs pooled SD difference",
+      "expected_status": "SUCCESS",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "details": {
+        "totalMatchedPairs": 21,
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      }
+    },
+    {
+      "fixture_id": "fix_11_pre_match_discard",
+      "name": "Pre-match discarded units with standardized caliper",
+      "expected_status": "SUCCESS",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "details": {
+        "totalMatchedPairs": 16,
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      }
+    },
+    {
+      "fixture_id": "fix_12_caliper_unmatched",
+      "name": "Caliper unmatched units",
+      "expected_status": "SUCCESS",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "details": {
+        "totalMatchedPairs": 98,
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      }
+    },
+    {
+      "fixture_id": "fix_13_more_treated_than_control",
+      "name": "More treated than control",
+      "expected_status": "SUCCESS",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "details": {
+        "totalMatchedPairs": 75,
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      }
+    },
+    {
+      "fixture_id": "fix_14_more_controls_than_treated",
+      "name": "More controls than treated",
+      "expected_status": "SUCCESS",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "details": {
+        "totalMatchedPairs": 40,
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      }
+    },
+    {
+      "fixture_id": "fix_15_quasi_separation",
+      "name": "Quasi-separation",
+      "expected_status": "SUCCESS_WITH_WARNING",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "details": {
+        "totalMatchedPairs": 50,
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      }
+    },
+    {
+      "fixture_id": "fix_16_complete_separation",
+      "name": "Complete separation",
+      "expected_status": "SUCCESS_WITH_WARNING",
+      "classification": "NUMERICAL_TOLERANCE_EXCEPTIONS",
+      "pass": true,
+      "details": {
+        "glmConvergence": true,
+        "maxCoefficientStandardError": 39815.87849877388,
+        "safeguardTriggered": true,
+        "publicationVerdict": "OUTPUT_GENERATION_RESTRICTED",
+        "outputGenerationAllowed": false
+      }
+    },
+    {
+      "fixture_id": "fix_17_rank_deficient",
+      "name": "Rank-deficient design matrix",
+      "expected_status": "SUCCESS",
+      "classification": "DIAGNOSTIC_ONLY_RESULTS",
+      "pass": true,
+      "details": {
+        "hasAliased": true,
+        "matchedPairs": 39,
+        "publicationVerdict": "OUTPUT_GENERATION_RESTRICTED"
+      }
+    },
+    {
+      "fixture_id": "fix_18_zero_variance",
+      "name": "Zero-variance covariate",
+      "expected_status": "SUCCESS",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "details": {
+        "totalMatchedPairs": 43,
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_GENERATION_RESTRICTED"
+      }
+    },
+    {
+      "fixture_id": "fix_19_missing_values",
+      "name": "Missing covariate values",
+      "expected_status": "EXPECTED_REFERENCE_ERROR",
+      "classification": "EXPECTED_NATIVE_REFERENCE_ERRORS",
+      "pass": true,
+      "details": {
+        "code": "MISSING_COVARIATE",
+        "error": "MISSING_DATA_REJECTED: Missing values detected in covariate \"x1\" at rows: [sub_0005]"
+      }
+    },
+    {
+      "fixture_id": "fix_19b_missing_treatment",
+      "name": "Missing treatment value",
+      "expected_status": "EXPECTED_REFERENCE_ERROR",
+      "classification": "EXPECTED_NATIVE_REFERENCE_ERRORS",
+      "pass": true,
+      "details": {
+        "code": "MISSING_TREATMENT",
+        "error": "MISSING_DATA_REJECTED: Missing value detected in treatment column \"treat\" at rows: [sub_0012]"
+      }
+    },
+    {
+      "fixture_id": "fix_20_malformed_category",
+      "name": "Malformed category values",
+      "expected_status": "SUCCESS",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "details": {
+        "totalMatchedPairs": 37,
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_GENERATION_RESTRICTED"
+      }
+    },
+    {
+      "fixture_id": "fix_21_extreme_propensities",
+      "name": "Extreme propensity scores",
+      "expected_status": "SUCCESS_WITH_WARNING",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "details": {
+        "totalMatchedPairs": 60,
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_GENERATION_RESTRICTED"
+      }
+    },
+    {
+      "fixture_id": "fix_22_small_sample",
+      "name": "Small degenerate sample",
+      "expected_status": "SUCCESS",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "details": {
+        "totalMatchedPairs": 4,
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      }
+    },
+    {
+      "fixture_id": "fix_23_no_eligible_match",
+      "name": "No eligible match",
+      "expected_status": "EXPECTED_ZERO_MATCHES",
+      "classification": "EXPECTED_NATIVE_REFERENCE_ERRORS",
+      "pass": true,
+      "details": {
+        "status": "EXPECTED_ZERO_MATCHES",
+        "error": "Error in unknown source: No units were matched."
+      }
+    },
+    {
+      "fixture_id": "fix_24_duplicate_ids",
+      "name": "Duplicate unit IDs",
+      "expected_status": "CLINICALPSM_POLICY_REJECT",
+      "classification": "PRODUCT_POLICY_REJECTIONS",
+      "pass": true,
+      "details": {
+        "policy": "DUPLICATE_UNIT_ID_REJECTED",
+        "error": "DUPLICATE_UNIT_ID_REJECTED: Duplicate row identifier detected: \"sub_0001\""
+      }
     }
   ],
   "verdict": "PASS"

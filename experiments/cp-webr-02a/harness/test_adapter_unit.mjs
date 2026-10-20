@@ -8,7 +8,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { SymbolMapper } from '../adapter/symbol_mapper.mjs';
 import {
-  canonicalizeValue,
   defensiveClone,
   serializeCanonical,
   wrapInVersionedEnvelope,
@@ -82,7 +81,7 @@ assert(limitTrapped, 'Header with 257 code points rejected with HEADER_LENGTH_EX
 let nullTrapped = false;
 try {
   SymbolMapper.validateAndNormalizeHeader('Patient\x00Name');
-} catch (err) {
+} catch {
   nullTrapped = true;
 }
 assert(nullTrapped, 'Header with null byte rejected');
@@ -90,7 +89,7 @@ assert(nullTrapped, 'Header with null byte rejected');
 let controlTrapped = false;
 try {
   SymbolMapper.validateAndNormalizeHeader('Age\x1bEscaped');
-} catch (err) {
+} catch {
   controlTrapped = true;
 }
 assert(controlTrapped, 'Header with escape control character rejected');
@@ -113,17 +112,17 @@ assert(cloned.normal === 42.5, 'Normal numbers preserved in defensive clone');
 
 // 2.3 VersionedCanonicalEnvelope creation & verification
 const payload = { result: 'OK', matched: 119, weights: [1, 1, 0] };
-const envelope = wrapInVersionedEnvelope(payload, { runId: 'run_test_01' });
+const envelope = await wrapInVersionedEnvelope(payload, { runId: 'run_test_01' });
 assert(envelope.envelopeVersion === '1.0.0', 'Envelope version is 1.0.0');
 assert(typeof envelope.payloadSha256 === 'string' && envelope.payloadSha256.length === 64, 'Envelope contains valid 64-char SHA-256');
 
-const verifyClean = verifyEnvelope(envelope);
+const verifyClean = await verifyEnvelope(envelope);
 assert(verifyClean.valid === true, 'Envelope verification succeeds on untampered payload');
 
 // 2.4 Tampering detection
 const tampered = JSON.parse(JSON.stringify(envelope));
 tampered.payload.matched = 120;
-const verifyTampered = verifyEnvelope(tampered);
+const verifyTampered = await verifyEnvelope(tampered);
 assert(verifyTampered.valid === false, 'Envelope verification traps payload tampering');
 
 // -------------------------------------------------------------
@@ -189,6 +188,102 @@ assert(manager.getState() === 'RECOVERABLE_ERROR', 'State is RECOVERABLE_ERROR a
 
 await manager.initialize();
 assert(manager.getState() === 'READY', 'Worker recovers cleanly to READY state after re-initialization');
+
+// -------------------------------------------------------------
+// 4. Data Ingestion & Parameter Binding Contracts
+// -------------------------------------------------------------
+console.log('\n--- 4. Testing Ingestion Validation & Parameter Binding ---');
+
+import { constructWebREnvironment } from '../adapter/webr_binding.mjs';
+
+class MockWebRForBinding {
+  async evalR() { return {}; }
+  REnvironment = class {
+    async bind() {}
+  };
+  RCharacter = class { constructor(v) { this.v = v; } };
+  RInteger = class { constructor(v) { this.v = v; } };
+  RDouble = class { constructor(v) { this.v = v; } };
+  RLogical = class { constructor(v) { this.v = v; } };
+}
+
+const mockWebR = new MockWebRForBinding();
+const testMapper = new SymbolMapper();
+testMapper.registerTreatment('treat');
+testMapper.registerCovariate('age');
+testMapper.registerCovariate('stage');
+
+// 4.1 Duplicate row ID rejection
+let dupRejected = false;
+try {
+  await constructWebREnvironment(mockWebR, {
+    treatmentVariable: 'treat',
+    covariates: ['age'],
+    rows: [
+      { id: 'unit_1', treat: 1, age: 30 },
+      { id: 'unit_1', treat: 0, age: 40 }
+    ]
+  }, testMapper);
+} catch (err) {
+  dupRejected = err.code === 'DUPLICATE_UNIT_ID_REJECTED';
+}
+assert(dupRejected, 'Duplicate unit ID rejected with DUPLICATE_UNIT_ID_REJECTED');
+
+// 4.2 Missing treatment value rejection
+let missingTrtRejected = false;
+try {
+  await constructWebREnvironment(mockWebR, {
+    treatmentVariable: 'treat',
+    covariates: ['age'],
+    rows: [
+      { id: 'unit_1', treat: 1, age: 30 },
+      { id: 'unit_2', treat: null, age: 40 }
+    ]
+  }, testMapper);
+} catch (err) {
+  missingTrtRejected = err.code === 'MISSING_TREATMENT';
+}
+assert(missingTrtRejected, 'Missing treatment value rejected with MISSING_TREATMENT');
+
+// 4.3 Missing covariate value rejection
+let missingCovRejected = false;
+try {
+  await constructWebREnvironment(mockWebR, {
+    treatmentVariable: 'treat',
+    covariates: ['age'],
+    rows: [
+      { id: 'unit_1', treat: 1, age: 30 },
+      { id: 'unit_2', treat: 0, age: '' }
+    ]
+  }, testMapper);
+} catch (err) {
+  missingCovRejected = err.code === 'MISSING_COVARIATE';
+}
+assert(missingCovRejected, 'Missing covariate value rejected with MISSING_COVARIATE');
+
+// 4.4 Factor metadata generation with explicit reference level
+const factorRes = await constructWebREnvironment(mockWebR, {
+  treatmentVariable: 'treat',
+  covariates: ['stage'],
+  covariateDefinitions: {
+    stage: {
+      originalHeader: 'stage',
+      inferredType: 'categorical',
+      levels: ['I', 'II', 'III'],
+      referenceLevel: 'II'
+    }
+  },
+  rows: [
+    { id: 'unit_1', treat: 1, stage: 'I' },
+    { id: 'unit_2', treat: 0, stage: 'II' },
+    { id: 'unit_3', treat: 0, stage: 'III' }
+  ]
+}, testMapper);
+
+const stageAlias = testMapper.getAlias('stage');
+const stageMeta = factorRes.factorMetadata[stageAlias];
+assert(stageMeta && stageMeta.referenceLevel === 'II', 'Factor reference level "II" preserved in factorMetadata');
+assert(stageMeta && stageMeta.levels.length === 3, 'Factor levels ["I", "II", "III"] preserved in factorMetadata');
 
 // -------------------------------------------------------------
 // Write Results

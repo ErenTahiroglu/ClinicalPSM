@@ -1,7 +1,21 @@
 // CP-WEBR-02A Canonical Serializer & Defensive Copy Boundary
 // Conforms to CP-WEBR-01 Canonical Result Contract Section 4 & Production Architecture Section 4.4
 
-import crypto from 'node:crypto';
+/**
+ * Computes SHA-256 hex digest using Web Crypto API in browser/Node or dynamic import fallback
+ */
+export async function sha256Hex(text) {
+  if (typeof globalThis.crypto?.subtle?.digest === 'function') {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text);
+    const hashBuf = await globalThis.crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hashBuf))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+  const { createHash } = await import('node:crypto');
+  return createHash('sha256').update(text).digest('hex');
+}
 
 /**
  * Recursively clones and sorts object keys lexicographically for canonical serialization
@@ -57,10 +71,10 @@ export function serializeCanonical(obj) {
 /**
  * Wraps canonical result into a VersionedCanonicalEnvelope with cryptographic hash
  */
-export function wrapInVersionedEnvelope(resultPayload, metadata = {}) {
+export async function wrapInVersionedEnvelope(resultPayload, metadata = {}) {
   const cloned = defensiveClone(resultPayload);
   const canonicalJson = serializeCanonical(cloned);
-  const sha256 = crypto.createHash('sha256').update(canonicalJson).digest('hex');
+  const sha256 = await sha256Hex(canonicalJson);
 
   return {
     envelopeVersion: '1.0.0',
@@ -77,7 +91,7 @@ export function wrapInVersionedEnvelope(resultPayload, metadata = {}) {
 /**
  * Verifies the integrity of a VersionedCanonicalEnvelope
  */
-export function verifyEnvelope(envelope) {
+export async function verifyEnvelope(envelope) {
   if (!envelope || typeof envelope !== 'object') {
     return { valid: false, reason: 'Invalid envelope object' };
   }
@@ -85,7 +99,7 @@ export function verifyEnvelope(envelope) {
     return { valid: false, reason: 'Missing payload or payloadSha256' };
   }
   const canonicalJson = serializeCanonical(envelope.payload);
-  const actualHash = crypto.createHash('sha256').update(canonicalJson).digest('hex');
+  const actualHash = await sha256Hex(canonicalJson);
 
   if (actualHash !== envelope.payloadSha256) {
     return {

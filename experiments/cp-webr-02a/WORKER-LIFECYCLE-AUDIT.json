@@ -1,27 +1,34 @@
 {
-  "executed_at": "2026-10-20T12:01:28.257Z",
-  "commit_sha": "6776f38339a06ecb84a02a05cf337e8b970dd3ca",
+  "executed_at": "2026-10-20T14:47:02.892Z",
+  "commit_sha": "92df0d2acd2973bf792b6a009b72e39656cf0c66",
   "results": {
     "initialization": {
       "pass": true,
-      "latencyMs": 2019.789999999106
+      "latencyMs": 2178.47500000149
     },
     "repeatedAnalyses": {
       "pass": true,
-      "run1Success": true,
-      "run2Success": true
+      "run1Pairs": 2,
+      "run2Pairs": 2
     },
     "singleJobConcurrency": {
       "pass": true,
-      "note": "Dedicated worker manages single execution promise sequentially"
+      "rejectedError": "CONCURRENCY_ERROR",
+      "job1Success": true,
+      "statePostCompletion": "READY"
     },
     "gracefulInterruption": {
       "pass": true,
-      "latencyMs": 0.10000000149011612
+      "cancelStatus": "GRACEFUL_INTERRUPT",
+      "interruptRequested": true,
+      "cancellationCompleted": true,
+      "durationMs": 0.989999994635582,
+      "statePostCancel": "READY"
     },
     "hardTerminationAndRecovery": {
       "pass": true,
-      "terminateDurationMs": 0.004999995231628418
+      "recoveredState": "READY",
+      "recoveryPairs": 2
     },
     "overallPass": true
   },

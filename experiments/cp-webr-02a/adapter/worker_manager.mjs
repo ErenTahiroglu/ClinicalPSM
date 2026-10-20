@@ -50,6 +50,12 @@ export class WorkerLifecycleManager {
     this.setState('INITIALIZING');
 
     try {
+      if (this.worker) {
+        try { this.worker.terminate(); } catch {}
+        this.worker = null;
+      }
+      this.messageHandlers.clear();
+
       this.worker = this.workerFactory();
       this.setupWorkerListeners();
 
@@ -69,12 +75,14 @@ export class WorkerLifecycleManager {
 
   setupWorkerListeners() {
     this.worker.onmessage = (event) => {
-      const { type, id, payload, error } = event.data || {};
+      const { id, payload, error } = event.data || {};
       if (id && this.messageHandlers.has(id)) {
         const handler = this.messageHandlers.get(id);
         this.messageHandlers.delete(id);
         if (error) {
-          handler.reject(new Error(error));
+          const err = new Error(error);
+          if (event.data?.code) err.code = event.data.code;
+          handler.reject(err);
         } else {
           handler.resolve(payload);
         }
@@ -84,7 +92,8 @@ export class WorkerLifecycleManager {
     this.worker.onerror = (err) => {
       console.error('Worker error caught in lifecycle manager:', err);
       if (this.currentJob) {
-        this.currentJob.reject(new Error(`Worker execution error: ${err.message || 'Unknown error'}`));
+        const errorObj = new Error(`Worker execution error: ${err.message || 'Unknown error'}`);
+        this.currentJob.reject(errorObj);
         this.currentJob = null;
       }
       this.setState('RECOVERABLE_ERROR', { error: err.message });
@@ -95,9 +104,9 @@ export class WorkerLifecycleManager {
    * Submits a statistical analysis job (Single-job concurrency enforcement)
    */
   async submitAnalysis(datasetInput) {
-    if (this.state !== 'READY' && this.state !== 'COMPLETED') {
-      if (this.state === 'RUNNING') {
-        const err = new Error(`Concurrency violation: Worker is currently RUNNING job ${this.currentJob?.id}. Concurrent tasks prohibited.`);
+    if (this.state !== 'READY') {
+      if (this.state === 'RUNNING' || this.state === 'CANCELLING') {
+        const err = new Error(`Concurrency violation: Worker is currently in state ${this.state} (job ${this.currentJob?.id}). Concurrent tasks prohibited.`);
         err.code = 'CONCURRENCY_ERROR';
         throw err;
       }
@@ -108,65 +117,112 @@ export class WorkerLifecycleManager {
     this.setState('RUNNING', { jobId });
 
     return new Promise((resolve, reject) => {
-      this.currentJob = { id: jobId, resolve, reject, startTime: Date.now() };
+      const jobRecord = {
+        id: jobId,
+        resolve: (val) => resolve(val),
+        reject: (err) => reject(err),
+        startTime: Date.now(),
+        cancelled: false,
+        interruptRequested: false
+      };
+      this.currentJob = jobRecord;
 
       this.sendMessage('RUN_ANALYSIS', datasetInput, jobId)
         .then((result) => {
+          if (jobRecord.cancelled) {
+            // Discard late result after cancellation
+            const cancelErr = new Error(`Operation cancelled: Job ${jobId} was cancelled; late result rejected.`);
+            cancelErr.code = 'OPERATION_CANCELLED';
+            this.currentJob = null;
+            this.setState('READY');
+            jobRecord.reject(cancelErr);
+            return;
+          }
           this.setState('COMPLETED', { jobId, result });
           this.currentJob = null;
           // Return to READY state for next analysis
           this.setState('READY');
-          resolve(result);
+          jobRecord.resolve(result);
         })
         .catch((err) => {
-          this.setState('RECOVERABLE_ERROR', { jobId, error: err.message });
+          const isCancelled = jobRecord.cancelled;
           this.currentJob = null;
-          reject(err);
+          if (isCancelled) {
+            const cancelErr = new Error(`Operation cancelled: Job ${jobId} execution stopped: ${err.message}`);
+            cancelErr.code = 'OPERATION_CANCELLED';
+            this.setState('READY');
+            jobRecord.reject(cancelErr);
+          } else {
+            this.setState('RECOVERABLE_ERROR', { jobId, error: err.message });
+            jobRecord.reject(err);
+          }
         });
     });
   }
 
   /**
-   * Graceful interruption with hard-termination fallback
+   * Graceful interruption with observed cessation and hard-termination fallback
    */
   async cancelCurrentJob() {
     if (this.state !== 'RUNNING' || !this.currentJob) {
-      return { status: 'NO_ACTIVE_JOB' };
+      return { status: 'NO_ACTIVE_JOB', interruptRequested: false, cancellationCompleted: false };
     }
 
     const activeJob = this.currentJob;
+    activeJob.cancelled = true;
+    activeJob.interruptRequested = true;
+    const interruptRequestedAt = performance.now();
     this.setState('CANCELLING', { jobId: activeJob.id });
 
-    // Try graceful interrupt
-    let interruptedGracefully = false;
+    // Post INTERRUPT to worker
     try {
-      this.worker.postMessage({ type: 'INTERRUPT', id: 'interrupt_req' });
+      this.worker.postMessage({ type: 'INTERRUPT', id: `interrupt_${activeJob.id}` });
     } catch (err) {
       console.warn('Failed to post INTERRUPT message, proceeding to hard termination:', err);
     }
 
-    // Await cessation or fallback to hard termination after timeout
-    const cancelPromise = new Promise((resolve) => {
+    return new Promise((resolve) => {
+      let resolved = false;
+
+      const finishCancellation = (status, error = null) => {
+        if (resolved) return;
+        resolved = true;
+        clearTimeout(timer);
+        const cancellationCompletedAt = performance.now();
+        const durationMs = cancellationCompletedAt - interruptRequestedAt;
+
+        resolve({
+          status,
+          jobId: activeJob.id,
+          interruptRequested: true,
+          cancellationCompleted: true,
+          durationMs,
+          error: error ? error.message : null
+        });
+      };
+
       const timer = setTimeout(() => {
         if (this.state === 'CANCELLING') {
-          // Hard terminate
-          this.terminateAndRecover('Hard termination after cancellation timeout');
-          resolve({ status: 'HARD_TERMINATED' });
+          this.terminateAndRecover('Hard termination fallback after cancellation timeout');
+          finishCancellation('HARD_TERMINATED');
         }
       }, this.options.cancelTimeoutMs);
 
-      // If currentJob rejects due to interruption
       const origReject = activeJob.reject;
       activeJob.reject = (err) => {
-        clearTimeout(timer);
-        interruptedGracefully = true;
         this.setState('READY');
         origReject(err);
-        resolve({ status: 'GRACEFUL_INTERRUPT' });
+        finishCancellation('GRACEFUL_INTERRUPT', err);
+      };
+
+      activeJob.resolve = (_res) => {
+        const cancelErr = new Error(`Operation cancelled: Job ${activeJob.id} was cancelled; late result rejected.`);
+        cancelErr.code = 'OPERATION_CANCELLED';
+        this.setState('READY');
+        origReject(cancelErr);
+        finishCancellation('GRACEFUL_INTERRUPT', cancelErr);
       };
     });
-
-    return cancelPromise;
   }
 
   /**
@@ -181,6 +237,16 @@ export class WorkerLifecycleManager {
       }
       this.worker = null;
     }
+
+    // Clear all pending message handlers and reject their promises
+    for (const handler of this.messageHandlers.values()) {
+      try {
+        const err = new Error(`Worker terminated (${reason}): pending operation aborted.`);
+        err.code = 'WORKER_TERMINATED';
+        handler.reject(err);
+      } catch {}
+    }
+    this.messageHandlers.clear();
 
     if (this.currentJob) {
       const err = new Error(`Job terminated: ${reason}`);

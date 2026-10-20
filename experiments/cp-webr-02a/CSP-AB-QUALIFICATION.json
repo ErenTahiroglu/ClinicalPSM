@@ -1,6 +1,6 @@
 {
-  "executed_at": "2026-10-20T12:01:28.257Z",
-  "commit_sha": "6776f38339a06ecb84a02a05cf337e8b970dd3ca",
+  "executed_at": "2026-10-20T14:47:02.892Z",
+  "commit_sha": "92df0d2acd2973bf792b6a009b72e39656cf0c66",
   "matrix": {
     "profileC1_strict": {
       "workerUrl": "/worker-strict.js",
@@ -27,7 +27,7 @@
       "isolatedToWebRWorker": true,
       "pageRequiresUnsafeEval": false,
       "exactFailingOperation": null,
-      "recommendation": "Preserve strict CSP for main page (no unsafe-eval). Isolate 'unsafe-eval' solely to Dedicated Worker script response headers to satisfy Emscripten ASM_CONSTS dynamic linking."
+      "recommendation": "Preserve strict CSP for BOTH main page and Dedicated Worker (no 'unsafe-eval'). Full WebR + MatchIt + cobalt pipeline executes successfully under strict worker CSP with 'wasm-unsafe-eval'. Opening 'unsafe-eval' is NOT required."
     }
   },
   "verdict": "PASS"
