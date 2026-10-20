@@ -201,3 +201,4 @@ console.log(`Passed: ${results.tests_passed}/${results.tests_passed + results.te
 if (results.tests_failed > 0) {
   process.exit(1);
 }
+process.exit(0);

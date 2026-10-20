@@ -58,16 +58,16 @@
       "sha256": "49ba3b04774d6ea5cb3e614056316ff6855952a5b0bfa0a30858faeb67393408"
     },
     "experiments/cp-webr-02a/harness/test_adapter_unit.mjs": {
-      "bytes": 8527,
-      "sha256": "a7844b6d58a84806a08fbb4aca4053dfe638aa1336472f11b002acd0977c89b6"
+      "bytes": 8544,
+      "sha256": "24cde0aaa5c63b3409bc8057e4c37d529aef2b7d61d4336f65cf9dc315a04742"
     },
     "experiments/cp-webr-02a/harness/test_scientific_parity.mjs": {
-      "bytes": 13413,
-      "sha256": "aa1133a594cd56a4b021a6e95c30e273fcf9c2f55479d47b3aca0db7b20571cb"
+      "bytes": 13633,
+      "sha256": "85c27ea5514d2d84294b133c6771e5f5dedcb77986c51f5790978e776a6345d6"
     },
     "experiments/cp-webr-02a/harness/test_browser_qualification.mjs": {
-      "bytes": 19399,
-      "sha256": "b572c62135aad7e89fb2291fba36bc942a65e295aeff6bee5ea8bbc5787f106a"
+      "bytes": 19514,
+      "sha256": "004d463ecb70456f88b85dbbfb0c2a2f3d3e7a898bd18d33b04d9256fa0480fb"
     },
     "experiments/cp-webr-02a/fixtures/fix_01_oracle_full_precision.json": {
       "bytes": 29484,

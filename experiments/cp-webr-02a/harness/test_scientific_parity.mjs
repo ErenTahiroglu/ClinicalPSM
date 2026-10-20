@@ -314,8 +314,17 @@ async function main() {
   console.log(`\nWrote scientific parity report to ${outPath}`);
   console.log(`Overall Parity Verdict: ${parityReport.verdict}`);
 
+  if (typeof server.closeAllConnections === 'function') {
+    server.closeAllConnections();
+  }
   server.close();
+  try {
+    if (webR && typeof webR.close === 'function') {
+      await webR.close();
+    }
+  } catch {}
   if (!allPass) process.exit(1);
+  process.exit(0);
 }
 
 main().catch(err => {

@@ -1,10 +1,10 @@
 {
-  "executed_at": "2026-10-20T11:44:18.472Z",
-  "commit_sha": "2e5dfcff8f03d0e3ce3d212f731bcd6082061a7d",
+  "executed_at": "2026-10-20T12:01:28.257Z",
+  "commit_sha": "6776f38339a06ecb84a02a05cf337e8b970dd3ca",
   "results": {
     "initialization": {
       "pass": true,
-      "latencyMs": 1993.6349999979138
+      "latencyMs": 2019.789999999106
     },
     "repeatedAnalyses": {
       "pass": true,
@@ -17,7 +17,7 @@
     },
     "gracefulInterruption": {
       "pass": true,
-      "latencyMs": 0.11500000208616257
+      "latencyMs": 0.10000000149011612
     },
     "hardTerminationAndRecovery": {
       "pass": true,

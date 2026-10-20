@@ -421,6 +421,9 @@ async function main() {
   console.log(`Mock Sink hits: ${mockSinkStatus.falsificationSinkHits}`);
 
   await browser.close();
+  if (typeof server.closeAllConnections === 'function') {
+    server.closeAllConnections();
+  }
   server.close();
 
   // -------------------------------------------------------------
@@ -478,6 +481,7 @@ async function main() {
   if (!allTestsPassed) {
     process.exit(1);
   }
+  process.exit(0);
 }
 
 main().catch(err => {
