@@ -131,7 +131,7 @@ All 17 experimental and architecture artifacts are registered with non-self-refe
 1. **Production Licensing Clearance:** Remains strictly **`BLOCKED`**. GPL-2 / GPL-3 copyleft distribution obligations for MatchIt and cobalt require qualified legal counsel before commercial deployment.
 2. **Cross-Browser Scope:** Qualified on Chromium. Firefox and WebKit remain recorded as `UNMEASURED_NOT_INSTALLED`. Safari / iOS remain `UNMEASURED`. Universal browser release approval is NOT granted.
 3. **Wasm Linear Memory:** Private WebAssembly heap memory profiling remains `UNMEASURED` in standard non-debug browser environments.
-4. **Complete Separation:** GLM non-convergence under quasi-complete separation is a known statistical exception; publication outputs must be restricted.
+4. **Complete Separation:** In `fix_16`, standard `glm()` reports algorithmic convergence (`glm$converged == TRUE` via deviance step threshold < 1e-8) despite complete separation, causing parameter instability (astronomical standard errors > 39,000) and failing numerical parity; publication outputs are strictly restricted (`REJECT_FOR_PUBLICATION`). Automated runtime separation diagnosis remains unimplemented (`AUTOMATED_SEPARATION_SAFETY` remains `BLOCKED`).
 5. **No Production Application Changes:** Zero production application code in `apps/web` or `clinicalpsm/src/lib/psm/` was modified.
 
 ---

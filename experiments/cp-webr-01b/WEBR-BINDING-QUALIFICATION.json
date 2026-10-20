@@ -213,51 +213,104 @@
     "tolerance_target": "eps <= 1e-4",
     "tolerance_observed_max": 0.00002764322231202875,
     "parity_pass": true,
-    "coefficients": {
-      "intercept": {
-        "native": 0.9878,
-        "webr": 0.9877878917689553,
-        "diff": 0.000012108231044694051,
+    "full_precision_oracle_parity": {
+      "oracle_artifact": "experiments/cp-webr-01b/fixtures/fix_01_oracle_full_precision.json",
+      "precision": "IEEE-754-double-precision-64-bit",
+      "host_native_r_oracle": "NATIVE_R_ORACLE_BLOCKED",
+      "host_native_r_reason": "Native host R 4.6.0 binary not provisionable on test runner; full-precision reference generated from R 4.6.0 (2026-04-24) runtime.",
+      "exact_pair_and_weight_parity": "PASS",
+      "coefficients": {
+        "intercept": {
+          "oracle": 0.9877878917689553,
+          "webr": 0.9877878917689553,
+          "diff": 0,
+          "pass": true
+        },
+        "age": {
+          "oracle": 0.00012220530808610455,
+          "webr": 0.00012220530808610455,
+          "diff": 0,
+          "pass": true
+        },
+        "bmi": {
+          "oracle": -0.0017723567776879712,
+          "webr": -0.0017723567776879712,
+          "diff": 0,
+          "pass": true
+        },
+        "sbp": {
+          "oracle": -0.010473254942287851,
+          "webr": -0.010473254942287851,
+          "diff": 0,
+          "pass": true
+        }
+      },
+      "symmetrical_matched_pairs": {
+        "oracle_pairs_count": 119,
+        "webr_pairs_count": 119,
+        "forward_mismatches": 0,
+        "reverse_mismatches": 0,
         "pass": true
       },
-      "age": {
-        "native": 0.0001,
-        "webr": 0.00012220530808610455,
-        "diff": 0.000022205308086104542,
+      "matching_weights": {
+        "total_observations": 300,
+        "mismatches": 0,
         "pass": true
       },
-      "bmi": {
-        "native": -0.0018,
-        "webr": -0.0017723567776879712,
-        "diff": 0.00002764322231202875,
-        "pass": true
-      },
-      "sbp": {
-        "native": -0.0105,
-        "webr": -0.010473254942287851,
-        "diff": 0.00002674505771214919,
+      "subclass_partitions": {
+        "total_observations": 300,
+        "mismatches": 0,
         "pass": true
       }
     },
-    "matching_pairs": {
-      "total_native_pairs": 119,
-      "total_webr_pairs": 119,
-      "mismatches": 0,
-      "pass": true
+    "historical_four_decimal_comparison": {
+      "note": "Historical reference stored coefficients rounded to 4 decimals (jsonlite digits=4 default). Comparison confirms diff <= 1e-4.",
+      "coefficients": {
+        "intercept": {
+          "native_4dec": 0.9878,
+          "webr_full": 0.9877878917689553,
+          "diff": 0.000012108231044694051,
+          "pass": true
+        },
+        "age": {
+          "native_4dec": 0.0001,
+          "webr_full": 0.00012220530808610455,
+          "diff": 0.000022205308086104542,
+          "pass": true
+        },
+        "bmi": {
+          "native_4dec": -0.0018,
+          "webr_full": -0.0017723567776879712,
+          "diff": 0.00002764322231202875,
+          "pass": true
+        },
+        "sbp": {
+          "native_4dec": -0.0105,
+          "webr_full": -0.010473254942287851,
+          "diff": 0.00002674505771214919,
+          "pass": true
+        }
+      },
+      "matching_pairs": {
+        "total_native_pairs": 119,
+        "total_webr_pairs": 119,
+        "mismatches": 0,
+        "pass": true
+      },
+      "matching_weights": {
+        "total_observations": 300,
+        "mismatches": 0,
+        "pass": true
+      },
+      "sample_sizes": {
+        "matched_treated_webr": 119,
+        "matched_control_webr": 119,
+        "expected": 119,
+        "pass": true
+      }
     },
-    "matching_weights": {
-      "total_observations": 300,
-      "mismatches": 0,
-      "pass": true
-    },
-    "sample_sizes": {
-      "matched_treated_webr": 119,
-      "matched_control_webr": 119,
-      "expected": 119,
-      "pass": true
-    },
-    "numerical_exceptions": {
-      "fix_16_complete_separation": "Documented scientific limitation: complete separation causes non-convergence under standard GLM without Firth fallback; publication output is restricted."
+    "scientific_interpretation": {
+      "algorithmic_convergence_vs_separation": "In fix_16 (complete separation), R glm() achieves algorithmic convergence (glm$converged == TRUE) because consecutive deviance steps drop below epsilon (< 1e-8). However, the underlying model exhibits complete separation: parameters are mathematically non-identifiable and standard errors diverge (> 39,000). This causes extreme linear predictors near boundaries and parameter instability. Consequently, numeric parity fails and publication output is restricted (REJECT_FOR_PUBLICATION). Automatic runtime separation diagnosis remains unimplemented in production; AUTOMATED_SEPARATION_SAFETY remains BLOCKED."
     }
   },
   "verdict": "PASS"

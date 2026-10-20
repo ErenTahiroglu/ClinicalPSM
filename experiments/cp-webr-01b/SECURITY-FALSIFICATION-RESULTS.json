@@ -1,6 +1,6 @@
 {
   "executed_at": "2026-10-20T00:00:00.000Z",
-  "commit_sha": "652f38734fc45bd426186bec125fcf31d60c5c06",
+  "commit_sha": "e56739d4a0671dc075075ccc74f451257b78706b",
   "nominal_offline_run": {
     "status": "PASS",
     "network_state_set_offline": true,
@@ -11,7 +11,7 @@
       "treated": 3,
       "control": 3
     },
-    "pipeline_duration_ms": 64.19999999925494
+    "pipeline_duration_ms": 71.79500000178814
   },
   "tripartite_egress_qualification": {
     "property_a_attempt_detection": {

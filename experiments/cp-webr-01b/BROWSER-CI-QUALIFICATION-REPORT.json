@@ -1,11 +1,11 @@
 {
   "executed_at": "2026-10-20T00:00:00.000Z",
-  "commit_sha": "652f38734fc45bd426186bec125fcf31d60c5c06",
+  "commit_sha": "e56739d4a0671dc075075ccc74f451257b78706b",
   "operating_system": "darwin 27.0.0 (arm64)",
   "node_version": "v26.12.0",
   "browser_type": "Chromium",
   "browser_version": "154.0.8037.93",
-  "duration_ms": 3252,
+  "duration_ms": 6415,
   "exit_code": 0,
   "runtime_packages": {
     "webr": "0.6.0",
@@ -18,9 +18,12 @@
     "RT-02 True offline MatchIt + cobalt pipeline execution with context.setOffline(true)",
     "RT-03 Tripartite network egress: Attempt detection, Pre-egress prevention, Server rejection",
     "RT-03 Local mock-sink sentinel falsification",
+    "RT-04 IndexedDB fault-injection across 5 failure modes (Fail-Closed)",
     "RT-04 IndexedDB scanner positive control across 5 data types",
     "RT-04 Deep storage residue audit across checkpoints T1-T5",
-    "RT-05 CSP Matrix Profiles A, B (strict page eval rejection), and C (worker asm stubs)"
+    "RT-05 CSP Matrix Profile A (Baseline)",
+    "RT-05 CSP Matrix Profile B (Strict page eval rejection with securitypolicyviolation)",
+    "RT-05 CSP Matrix Profile C (Worker executable A/B testing with and without unsafe-eval)"
   ],
   "tests_not_executed": [
     "Firefox cross-browser execution (UNMEASURED)",
@@ -28,6 +31,12 @@
     "Wasm linear memory profiling via private heap (UNMEASURED)"
   ],
   "verdicts": {
+    "FULL_PRECISION_NATIVE_R_ORACLE": "NATIVE_R_ORACLE_BLOCKED",
+    "EXACT_PAIR_AND_WEIGHT_PARITY": "PASS",
+    "CI_EVIDENCE_PROVENANCE": "PASS",
+    "INDEXEDDB_FAIL_CLOSED": "PASS",
+    "WORKER_CSP_EXCEPTION": "PASS",
+    "CHROMIUM_SECURITY_QUALIFICATION": "PASS",
     "TRUE_OFFLINE_EXECUTION": "PASS",
     "NETWORK_FALSIFICATION": "PASS",
     "INDEXEDDB_SCANNER_FALSIFICATION": "PASS",
@@ -36,6 +45,34 @@
     "CHROMIUM_BROWSER_CI": "PASS",
     "CROSS_BROWSER_SUPPORT": "UNMEASURED",
     "WASM_MEMORY_QUALIFICATION": "UNMEASURED",
-    "PRODUCTION_LICENSING_CLEARANCE": "BLOCKED"
+    "PRODUCTION_LICENSING_CLEARANCE": "BLOCKED",
+    "AUTOMATED_SEPARATION_SAFETY": "BLOCKED",
+    "OVERALL_QUALIFICATION_VERDICT": "SECURITY_QUALIFICATION_PASS_FOR_IMPLEMENTATION_REVIEW"
+  },
+  "evidence_hashes": {
+    "experiments/cp-webr-01b/SECURITY-FALSIFICATION-RESULTS.json": {
+      "bytes": 2865,
+      "sha256": "83c6ae401571778778547b12f9d71fe36e190a354e2dafda901d3e8468349562"
+    },
+    "experiments/cp-webr-01b/INDEXEDDB-LIFECYCLE-AUDIT.json": {
+      "bytes": 8062,
+      "sha256": "912802c08756ca9ee2531cc543d61e7537289521206d83264217a771ff24c166"
+    },
+    "experiments/cp-webr-01b/CSP-QUALIFICATION.json": {
+      "bytes": 3185,
+      "sha256": "94e325b34f972049642011bfaadfb7a305b1ceeb8ba5067c578e4a4c7da403dd"
+    },
+    "experiments/cp-webr-01b/WEBR-BINDING-QUALIFICATION.json": {
+      "bytes": 9975,
+      "sha256": "fedad6f386719ea775f5f7fab96359edf7ae5cc67e922bf72e279a8fe5dbc502"
+    },
+    "experiments/cp-webr-01b/ALIAS-AND-SERIALIZATION-TESTS.json": {
+      "bytes": 4191,
+      "sha256": "7329075d8cbe3a9ac4a5dacd76fcf069d1119045058636522228dbe1789fd85d"
+    },
+    "experiments/cp-webr-01b/fixtures/fix_01_oracle_full_precision.json": {
+      "bytes": 29484,
+      "sha256": "5efc3404e213c19f7663e5e09c3e96bda73a189efbf2e265fcf0315f4167c109"
+    }
   }
 }

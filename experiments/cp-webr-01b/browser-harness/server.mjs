@@ -69,8 +69,8 @@ export function createServer(options = {}) {
       "style-src 'self'; " +
       "connect-src 'self';";
 
-    if (reqCsp === 'strict-page' || reqCsp === 'no-eval-page') {
-      // Profile B: Strict Page CSP removing 'unsafe-eval'
+    if (reqCsp === 'strict-page' || reqCsp === 'no-eval-page' || reqCsp === 'strict-worker' || pathname === '/worker-strict.js') {
+      // Strict CSP removing 'unsafe-eval' for Page or Worker
       cspHeader = "default-src 'self' 'wasm-unsafe-eval' blob: data:; " +
         "script-src 'self' 'wasm-unsafe-eval' blob:; " +
         "worker-src 'self' blob:; " +
@@ -158,6 +158,9 @@ export function createServer(options = {}) {
       filePath = path.join(localRepo, pathname.replace(/^\/repo\//, ''));
     } else {
       let rel = pathname === '/' || pathname === '' ? '/index.html' : pathname;
+      if (pathname === '/worker-strict.js') {
+        rel = '/worker.js';
+      }
       filePath = path.join(harnessDir, rel);
     }
 

@@ -21,6 +21,26 @@ self.onmessage = async (e) => {
       return;
     }
 
+    if (type === 'TEST_WORKER_EVAL') {
+      let blocked = false;
+      let evalResult = null;
+      let evalError = null;
+      try {
+        evalResult = eval('1 + 1');
+      } catch (err) {
+        blocked = true;
+        evalError = err.message;
+      }
+      self.postMessage({
+        id,
+        type: 'TEST_WORKER_EVAL_RESPONSE',
+        blocked,
+        eval_result: evalResult,
+        eval_error: evalError
+      });
+      return;
+    }
+
     if (type === 'INIT') {
       const t0 = performance.now();
       webr = new WebR({

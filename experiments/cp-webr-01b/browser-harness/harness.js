@@ -25,6 +25,26 @@ export function createWorker() {
   return window.currentWorker;
 }
 
+export function createStrictWorker() {
+  if (window.currentWorker) {
+    window.currentWorker.terminate();
+  }
+  window.currentWorker = new Worker('/worker-strict.js?csp=strict-worker', { type: 'module' });
+  window.currentWorker.onmessage = (e) => {
+    const { id, type, error } = e.data;
+    if (pending.has(id)) {
+      const { resolve, reject } = pending.get(id);
+      pending.delete(id);
+      if (type === 'WORKER_ERROR' || error) {
+        reject(new Error(error || 'Worker error'));
+      } else {
+        resolve(e.data);
+      }
+    }
+  };
+  return window.currentWorker;
+}
+
 export function sendWorkerMessage(type, payload = {}) {
   return new Promise((resolve, reject) => {
     const id = ++msgId;
@@ -95,11 +115,19 @@ async function inspectValueRecursively(val, sentinels, path = '') {
   return matches;
 }
 
-export async function inspectDeepStorage(sentinels) {
+export async function inspectDeepStorage(sentinels, options = {}) {
+  const injectedFault = options.injectedFault || null;
   const audit = {
     executed_at: '2026-10-20T00:00:00.000Z',
     sentinels_checked: sentinels,
-    indexedDB: { databases: [], records_inspected: 0, residue_matches: [] },
+    indexedDB: {
+      status: 'PENDING',
+      databases: [],
+      records_inspected: 0,
+      residue_matches: [],
+      errors: [],
+      inaccessible: false
+    },
     localStorage: { entries_inspected: 0, residue_matches: [] },
     sessionStorage: { entries_inspected: 0, residue_matches: [] },
     cacheStorage: { caches_inspected: 0, requests_inspected: 0, residue_matches: [] },
@@ -108,59 +136,150 @@ export async function inspectDeepStorage(sentinels) {
     storage_accessible: true
   };
 
-  // 1. IndexedDB Inspection
+  // 1. IndexedDB Inspection (Fail-Closed Architecture)
   try {
-    if (window.indexedDB && window.indexedDB.databases) {
-      const dbs = await window.indexedDB.databases();
-      audit.indexedDB.databases = dbs.map(d => ({ name: d.name, version: d.version }));
+    if (injectedFault === 'FAULT_OPEN_FAILURE') {
+      audit.indexedDB.errors.push('Fault injection: IndexedDB database open failure');
+      audit.indexedDB.status = 'INSPECTION_ERROR';
+      audit.storage_accessible = false;
+    } else if (window.indexedDB && window.indexedDB.databases) {
+      let dbs = [];
+      try {
+        dbs = await window.indexedDB.databases();
+        audit.indexedDB.databases = dbs.map(d => ({ name: d.name, version: d.version }));
+      } catch (err) {
+        audit.indexedDB.errors.push('Failed to list databases: ' + err.message);
+        audit.indexedDB.status = 'INSPECTION_ERROR';
+      }
 
-      for (const dbInfo of dbs) {
-        if (!dbInfo.name) continue;
-        await new Promise((resolve) => {
-          const req = indexedDB.open(dbInfo.name);
-          req.onblocked = () => resolve();
-          req.onerror = () => resolve();
-          req.onsuccess = async (e) => {
-            const db = e.target.result;
-            const storeNames = Array.from(db.objectStoreNames);
-            for (const sName of storeNames) {
-              const records = await new Promise((sResolve) => {
-                try {
-                  const tx = db.transaction(sName, 'readonly');
-                  const store = tx.objectStore(sName);
-                  const items = [];
-                  const curReq = store.openCursor();
-                  curReq.onsuccess = (ev) => {
-                    const cursor = ev.target.result;
-                    if (cursor) {
-                      items.push({ key: cursor.key, value: cursor.value });
-                      cursor.continue();
-                    } else {
-                      sResolve(items);
-                    }
-                  };
-                  curReq.onerror = () => sResolve([]);
-                } catch {
-                  sResolve([]);
-                }
-              });
-
-              for (const item of records) {
-                audit.indexedDB.records_inspected++;
-                const keyMatches = await inspectValueRecursively(item.key, sentinels, `${dbInfo.name}.${sName}[key]`);
-                audit.indexedDB.residue_matches.push(...keyMatches);
-                const valMatches = await inspectValueRecursively(item.value, sentinels, `${dbInfo.name}.${sName}[val]`);
-                audit.indexedDB.residue_matches.push(...valMatches);
-              }
+      if (audit.indexedDB.errors.length === 0) {
+        for (const dbInfo of dbs) {
+          if (!dbInfo.name) continue;
+          await new Promise((resolve) => {
+            let req;
+            try {
+              req = indexedDB.open(dbInfo.name);
+            } catch (err) {
+              audit.indexedDB.errors.push(`open() threw for ${dbInfo.name}: ${err.message}`);
+              audit.indexedDB.status = 'INSPECTION_ERROR';
+              return resolve();
             }
-            db.close();
-            resolve();
-          };
-        });
+
+            req.onblocked = () => {
+              audit.indexedDB.errors.push(`Database ${dbInfo.name} open blocked`);
+              audit.indexedDB.status = 'INACCESSIBLE';
+              audit.indexedDB.inaccessible = true;
+              resolve();
+            };
+
+            req.onerror = () => {
+              audit.indexedDB.errors.push(`Database ${dbInfo.name} open error: ${req.error?.message || 'unknown'}`);
+              audit.indexedDB.status = 'INSPECTION_ERROR';
+              resolve();
+            };
+
+            req.onsuccess = async (e) => {
+              const db = e.target.result;
+              const storeNames = Array.from(db.objectStoreNames);
+
+              for (const sName of storeNames) {
+                if (injectedFault === 'FAULT_INACCESSIBLE_STORE') {
+                  audit.indexedDB.errors.push(`Fault injection: Inaccessible object store ${sName}`);
+                  audit.indexedDB.status = 'INACCESSIBLE';
+                  audit.indexedDB.inaccessible = true;
+                  audit.storage_accessible = false;
+                  break;
+                }
+
+                if (injectedFault === 'FAULT_TX_FAILURE') {
+                  audit.indexedDB.errors.push(`Fault injection: Transaction creation failed for ${sName}`);
+                  audit.indexedDB.status = 'INSPECTION_ERROR';
+                  break;
+                }
+
+                const records = await new Promise((sResolve) => {
+                  try {
+                    const tx = db.transaction(sName, 'readonly');
+                    tx.onerror = () => {
+                      audit.indexedDB.errors.push(`Transaction error on ${sName}: ${tx.error?.message || 'unknown'}`);
+                      audit.indexedDB.status = 'INSPECTION_ERROR';
+                      sResolve([]);
+                    };
+
+                    const store = tx.objectStore(sName);
+                    const items = [];
+
+                    if (injectedFault === 'FAULT_CURSOR_FAILURE') {
+                      audit.indexedDB.errors.push(`Fault injection: Cursor read failure on ${sName}`);
+                      audit.indexedDB.status = 'INSPECTION_ERROR';
+                      return sResolve([]);
+                    }
+
+                    const curReq = store.openCursor();
+                    curReq.onsuccess = (ev) => {
+                      const cursor = ev.target.result;
+                      if (cursor) {
+                        items.push({ key: cursor.key, value: cursor.value });
+                        cursor.continue();
+                      } else {
+                        sResolve(items);
+                      }
+                    };
+                    curReq.onerror = () => {
+                      audit.indexedDB.errors.push(`Cursor error on ${sName}: ${curReq.error?.message || 'unknown'}`);
+                      audit.indexedDB.status = 'INSPECTION_ERROR';
+                      sResolve([]);
+                    };
+                  } catch (err) {
+                    audit.indexedDB.errors.push(`Transaction initialization threw on ${sName}: ${err.message}`);
+                    audit.indexedDB.status = 'INSPECTION_ERROR';
+                    sResolve([]);
+                  }
+                });
+
+                for (const item of records) {
+                  audit.indexedDB.records_inspected++;
+
+                  if (injectedFault === 'FAULT_DECODER_FAILURE') {
+                    audit.indexedDB.errors.push('Fault injection: Recursive value decoder failure');
+                    audit.indexedDB.status = 'INSPECTION_ERROR';
+                    break;
+                  }
+
+                  try {
+                    const keyMatches = await inspectValueRecursively(item.key, sentinels, `${dbInfo.name}.${sName}[key]`);
+                    audit.indexedDB.residue_matches.push(...keyMatches);
+                    const valMatches = await inspectValueRecursively(item.value, sentinels, `${dbInfo.name}.${sName}[val]`);
+                    audit.indexedDB.residue_matches.push(...valMatches);
+                  } catch (err) {
+                    audit.indexedDB.errors.push(`Decoder error on ${dbInfo.name}.${sName}: ${err.message}`);
+                    audit.indexedDB.status = 'INSPECTION_ERROR';
+                  }
+                }
+              }
+              db.close();
+              resolve();
+            };
+          });
+        }
       }
     }
   } catch (err) {
-    audit.indexedDB.error = err.message;
+    audit.indexedDB.errors.push('Top-level IndexedDB error: ' + err.message);
+    audit.indexedDB.status = 'INSPECTION_ERROR';
+  }
+
+  // Determine final IndexedDB status if not already set to an error state
+  if (audit.indexedDB.status === 'PENDING') {
+    if (audit.indexedDB.errors.length > 0) {
+      audit.indexedDB.status = audit.indexedDB.inaccessible ? 'INACCESSIBLE' : 'INSPECTION_ERROR';
+    } else if (audit.indexedDB.residue_matches.length > 0) {
+      audit.indexedDB.status = 'SENTINEL_DETECTED';
+    } else if (audit.indexedDB.records_inspected > 0) {
+      audit.indexedDB.status = 'INSPECTED_NO_SENTINEL';
+    } else {
+      audit.indexedDB.status = 'INSPECTED_EMPTY';
+    }
   }
 
   // 2. LocalStorage Inspection
@@ -373,10 +492,84 @@ export function testPageEvalAsync() {
   });
 }
 
+// -------------------------------------------------------------
+// IndexedDB Fault Injection Suite (Fail-Closed Verification)
+// -------------------------------------------------------------
+
+export async function runIndexedDbFaultInjectionTests(sentinels = ['TEST_SNTL_01']) {
+  const PROBE_DB_NAME = 'fault_injection_test_db';
+  const PROBE_STORE_NAME = 'fault_store';
+
+  // Seed temporary probe db so stores exist
+  await new Promise((resolve) => {
+    const delReq = indexedDB.deleteDatabase(PROBE_DB_NAME);
+    delReq.onsuccess = () => resolve();
+    delReq.onerror = () => resolve();
+  });
+
+  await new Promise((resolve, reject) => {
+    const req = indexedDB.open(PROBE_DB_NAME, 1);
+    req.onupgradeneeded = (e) => {
+      e.target.result.createObjectStore(PROBE_STORE_NAME);
+    };
+    req.onsuccess = (e) => {
+      const db = e.target.result;
+      const tx = db.transaction(PROBE_STORE_NAME, 'readwrite');
+      tx.objectStore(PROBE_STORE_NAME).put('safe_data_payload', 'key_01');
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = (err) => reject(err);
+    };
+    req.onerror = (err) => reject(err);
+  });
+
+  const faults = [
+    'FAULT_OPEN_FAILURE',
+    'FAULT_TX_FAILURE',
+    'FAULT_CURSOR_FAILURE',
+    'FAULT_INACCESSIBLE_STORE',
+    'FAULT_DECODER_FAILURE'
+  ];
+
+  const results = {};
+  let allFailedClosed = true;
+
+  for (const f of faults) {
+    const audit = await inspectDeepStorage(sentinels, { injectedFault: f });
+    const isErrorOrInaccessible = audit.indexedDB.status === 'INSPECTION_ERROR' || audit.indexedDB.status === 'INACCESSIBLE';
+    const notCleanPass = audit.indexedDB.status !== 'INSPECTED_EMPTY' && audit.indexedDB.status !== 'INSPECTED_NO_SENTINEL';
+    const hasRecordedErrors = audit.indexedDB.errors.length > 0;
+    const failedClosed = isErrorOrInaccessible && notCleanPass && hasRecordedErrors;
+
+    results[f] = {
+      fault: f,
+      status: audit.indexedDB.status,
+      errors: audit.indexedDB.errors,
+      failed_closed: failedClosed
+    };
+    if (!failedClosed) allFailedClosed = false;
+  }
+
+  // Cleanup temporary db
+  await new Promise((resolve) => {
+    const req = indexedDB.deleteDatabase(PROBE_DB_NAME);
+    req.onsuccess = () => resolve();
+    req.onerror = () => resolve();
+  });
+
+  return {
+    fault_injection_verdict: allFailedClosed ? 'PASS' : 'FAIL',
+    faults_evaluated: faults.length,
+    all_failed_closed: allFailedClosed,
+    details: results
+  };
+}
+
 window.createWorker = createWorker;
+window.createStrictWorker = createStrictWorker;
 window.sendWorkerMessage = sendWorkerMessage;
 window.inspectDeepStorage = inspectDeepStorage;
 window.runStorageScannerFalsification = runStorageScannerFalsification;
+window.runIndexedDbFaultInjectionTests = runIndexedDbFaultInjectionTests;
 window.triggerPageEgressPrevention = triggerPageEgressPrevention;
 window.triggerPageServerRejection = triggerPageServerRejection;
 window.testPageEvalAsync = testPageEvalAsync;

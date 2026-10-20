@@ -99,8 +99,25 @@ jobs:
             if (report.verdicts.TRUE_OFFLINE_EXECUTION !== 'PASS') throw new Error('TRUE_OFFLINE_EXECUTION did not pass');
             if (report.verdicts.NETWORK_FALSIFICATION !== 'PASS') throw new Error('NETWORK_FALSIFICATION did not pass');
             if (report.verdicts.INDEXEDDB_SCANNER_FALSIFICATION !== 'PASS') throw new Error('INDEXEDDB_SCANNER_FALSIFICATION did not pass');
+            if (report.verdicts.INDEXEDDB_FAIL_CLOSED !== 'PASS') throw new Error('INDEXEDDB_FAIL_CLOSED did not pass');
             if (report.verdicts.PERSISTENCE_ISOLATION !== 'PASS') throw new Error('PERSISTENCE_ISOLATION did not pass');
             if (report.verdicts.CSP_PAGE_WORKER_ISOLATION !== 'PASS') throw new Error('CSP_PAGE_WORKER_ISOLATION did not pass');
+            if (report.verdicts.WORKER_CSP_EXCEPTION !== 'PASS') throw new Error('WORKER_CSP_EXCEPTION did not pass');
+            if (report.verdicts.EXACT_PAIR_AND_WEIGHT_PARITY !== 'PASS') throw new Error('EXACT_PAIR_AND_WEIGHT_PARITY did not pass');
+            if (report.verdicts.CHROMIUM_SECURITY_QUALIFICATION !== 'PASS') throw new Error('CHROMIUM_SECURITY_QUALIFICATION did not pass');
             if (report.verdicts.CHROMIUM_BROWSER_CI !== 'PASS') throw new Error('CHROMIUM_BROWSER_CI did not pass');
             console.log('All CI browser qualification gates verified PASS!');
           "
+
+      - name: Generate post-run CI evidence manifest
+        run: node experiments/cp-webr-01b/harness/generate_ci_manifest.mjs
+
+      - name: Upload CP-WEBR-01B Qualification Evidence Artifacts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cp-webr-01b-qualification-evidence
+          path: |
+            experiments/cp-webr-01b/*.json
+            experiments/cp-webr-01b/fixtures/fix_01_oracle_full_precision.json
+          retention-days: 90

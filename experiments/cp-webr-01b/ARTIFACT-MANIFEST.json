@@ -1,8 +1,9 @@
 {
-  "manifest_version": "1.1.0",
-  "generated_at": "2026-10-20T00:00:00.000Z",
-  "phase": "CP-WEBR-01B-R1",
-  "baseline_sha": "652f38734fc45bd426186bec125fcf31d60c5c06",
+  "manifest_version": "1.2.0",
+  "generated_at": "2026-10-20T10:52:39.581Z",
+  "phase": "CP-WEBR-01B-R1.1",
+  "baseline_sha": "e56739d4a0671dc075075ccc74f451257b78706b",
+  "manifest_classification": "COMMITTED_BASELINE_IMMUTABLE_INPUTS",
   "dependency_accounting_reconciliation": {
     "r_packages_count": 21,
     "r_packages_bytes_sum": 23863424,
@@ -10,7 +11,7 @@
     "webr_runtime_core_bytes": 48577103,
     "total_static_assets_bytes": 72442256,
     "historical_lockfile_declared_bytes": 25055047,
-    "accounting_note": "Resolved discrepancy in Errata A: 21 packages exactly sum to 23,863,424 bytes. Full distribution including WebR runtime binaries and repository index metadata is 72,442,256 bytes (~69.09 MiB)."
+    "accounting_note": "Resolved discrepancy in Errata A: 21 packages exactly sum to 23,863,424 bytes. Full distribution tree including WebR runtime binaries and repository index metadata is 72,442,256 bytes (~69.09 MiB)."
   },
   "artifacts": {
     "experiments/cp-webr-01b/CP-WEBR-01B-EXPERIMENT-CONTRACT.md": {
@@ -18,52 +19,36 @@
       "sha256": "1d8de82e439213b7fd7f8dd1208d88d2eda69ea3cdd8dfcee8fac1b3857ac7e5"
     },
     "experiments/cp-webr-01b/CP-WEBR-01B-RESULT.md": {
-      "bytes": 10887,
-      "sha256": "99e3f1a07a3c68d11d572abc7e8ef107c60f4df2dcc8ca8a8c013138d71f15ef"
+      "bytes": 9327,
+      "sha256": "8a1c3d76fd2ed0710f9b95a7568a12678f779b774944e2c72af701a6cdf82853"
     },
     "experiments/cp-webr-01b/CP-WEBR-01B-R1-RED-TEAM-REMEDIATION.md": {
-      "bytes": 11886,
-      "sha256": "0b660def2e662e490111985b63e6d333ad1e8844be7ef6e2dd124d9ed703a89b"
+      "bytes": 12196,
+      "sha256": "9a17695d98c523804e7ee82494b99596186de817ddaa5ca43426a6b7d1960398"
+    },
+    "experiments/cp-webr-01b/CP-WEBR-01B-R1.1-EVIDENCE-CLOSURE.md": {
+      "bytes": 15884,
+      "sha256": "848e993145293b18fa1ef7f0b79482e1002a0801bd0ca6db8dcf2fc947243943"
     },
     "docs/audits/CP-WEBR-01B-ARCHITECTURE-ERRATA.md": {
-      "bytes": 11085,
-      "sha256": "61a852810efa3950246133033c0d11a2dee7b7bbb539ff4c1ad234f09b4d4fdf"
+      "bytes": 14715,
+      "sha256": "94b8a2ebc695e8e94cc58c13ab47b481ce4c5ffc135cf6af035b23a35453dd3a"
     },
-    "experiments/cp-webr-01b/ALIAS-AND-SERIALIZATION-TESTS.json": {
-      "bytes": 4191,
-      "sha256": "7329075d8cbe3a9ac4a5dacd76fcf069d1119045058636522228dbe1789fd85d"
-    },
-    "experiments/cp-webr-01b/WEBR-BINDING-QUALIFICATION.json": {
-      "bytes": 7624,
-      "sha256": "fff1e2baed5691407ec3687f1c5366bcfc5d9e9376cc3d9fea0fc51f3e50e5b8"
-    },
-    "experiments/cp-webr-01b/SECURITY-FALSIFICATION-RESULTS.json": {
-      "bytes": 2865,
-      "sha256": "5d33d6fd81f8262b17fadb8b28e4176fc6c5d3074f7c9d68790e20054648f45b"
-    },
-    "experiments/cp-webr-01b/INDEXEDDB-LIFECYCLE-AUDIT.json": {
-      "bytes": 5963,
-      "sha256": "f2a5f7f5a345664f44ba2eb1255bda57ac644aae7dd67d01746dbea67ef2cf74"
-    },
-    "experiments/cp-webr-01b/CSP-QUALIFICATION.json": {
-      "bytes": 1913,
-      "sha256": "e0a89d68057d54cd77d8350c84be9ef23bfacaa113bde0aa1af67e94ba86d27f"
-    },
-    "experiments/cp-webr-01b/BROWSER-CI-QUALIFICATION-REPORT.json": {
-      "bytes": 1551,
-      "sha256": "155aafe0cfa1a203a77e259fe46a7119ffce31f245f58a8df1dd8a7da6936711"
+    "experiments/cp-webr-01b/fixtures/fix_01_oracle_full_precision.json": {
+      "bytes": 29484,
+      "sha256": "5efc3404e213c19f7663e5e09c3e96bda73a189efbf2e265fcf0315f4167c109"
     },
     "experiments/cp-webr-01b/browser-harness/server.mjs": {
-      "bytes": 6902,
-      "sha256": "cfe4f458202abe8fa49943351a34b41eb4dbdbd9415d2b2455ec9f23ed0cc9c9"
+      "bytes": 7053,
+      "sha256": "e0c12004154aae6ce27443b1f5ac9885c5e325c199a200378bbf4ac959c60801"
     },
     "experiments/cp-webr-01b/browser-harness/worker.js": {
-      "bytes": 8486,
-      "sha256": "e72b072f179264dad4e439961b6fbc6c093d5a66877ae2266ee72df7d630e908"
+      "bytes": 8935,
+      "sha256": "5dcb0e6ea819d89f8232036748b9362eadff6f834290aa0c17addf3f30b293bc"
     },
     "experiments/cp-webr-01b/browser-harness/harness.js": {
-      "bytes": 12966,
-      "sha256": "6c5242442657f17e623e482f2c4a6c3109abef31a3c538c26ac076b64b9bafd4"
+      "bytes": 20433,
+      "sha256": "e684faaf7a5a46f008c8efe8aeefbb2ff6983316d0bc08411ccba2235f1594bc"
     },
     "experiments/cp-webr-01b/browser-harness/index.html": {
       "bytes": 294,
@@ -74,16 +59,24 @@
       "sha256": "4331edf8bb0e1c66b3e5607d1a9de7823fd3a88a6057d784519767f5347e8dd7"
     },
     "experiments/cp-webr-01b/harness/test_webr_binding.mjs": {
-      "bytes": 23355,
-      "sha256": "4bf536e4d61961f1dbff2e7f561b65b4318df389431df38dfc46c6931a1f39e5"
+      "bytes": 28511,
+      "sha256": "7ced517b94cace2800f8fdaa1120af703b5bd7596a8a5fa129d2b30dd370475d"
     },
     "experiments/cp-webr-01b/harness/test_browser_security.mjs": {
-      "bytes": 26245,
-      "sha256": "aeb0dbe5bdb4ded7533ded057a69b11bf5ca59eb9f4d7f144edf181c0c03c12a"
+      "bytes": 32405,
+      "sha256": "6304304d1d4f572161faef4b8f521f6e5b6db144c73fe1e1a805f6569af93b27"
     },
     "experiments/cp-webr-01b/harness/verify_manifest.mjs": {
       "bytes": 1575,
       "sha256": "bf8b708f7372c3dbf74155d11aa6b531f7101f6dc49ac76f9e82452474488d42"
+    },
+    "experiments/cp-webr-01b/harness/generate_ci_manifest.mjs": {
+      "bytes": 3092,
+      "sha256": "2287e658ea032df8b33f25045f0be4f1c8362fed58e7d90d43ef4be47c268705"
+    },
+    "experiments/cp-webr-01b/harness/generate_oracle.mjs": {
+      "bytes": 7000,
+      "sha256": "47de8985a4655b02784b472c62afd21d12f75d04b61906e5606f987fb9b5118f"
     }
   }
 }

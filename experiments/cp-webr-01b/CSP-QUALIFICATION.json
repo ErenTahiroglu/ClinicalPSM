@@ -1,6 +1,6 @@
 {
   "executed_at": "2026-10-20T00:00:00.000Z",
-  "commit_sha": "652f38734fc45bd426186bec125fcf31d60c5c06",
+  "commit_sha": "e56739d4a0671dc075075ccc74f451257b78706b",
   "matrix": {
     "profile_a_baseline": {
       "csp_header": "default-src 'self' 'wasm-unsafe-eval' blob: data:; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' blob:; worker-src 'self' blob:; style-src 'self'; connect-src 'self';",
@@ -21,12 +21,26 @@
     },
     "profile_c_worker_qualification": {
       "worker_type": "DedicatedWorker",
+      "effective_csp_dedicated_worker": "default-src 'self' 'wasm-unsafe-eval' blob: data:; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' blob:; connect-src 'self';",
+      "effective_csp_webr_internal_worker": "Inherited from DedicatedWorker context / server response headers",
+      "executable_ab_testing": {
+        "tested": true,
+        "condition_strict_worker_eval_blocked": true,
+        "condition_strict_worker_eval_error": "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'wasm-unsafe-eval' blob:\".\n",
+        "condition_strict_worker_webr_init_failed": false,
+        "condition_strict_worker_init_error": null,
+        "condition_permissive_worker_eval_allowed": true,
+        "pass": true
+      },
       "inherits_network_connect_src": "connect-src self (prohibits external egress)",
       "worker_requires_unsafe_eval": true,
       "emscripten_dynamic_linker_reason": "Emscripten dynamic linking (ASM_CONSTS for libRlapack.so and libRblas.so) requires runtime JS function generation inside worker scope",
+      "exact_execution_context_requiring_exception": "WebR internal Wasm Emscripten dynamic linker runtime (ASM_CONSTS and dynamic function creation for compiled shared libraries); Dedicated Application Worker application code executes zero eval calls",
       "worker_sandbox_boundary": "Worker isolated from DOM, cookies, sessionStorage, and localStorage credentials",
-      "security_risk_assessment": "Tracked exception; unsafe-eval in worker remains a documented attack surface"
+      "security_risk_assessment": "Tracked exception; unsafe-eval in worker remains a documented attack surface bounded to worker thread",
+      "unsupported_configurations": "UNMEASURED for browsers without SharedArrayBuffer / crossOriginIsolated"
     }
   },
+  "worker_csp_exception_verdict": "PASS",
   "verdict": "PASS"
 }

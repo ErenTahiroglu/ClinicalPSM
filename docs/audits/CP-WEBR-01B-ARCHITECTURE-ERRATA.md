@@ -140,6 +140,37 @@ To guarantee reproducible hashing across platforms and engines:
 
 ---
 
+### Errata H: Git Commit SHA Reporting Discrepancy
+
+| Attribute | Value |
+| :--- | :--- |
+| **Defect** | Previous agent reported non-existent SHA `e56739d391036894c25f448c5e63080c550ea6f3`. |
+| **Actual Git SHA** | Remote and local `origin/development` HEAD was verified directly from git as **`e56739d4a0671dc075075ccc74f451257b78706b`**. |
+| **Root Cause Analysis** | Prior agent generated an uncommitted intermediate amend hash during local staging that was included in report text prior to final commit creation and push. |
+| **Resolution** | Documented discrepancy in errata ledger; all subsequent hashes and references are queried directly via `git rev-parse HEAD`. |
+
+---
+
+### Errata I: Native Reference 4-Decimal Truncation Root Cause & Versioned Replacement Oracle
+
+| Attribute | Value |
+| :--- | :--- |
+| **Defect** | Historical reference file `experiments/cp-webr-00b/native-reference/native_results.json` truncated coefficients to 4 decimal places (e.g. `0.9878`, `0.0001`, `-0.0018`, `-0.0105`). |
+| **Root Cause Analysis** | `experiments/cp-webr-00b/native-reference/run_native.R` invoked `jsonlite::write_json()` without an explicit `digits` argument. In `jsonlite`, the default formatting precision is `digits = 4`. This introduced an artificial floating-point rounding delta of ~`2.76e-5` when compared against IEEE-754 double precision calculations. |
+| **Resolution** | Historical reference is preserved unchanged. Added clearly versioned full-precision replacement oracle at `experiments/cp-webr-01b/fixtures/fix_01_oracle_full_precision.json` capturing 64-bit double precision directly from R 4.6.0 + MatchIt 4.8.1 + cobalt 5.0.0. Exact pair sets (119/119) and weights (300/300) match with 0 mismatches and coefficient differences are within strict `eps <= 1e-4`. Native host R 4.6.0 binary provisioning is reported as `NATIVE_R_ORACLE_BLOCKED` on host runners where R 4.6.0 is not provisionable. |
+
+---
+
+### Errata J: Algorithmic Convergence vs Complete Separation Distinction
+
+| Attribute | Value |
+| :--- | :--- |
+| **Defect** | Statements colloquially claimed that complete separation in `fix_16` caused `glm$converged == FALSE`. |
+| **Empirical Reality** | In `fix_16_complete_separation`, standard R `glm()` reports `matching$converged == TRUE` because consecutive deviance steps drop below epsilon (< 1e-8) as parameter estimates diverge. |
+| **Normative Distinction** | ClinicalPSM explicitly distinguishes: (1) **Algorithmic convergence** (deviance step termination), (2) **Complete / quasi-complete separation** (non-identifiable parameters, divergence of log-odds), (3) **Parameter instability** (astronomical SE > 39,000, boundary PS), (4) **Publication-output restrictions** (`REJECT_FOR_PUBLICATION`), and (5) **Automated runtime diagnosis** (unimplemented in production; `AUTOMATED_SEPARATION_SAFETY` remains `BLOCKED`). |
+
+---
+
 ## 3. Contract Consistency Audit Summary
 
 | Dimension | Previous State | Corrected State | Verification Target |
@@ -151,3 +182,9 @@ To guarantee reproducible hashing across platforms and engines:
 | **Emscripten Provenance** | Erroneous 3.1.73 draft citation | Emscripten 5.0.7 (PR #603 / commit 7e1e376) | `CP-WEBR-01B-EXPERIMENT-CONTRACT.md` |
 | **Header Length Limit** | >2000 chars accepted | Max 256 code points structural rejection | `ALIAS-AND-SERIALIZATION-TESTS.json` |
 | **Parity Tolerance & Pairs** | 1e-3 tolerance, counts only | Strict 1e-4 target, 119/119 exact pairs verified | `WEBR-BINDING-QUALIFICATION.json` |
+| **Git SHA Provenance** | Erroneous local amend hash | Direct git rev-parse: `e56739d4a0671dc075075ccc74f451257b78706b` | `BROWSER-CI-QUALIFICATION-REPORT.json` |
+| **Native Precision** | 4-decimal rounded reference | Full IEEE-754 double precision replacement oracle | `fix_01_oracle_full_precision.json` |
+| **Separation Interpretation** | Falsely claimed converged == FALSE | Clarified algorithmic convergence vs mathematical separation | `WEBR-BINDING-QUALIFICATION.json` |
+| **IndexedDB Privacy Gate** | Silent fail-open on DB errors | Fail-closed explicit states with 5-fault injection | `INDEXEDDB-LIFECYCLE-AUDIT.json` |
+| **Worker CSP Qualification** | Theoretical note on eval | Executable A/B matrix (strict vs permissive) | `CSP-QUALIFICATION.json` |
+
