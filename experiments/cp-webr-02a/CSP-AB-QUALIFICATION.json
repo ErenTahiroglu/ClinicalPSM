@@ -1,0 +1,34 @@
+{
+  "executed_at": "2026-10-20T11:44:18.472Z",
+  "commit_sha": "2e5dfcff8f03d0e3ce3d212f731bcd6082061a7d",
+  "matrix": {
+    "profileC1_strict": {
+      "workerUrl": "/worker-strict.js",
+      "csp": "default-src 'none'; script-src 'self' 'wasm-unsafe-eval' blob:; connect-src 'self' blob:; worker-src 'self' blob:;",
+      "evalAllowed": false,
+      "evalError": "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'wasm-unsafe-eval' blob:\".\n",
+      "webrInitSuccess": true,
+      "webrInitError": null,
+      "pipelineSuccess": true,
+      "pipelineError": null,
+      "failingOperation": null
+    },
+    "profileC2_permissive": {
+      "workerUrl": "/worker-permissive.js",
+      "csp": "default-src 'none'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' blob:; connect-src 'self' blob:; worker-src 'self' blob:;",
+      "evalAllowed": true,
+      "evalError": null,
+      "webrInitSuccess": true,
+      "pipelineSuccess": true,
+      "failingOperation": null
+    },
+    "synthesis": {
+      "workerUnsafeEvalRequired": false,
+      "isolatedToWebRWorker": true,
+      "pageRequiresUnsafeEval": false,
+      "exactFailingOperation": null,
+      "recommendation": "Preserve strict CSP for main page (no unsafe-eval). Isolate 'unsafe-eval' solely to Dedicated Worker script response headers to satisfy Emscripten ASM_CONSTS dynamic linking."
+    }
+  },
+  "verdict": "PASS"
+}

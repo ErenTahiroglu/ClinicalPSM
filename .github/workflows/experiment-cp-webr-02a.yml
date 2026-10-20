@@ -1,0 +1,87 @@
+name: Experiment CP-WEBR-02A
+
+permissions:
+  contents: read
+
+on:
+  push:
+    paths:
+      - 'experiments/cp-webr-02a/**'
+      - '.github/workflows/experiment-cp-webr-02a.yml'
+  pull_request:
+    paths:
+      - 'experiments/cp-webr-02a/**'
+      - '.github/workflows/experiment-cp-webr-02a.yml'
+
+jobs:
+  adapter-qualification:
+    name: CP-WEBR-02A Adapter, Parity & Browser CI Qualification
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Verify artifact manifest integrity (committed baseline)
+        run: node experiments/cp-webr-02a/harness/verify_manifest.mjs
+
+      - name: Setup experiment dependencies & install webr
+        run: |
+          node experiments/cp-webr-00b/harness/setup_experiment.mjs
+          npm install --no-save webr@0.6.0
+
+      - name: Run adapter unit test suite
+        run: node experiments/cp-webr-02a/harness/test_adapter_unit.mjs
+
+      - name: Run scientific parity verification suite
+        run: node experiments/cp-webr-02a/harness/test_scientific_parity.mjs
+
+      - name: Install Playwright Chromium and system dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser qualification suite (CSP A/B, Lifecycle, Offline, Storage, Egress)
+        run: node experiments/cp-webr-02a/harness/test_browser_qualification.mjs
+
+      - name: Verify qualification report verdicts
+        run: |
+          node -e "
+            import fs from 'fs';
+            const report = JSON.parse(fs.readFileSync('experiments/cp-webr-02a/BROWSER-CI-QUALIFICATION-REPORT.json', 'utf-8'));
+            console.log('Browser qualification verdicts:', report.verdicts);
+            if (report.exit_code !== 0) throw new Error('Browser qualification exit code was non-zero');
+            if (report.verdicts.EXACT_PAIR_AND_WEIGHT_PARITY !== 'PASS') throw new Error('EXACT_PAIR_AND_WEIGHT_PARITY failed');
+            if (report.verdicts.WORKER_CSP_QUALIFICATION !== 'PASS') throw new Error('WORKER_CSP_QUALIFICATION failed');
+            if (report.verdicts.WORKER_LIFECYCLE_SUITE !== 'PASS') throw new Error('WORKER_LIFECYCLE_SUITE failed');
+            if (report.verdicts.TRUE_OFFLINE_EXECUTION !== 'PASS') throw new Error('TRUE_OFFLINE_EXECUTION failed');
+            if (report.verdicts.STORAGE_PRIVACY_AUDIT !== 'PASS') throw new Error('STORAGE_PRIVACY_AUDIT failed');
+            if (report.verdicts.PRE_EGRESS_PREVENTION !== 'PASS') throw new Error('PRE_EGRESS_PREVENTION failed');
+            if (report.verdicts.SERVER_REJECTION_403 !== 'PASS') throw new Error('SERVER_REJECTION_403 failed');
+            if (report.verdicts.MOCK_SINK_FALSIFICATION !== 'PASS') throw new Error('MOCK_SINK_FALSIFICATION failed');
+            if (report.verdicts.OVERALL_ADAPTER_VERDICT !== 'ADAPTER_PASS_FOR_INTEGRATION_REVIEW') throw new Error('Unexpected overall adapter verdict: ' + report.verdicts.OVERALL_ADAPTER_VERDICT);
+            console.log('All CP-WEBR-02A qualification gates verified PASS!');
+          "
+
+      - name: Generate post-run CI evidence manifest
+        run: node experiments/cp-webr-02a/harness/generate_ci_manifest.mjs
+
+      - name: Upload CP-WEBR-02A Qualification Evidence Artifacts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cp-webr-02a-qualification-evidence
+          path: |
+            experiments/cp-webr-02a/*.json
+            experiments/cp-webr-02a/fixtures/fix_01_oracle_full_precision.json
+          retention-days: 90

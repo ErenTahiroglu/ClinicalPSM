@@ -1,0 +1,81 @@
+{
+  "manifest_version": "2.0.0",
+  "generated_at": "2026-10-20T11:46:36.884Z",
+  "phase": "CP-WEBR-02A",
+  "baseline_sha": "2e5dfcff8f03d0e3ce3d212f731bcd6082061a7d",
+  "manifest_classification": "COMMITTED_BASELINE_IMMUTABLE_INPUTS",
+  "artifacts": {
+    "experiments/cp-webr-02a/CP-WEBR-02A-EXPERIMENT-CONTRACT.md": {
+      "bytes": 4807,
+      "sha256": "8e032108c05f963a56c165ee375376704dd140472e45ac914965569b9260e7a6"
+    },
+    "experiments/cp-webr-02a/CP-WEBR-02A-RESULT.md": {
+      "bytes": 11010,
+      "sha256": "b93e8d93e077aeb7f45adeb86a4bd31d1554121662f222085b23565d58917e1b"
+    },
+    "experiments/cp-webr-02a/adapter/types.ts": {
+      "bytes": 5657,
+      "sha256": "6f869fca291f7f24d9b3394dbd4e40186b45de6a85cea328adc0ceac44761fcf"
+    },
+    "experiments/cp-webr-02a/adapter/symbol_mapper.mjs": {
+      "bytes": 2978,
+      "sha256": "951de520b248222e1ce342c85813961996b93d506f46183100c1c6be78d4717b"
+    },
+    "experiments/cp-webr-02a/adapter/r_template.R": {
+      "bytes": 12304,
+      "sha256": "93e34484cc617f1f6440c242d58bd82f62dbb1e4a8f681dedb7d44f1deb9de9e"
+    },
+    "experiments/cp-webr-02a/adapter/webr_binding.mjs": {
+      "bytes": 4053,
+      "sha256": "a2050b7d872ee172d318850eb52773af32bbfd6536183bfb768e26e62b0df9fd"
+    },
+    "experiments/cp-webr-02a/adapter/canonical_serializer.mjs": {
+      "bytes": 2805,
+      "sha256": "a1c8cab48f964781cd73234e1c7b6bdb6edc1f596936b4a2113ffbb77e459d79"
+    },
+    "experiments/cp-webr-02a/adapter/webr_adapter.mjs": {
+      "bytes": 13157,
+      "sha256": "95b060a5595263eed23cd154b8767efb580fbeb28bade02bfbb31e61d174fb24"
+    },
+    "experiments/cp-webr-02a/adapter/worker_manager.mjs": {
+      "bytes": 6208,
+      "sha256": "3de90a9f299bd5bb5701762fc6a3c56da3ee66aadc01aa7fbfd8d2492aa916d4"
+    },
+    "experiments/cp-webr-02a/browser-harness/server.mjs": {
+      "bytes": 8010,
+      "sha256": "bf81c0612429ee0236d0e14d702bdcd5310771100ac49b7c7294360d5155acb4"
+    },
+    "experiments/cp-webr-02a/browser-harness/worker.js": {
+      "bytes": 10025,
+      "sha256": "8f5421dc25d049bb98c4ff44ac2373427e2358acad5761cee1ec8ec799d43578"
+    },
+    "experiments/cp-webr-02a/browser-harness/harness.js": {
+      "bytes": 31672,
+      "sha256": "9540a59970e46470a61f699a8f52d9c8ac72a3b87617e73bcd2162615a967725"
+    },
+    "experiments/cp-webr-02a/browser-harness/index.html": {
+      "bytes": 306,
+      "sha256": "49ba3b04774d6ea5cb3e614056316ff6855952a5b0bfa0a30858faeb67393408"
+    },
+    "experiments/cp-webr-02a/harness/test_adapter_unit.mjs": {
+      "bytes": 8527,
+      "sha256": "a7844b6d58a84806a08fbb4aca4053dfe638aa1336472f11b002acd0977c89b6"
+    },
+    "experiments/cp-webr-02a/harness/test_scientific_parity.mjs": {
+      "bytes": 13413,
+      "sha256": "aa1133a594cd56a4b021a6e95c30e273fcf9c2f55479d47b3aca0db7b20571cb"
+    },
+    "experiments/cp-webr-02a/harness/test_browser_qualification.mjs": {
+      "bytes": 19399,
+      "sha256": "b572c62135aad7e89fb2291fba36bc942a65e295aeff6bee5ea8bbc5787f106a"
+    },
+    "experiments/cp-webr-02a/fixtures/fix_01_oracle_full_precision.json": {
+      "bytes": 29484,
+      "sha256": "5efc3404e213c19f7663e5e09c3e96bda73a189efbf2e265fcf0315f4167c109"
+    },
+    "experiments/cp-webr-02a/fixtures/fixtures_manifest.json": {
+      "bytes": 15372,
+      "sha256": "e799ff01a9606c91cb3d494e277e081cabdc1349a37c993a08e7057d7411e4b1"
+    }
+  }
+}

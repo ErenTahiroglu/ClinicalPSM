@@ -1,0 +1,285 @@
+{
+  "executed_at": "2026-10-20T11:44:18.472Z",
+  "commit_sha": "2e5dfcff8f03d0e3ce3d212f731bcd6082061a7d",
+  "fault_injection_tests": {
+    "fault_injection_verdict": "PASS",
+    "faults_evaluated": 5,
+    "all_failed_closed": true,
+    "details": {
+      "FAULT_OPEN_FAILURE": {
+        "fault": "FAULT_OPEN_FAILURE",
+        "status": "INSPECTION_ERROR",
+        "errors": [
+          "Fault injection: IndexedDB database open failure"
+        ],
+        "failed_closed": true
+      },
+      "FAULT_TX_FAILURE": {
+        "fault": "FAULT_TX_FAILURE",
+        "status": "INSPECTION_ERROR",
+        "errors": [
+          "Fault injection: Transaction creation failed for FILES",
+          "Fault injection: Transaction creation failed for fault_store"
+        ],
+        "failed_closed": true
+      },
+      "FAULT_CURSOR_FAILURE": {
+        "fault": "FAULT_CURSOR_FAILURE",
+        "status": "INSPECTION_ERROR",
+        "errors": [
+          "Fault injection: Cursor read failure on FILES",
+          "Fault injection: Cursor read failure on fault_store"
+        ],
+        "failed_closed": true
+      },
+      "FAULT_INACCESSIBLE_STORE": {
+        "fault": "FAULT_INACCESSIBLE_STORE",
+        "status": "INACCESSIBLE",
+        "errors": [
+          "Fault injection: Inaccessible object store FILES",
+          "Fault injection: Inaccessible object store fault_store"
+        ],
+        "failed_closed": true
+      },
+      "FAULT_DECODER_FAILURE": {
+        "fault": "FAULT_DECODER_FAILURE",
+        "status": "INSPECTION_ERROR",
+        "errors": [
+          "Fault injection: Recursive value decoder failure"
+        ],
+        "failed_closed": true
+      }
+    }
+  },
+  "scanner_falsification": {
+    "scanner_falsification_verdict": "SCANNER_FALSIFICATION_PASS",
+    "planted_count": 5,
+    "detected_count": 5,
+    "detected_by_type": {
+      "key": true,
+      "string": true,
+      "nested_object": true,
+      "typed_array": true,
+      "blob": true
+    },
+    "cleanup_verified": true
+  },
+  "sentinels_monitored": [
+    "SYNTH_PT_7a9f8c12_SEC_TRACE_01",
+    "SYNTH_PT_b3e4d567_SEC_TRACE_02",
+    "FACTOR_LEVEL_ALPHA_9f8e7d6c",
+    "FACTOR_LEVEL_BETA_1a2b3c4d",
+    "Clinical Biomarker Δ [mg/dL]"
+  ],
+  "checkpoints": {
+    "T1_post_pipeline": {
+      "executed_at": "2026-10-20T11:44:29.718Z",
+      "sentinels_checked": [
+        "SYNTH_PT_7a9f8c12_SEC_TRACE_01",
+        "SYNTH_PT_b3e4d567_SEC_TRACE_02",
+        "FACTOR_LEVEL_ALPHA_9f8e7d6c",
+        "FACTOR_LEVEL_BETA_1a2b3c4d",
+        "Clinical Biomarker Δ [mg/dL]"
+      ],
+      "indexedDB": {
+        "status": "INSPECTED_EMPTY",
+        "databases": [
+          {
+            "name": "emscripten_filesystem",
+            "version": 1
+          }
+        ],
+        "records_inspected": 0,
+        "residue_matches": [],
+        "errors": [],
+        "inaccessible": false
+      },
+      "localStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "sessionStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "cacheStorage": {
+        "caches_inspected": 0,
+        "requests_inspected": 0,
+        "residue_matches": []
+      },
+      "serviceWorkers": {
+        "registrations_count": 0
+      },
+      "total_residue_found": 0,
+      "storage_accessible": true
+    },
+    "T2_post_termination": {
+      "executed_at": "2026-10-20T11:44:29.720Z",
+      "sentinels_checked": [
+        "SYNTH_PT_7a9f8c12_SEC_TRACE_01",
+        "SYNTH_PT_b3e4d567_SEC_TRACE_02",
+        "FACTOR_LEVEL_ALPHA_9f8e7d6c",
+        "FACTOR_LEVEL_BETA_1a2b3c4d",
+        "Clinical Biomarker Δ [mg/dL]"
+      ],
+      "indexedDB": {
+        "status": "INSPECTED_EMPTY",
+        "databases": [
+          {
+            "name": "emscripten_filesystem",
+            "version": 1
+          }
+        ],
+        "records_inspected": 0,
+        "residue_matches": [],
+        "errors": [],
+        "inaccessible": false
+      },
+      "localStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "sessionStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "cacheStorage": {
+        "caches_inspected": 0,
+        "requests_inspected": 0,
+        "residue_matches": []
+      },
+      "serviceWorkers": {
+        "registrations_count": 0
+      },
+      "total_residue_found": 0,
+      "storage_accessible": true
+    },
+    "T3_post_respawn": {
+      "executed_at": "2026-10-20T11:44:29.721Z",
+      "sentinels_checked": [
+        "SYNTH_PT_7a9f8c12_SEC_TRACE_01",
+        "SYNTH_PT_b3e4d567_SEC_TRACE_02",
+        "FACTOR_LEVEL_ALPHA_9f8e7d6c",
+        "FACTOR_LEVEL_BETA_1a2b3c4d",
+        "Clinical Biomarker Δ [mg/dL]"
+      ],
+      "indexedDB": {
+        "status": "INSPECTED_EMPTY",
+        "databases": [
+          {
+            "name": "emscripten_filesystem",
+            "version": 1
+          }
+        ],
+        "records_inspected": 0,
+        "residue_matches": [],
+        "errors": [],
+        "inaccessible": false
+      },
+      "localStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "sessionStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "cacheStorage": {
+        "caches_inspected": 0,
+        "requests_inspected": 0,
+        "residue_matches": []
+      },
+      "serviceWorkers": {
+        "registrations_count": 0
+      },
+      "total_residue_found": 0,
+      "storage_accessible": true
+    },
+    "T4_post_second_run": {
+      "executed_at": "2026-10-20T11:44:31.915Z",
+      "sentinels_checked": [
+        "SYNTH_PT_7a9f8c12_SEC_TRACE_01",
+        "SYNTH_PT_b3e4d567_SEC_TRACE_02",
+        "FACTOR_LEVEL_ALPHA_9f8e7d6c",
+        "FACTOR_LEVEL_BETA_1a2b3c4d",
+        "Clinical Biomarker Δ [mg/dL]"
+      ],
+      "indexedDB": {
+        "status": "INSPECTED_EMPTY",
+        "databases": [
+          {
+            "name": "emscripten_filesystem",
+            "version": 1
+          }
+        ],
+        "records_inspected": 0,
+        "residue_matches": [],
+        "errors": [],
+        "inaccessible": false
+      },
+      "localStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "sessionStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "cacheStorage": {
+        "caches_inspected": 0,
+        "requests_inspected": 0,
+        "residue_matches": []
+      },
+      "serviceWorkers": {
+        "registrations_count": 0
+      },
+      "total_residue_found": 0,
+      "storage_accessible": true
+    },
+    "T5_final_clean": {
+      "executed_at": "2026-10-20T11:44:31.916Z",
+      "sentinels_checked": [
+        "SYNTH_PT_7a9f8c12_SEC_TRACE_01",
+        "SYNTH_PT_b3e4d567_SEC_TRACE_02",
+        "FACTOR_LEVEL_ALPHA_9f8e7d6c",
+        "FACTOR_LEVEL_BETA_1a2b3c4d",
+        "Clinical Biomarker Δ [mg/dL]"
+      ],
+      "indexedDB": {
+        "status": "INSPECTED_EMPTY",
+        "databases": [
+          {
+            "name": "emscripten_filesystem",
+            "version": 1
+          }
+        ],
+        "records_inspected": 0,
+        "residue_matches": [],
+        "errors": [],
+        "inaccessible": false
+      },
+      "localStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "sessionStorage": {
+        "entries_inspected": 0,
+        "residue_matches": []
+      },
+      "cacheStorage": {
+        "caches_inspected": 0,
+        "requests_inspected": 0,
+        "residue_matches": []
+      },
+      "serviceWorkers": {
+        "registrations_count": 0
+      },
+      "total_residue_found": 0,
+      "storage_accessible": true
+    }
+  },
+  "fault_injection_verdict": "PASS",
+  "scanner_falsification_verdict": "SCANNER_FALSIFICATION_PASS",
+  "patient_sentinel_residue_verdict": "PATIENT_SENTINEL_RESIDUE_NOT_OBSERVED",
+  "overall_storage_verdict": "PASS"
+}

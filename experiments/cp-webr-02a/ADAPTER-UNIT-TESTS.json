@@ -1,0 +1,143 @@
+{
+  "suite": "CP-WEBR-02A Adapter Unit Suite",
+  "executed_at": "2026-10-20T11:47:40.061Z",
+  "tests_passed": 27,
+  "tests_failed": 0,
+  "cases": [
+    {
+      "name": "Treatment alias is monotonic trt_00",
+      "status": "PASS",
+      "details": "got trt_00"
+    },
+    {
+      "name": "First covariate alias is cov_00",
+      "status": "PASS",
+      "details": "got cov_00"
+    },
+    {
+      "name": "Second covariate alias is cov_01",
+      "status": "PASS",
+      "details": "got cov_01"
+    },
+    {
+      "name": "Registering same treatment returns identical alias",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Registering same covariate returns identical alias",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Reversible mapping: cov_00 -> Patient Age",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Reversible mapping: cov_01 -> Body Mass Index",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Unicode NFC normalization maps NFD and NFC to same alias",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "256 code points header accepted",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Header with 257 code points rejected with HEADER_LENGTH_EXCEEDED",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Header with null byte rejected",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Header with escape control character rejected",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Keys sorted lexicographically at all nesting levels",
+      "status": "PASS",
+      "details": "{\"a\":2,\"m\":{\"b\":20,\"y\":10},\"z\":1}"
+    },
+    {
+      "name": "Non-finite numbers converted to null (never coerced to 0)",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Normal numbers preserved in defensive clone",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Envelope version is 1.0.0",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Envelope contains valid 64-char SHA-256",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Envelope verification succeeds on untampered payload",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Envelope verification traps payload tampering",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Initial worker state is NOT_LOADED",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Worker state transitions to READY after INIT",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Worker state transitions to RUNNING on job submit",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Single-job concurrency enforced: concurrent request throws CONCURRENCY_ERROR",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "First analysis completes successfully",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Worker reverts to READY state post-completion",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "State is RECOVERABLE_ERROR after terminateAndRecover",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Worker recovers cleanly to READY state after re-initialization",
+      "status": "PASS",
+      "details": ""
+    }
+  ]
+}

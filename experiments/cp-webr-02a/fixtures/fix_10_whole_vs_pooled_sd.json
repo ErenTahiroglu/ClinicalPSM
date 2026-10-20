@@ -1,0 +1,24 @@
+{
+  "id": "fix_10_whole_vs_pooled_sd",
+  "name": "Whole-sample vs pooled SD difference",
+  "description": "Demonstrates MatchIt whole-sample caliper standardization differs substantially from pooled SD",
+  "formula": "treat ~ x",
+  "method": "nearest",
+  "distance": "glm",
+  "link": "linear.logit",
+  "caliper": 0.2,
+  "std_caliper": true,
+  "discard": "none",
+  "ratio": 1,
+  "replace": false,
+  "m_order": "largest",
+  "expected_status": "SUCCESS",
+  "n_total": 200,
+  "n_treated": 100,
+  "n_control": 100,
+  "extra_meta": {
+    "whole_sample_sd": 4.3452,
+    "pooled_within_sd": 2.5927,
+    "sd_difference": 1.7525
+  }
+}

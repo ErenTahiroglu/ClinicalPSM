@@ -1,0 +1,20 @@
+{
+  "id": "fix_07_prob_scale_caliper",
+  "name": "Probability scale caliper",
+  "description": "distance=glm, link=logit, caliper=0.1 on raw probabilities",
+  "formula": "treat ~ age + bmi + sbp",
+  "method": "nearest",
+  "distance": "glm",
+  "link": "logit",
+  "caliper": 0.1,
+  "std_caliper": false,
+  "discard": "none",
+  "ratio": 1,
+  "replace": false,
+  "m_order": "largest",
+  "expected_status": "SUCCESS",
+  "n_total": 300,
+  "n_treated": 119,
+  "n_control": 181,
+  "extra_meta": []
+}

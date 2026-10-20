@@ -1,0 +1,20 @@
+{
+  "id": "fix_23_no_eligible_match",
+  "name": "No eligible match",
+  "description": "Strict caliper=0.01 between disjoint groups results in 0 matches",
+  "formula": "treat ~ x",
+  "method": "nearest",
+  "distance": "glm",
+  "link": "linear.logit",
+  "caliper": 0.01,
+  "std_caliper": false,
+  "discard": "none",
+  "ratio": 1,
+  "replace": false,
+  "m_order": "largest",
+  "expected_status": "EXPECTED_ZERO_MATCHES",
+  "n_total": 40,
+  "n_treated": 20,
+  "n_control": 20,
+  "extra_meta": []
+}

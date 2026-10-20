@@ -1,0 +1,54 @@
+{
+  "manifest_type": "POST_RUN_CI_EVIDENCE_MANIFEST",
+  "manifest_version": "2.0.0",
+  "generated_at": "2026-10-20T11:47:50.743Z",
+  "commit_sha": "2e5dfcff8f03d0e3ce3d212f731bcd6082061a7d",
+  "environment": {
+    "operating_system": "darwin 27.0.0 (arm64)",
+    "node_version": "v26.12.0",
+    "ci_runner": "LOCAL_DEVELOPMENT"
+  },
+  "provenance_classification": {
+    "category_1_tracked_reference_artifacts": [
+      "experiments/cp-webr-02a/fixtures/fix_01_oracle_full_precision.json"
+    ],
+    "category_2_fresh_ci_execution_artifacts": [
+      "experiments/cp-webr-02a/ADAPTER-UNIT-TESTS.json",
+      "experiments/cp-webr-02a/SCIENTIFIC-PARITY-RESULTS.json",
+      "experiments/cp-webr-02a/CSP-AB-QUALIFICATION.json",
+      "experiments/cp-webr-02a/WORKER-LIFECYCLE-AUDIT.json",
+      "experiments/cp-webr-02a/STORAGE-PRIVACY-AUDIT.json",
+      "experiments/cp-webr-02a/BROWSER-CI-QUALIFICATION-REPORT.json"
+    ]
+  },
+  "artifacts": {
+    "experiments/cp-webr-02a/ADAPTER-UNIT-TESTS.json": {
+      "bytes": 3471,
+      "sha256": "7e0cbc686cb18111fe1c9964bc4a2d3a111e98c71491644efd15bbfee99a8778"
+    },
+    "experiments/cp-webr-02a/SCIENTIFIC-PARITY-RESULTS.json": {
+      "bytes": 1461,
+      "sha256": "2958b41fef60c2f0b2dcc9c3687852e620eaecb1f4a8ac4b99e9dda533ea36f5"
+    },
+    "experiments/cp-webr-02a/CSP-AB-QUALIFICATION.json": {
+      "bytes": 1499,
+      "sha256": "eeaa0521c678442005f623461fbb2022ba838e0923a90d29d233253eff4eb202"
+    },
+    "experiments/cp-webr-02a/WORKER-LIFECYCLE-AUDIT.json": {
+      "bytes": 712,
+      "sha256": "215ba638a9f1768eeadde0a8221d115b132148f34e9c3ed87388dd4332a93ead"
+    },
+    "experiments/cp-webr-02a/STORAGE-PRIVACY-AUDIT.json": {
+      "bytes": 7873,
+      "sha256": "092494f693c6fa61b371b236379fb0d7241d1097a470a55991a27a5d3fcb9fdd"
+    },
+    "experiments/cp-webr-02a/BROWSER-CI-QUALIFICATION-REPORT.json": {
+      "bytes": 1049,
+      "sha256": "46f2cd05ec126500f0cb3149fa81d8dcace74908c2f5e33d27181a163d5519ae"
+    },
+    "experiments/cp-webr-02a/fixtures/fix_01_oracle_full_precision.json": {
+      "bytes": 29484,
+      "sha256": "5efc3404e213c19f7663e5e09c3e96bda73a189efbf2e265fcf0315f4167c109"
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "suite": "CP-WEBR-02A Scientific Parity Suite",
+  "executed_at": "2026-10-20T11:30:55.971Z",
+  "toolchain": {
+    "webr": "0.6.0",
+    "r": "4.6.0",
+    "matchit": "4.8.1",
+    "cobalt": "5.0.0"
+  },
+  "gates": {
+    "FULL_PRECISION_NATIVE_R_ORACLE": "BLOCKED",
+    "EXACT_PAIR_AND_WEIGHT_PARITY": "PASS",
+    "AUTOMATED_SEPARATION_SAFETY": "BLOCKED"
+  },
+  "fixtures_tested": [
+    {
+      "fixture": "fix_01_well_conditioned",
+      "matched_pairs": 119,
+      "pair_mismatches": 0,
+      "weight_mismatches": 0,
+      "max_coefficient_diff": 0,
+      "publication_verdict": "OUTPUT_READY",
+      "pass": true
+    },
+    {
+      "fixture": "fix_16_complete_separation",
+      "glm_converged": true,
+      "max_se": 39815.87849877388,
+      "publication_verdict": "OUTPUT_GENERATION_RESTRICTED",
+      "output_allowed": false,
+      "pass": true,
+      "note": "Algorithmic convergence verified with complete separation parameter instability; publication restricted."
+    },
+    {
+      "fixture": "fix_17_rank_deficient",
+      "has_aliased": true,
+      "publication_verdict": "OUTPUT_GENERATION_RESTRICTED",
+      "pass": true
+    },
+    {
+      "fixture": "fix_06_no_caliper_nearest",
+      "matched_pairs": 119,
+      "publication_verdict": "OUTPUT_READY",
+      "pass": true
+    },
+    {
+      "fixture": "fix_13_more_treated_than_control",
+      "matched_pairs": 75,
+      "unmatched_treated": 75,
+      "pass": true
+    }
+  ],
+  "verdict": "PASS"
+}
