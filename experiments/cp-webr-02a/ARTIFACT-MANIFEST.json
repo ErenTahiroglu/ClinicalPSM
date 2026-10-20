@@ -110,12 +110,12 @@
       "sha256": "510e4b0f09778dadf68a977bf8d2d04e3bdb803e4a6bf6fa40f824ec849bfcc2"
     },
     "experiments/cp-webr-02a/harness/generate_cobalt_reference.mjs": {
-      "bytes": 13607,
-      "sha256": "ddc127f27350d7b70c2a5c9b6134c6561827723779f259113cdfcdfdfea9cb62"
+      "bytes": 13637,
+      "sha256": "c8fee5976d740c7a31a7ef79528579376b333b9c633238f4031b48c8b3074888"
     },
     "experiments/cp-webr-02a/CP-WEBR-02A-R1.2a-E1-ERRATUM.md": {
       "bytes": 10061,
-      "sha256": "c2ac9a660e3dd3fdfeb933c41f0b41fdd6f55cfbb950430394486b7040fc2361"
+      "sha256": "e092c476bef83c7c6fbb75d3cadf8d76755b18c55e8a0efda1f2287db0462903"
     },
     "experiments/cp-webr-02a/fixtures/fix_01_oracle_full_precision.json": {
       "bytes": 29484,

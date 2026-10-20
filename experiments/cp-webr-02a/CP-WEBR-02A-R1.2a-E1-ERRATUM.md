@@ -70,7 +70,7 @@ Under standard MatchIt ATT nearest-neighbor matching, cobalt default balance tab
 
 - **Generator Command:** `node experiments/cp-webr-02a/harness/generate_cobalt_reference.mjs`
 - **Execution Mode:** Direct evaluation in official WebR R 4.6.0; MatchIt 4.8.1; cobalt 5.0.0; isolated R workspace without adapter or template.
-- **Generator Script SHA-256:** `ddc127f27350d7b70c2a5c9b6134c6561827723779f259113cdfcdfdfea9cb62`
+- **Generator Script SHA-256:** `c8fee5976d740c7a31a7ef79528579376b333b9c633238f4031b48c8b3074888`
 - **Input Fixture CSV Hashes:**
   - `fix_01_well_conditioned.csv`: `5a76a1d6921f59eb92accd464f41817b360798d23c7d54bfb0c904544c2639dc`
   - `fix_02_mixed_types.csv`: `d2410f4639e9a23c295b42747ed787b2db018e929bdc0e49db3c0c093ab076ad`
