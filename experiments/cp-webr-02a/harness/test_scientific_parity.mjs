@@ -11,7 +11,7 @@ import { execSync } from 'node:child_process';
 import { WebR } from 'webr';
 import { createServer, PORT } from '../browser-harness/server.mjs';
 import { WebRStatisticalAdapter } from '../adapter/webr_adapter.mjs';
-import { verifyEnvelope, validateCanonicalResult } from '../adapter/canonical_serializer.mjs';
+import { verifyEnvelope } from '../adapter/canonical_serializer.mjs';
 
 function getGitCommitSha() {
   try {
@@ -100,6 +100,122 @@ export function verifyGlmCoefficients(result, oracle, tolerance = 1e-4) {
     }
   }
   return { pass: true, termsChecked: coefs.length };
+}
+
+export function compareCobaltBalanceDiagnostics(result, referenceFixture, fixtureId, tolerance = 1e-4) {
+  if (!result?.balanceTable || !Array.isArray(result.balanceTable)) {
+    return { pass: false, error: 'Missing or invalid balanceTable in result', comparisons: [] };
+  }
+  const comparisons = [];
+  const expectedCovNames = Object.keys(referenceFixture.covariates);
+  const actualRows = result.balanceTable;
+
+  // Verify row counts and identities
+  for (const expName of expectedCovNames) {
+    const row = actualRows.find(r => r.displayName === expName || r.originalHeader === expName || r.covariateName === expName);
+    if (!row) {
+      return { pass: false, error: `Missing expected covariate "${expName}" in balanceTable for ${fixtureId}`, comparisons };
+    }
+  }
+
+  if (actualRows.length !== expectedCovNames.length) {
+    const actualNames = actualRows.map(r => r.displayName || r.originalHeader || r.covariateName);
+    return {
+      pass: false,
+      error: `Row count mismatch in balanceTable for ${fixtureId}: expected ${expectedCovNames.length} (${expectedCovNames.join(', ')}), got ${actualRows.length} (${actualNames.join(', ')})`,
+      comparisons
+    };
+  }
+
+  for (const expName of expectedCovNames) {
+    const expStats = referenceFixture.covariates[expName];
+    const row = actualRows.find(r => r.displayName === expName || r.originalHeader === expName || r.covariateName === expName);
+
+    // Verify type
+    if (row.type !== expStats.type) {
+      return { pass: false, error: `Type mismatch for ${expName}: expected ${expStats.type}, got ${row.type}`, comparisons };
+    }
+
+    const statFields = [
+      { name: 'unadjusted_smd', actual: row.unadjustedSmd, expected: expStats.unadjusted_smd },
+      { name: 'matched_smd', actual: row.matchedSmd, expected: expStats.matched_smd },
+      { name: 'raw_diff_unadjusted', actual: row.rawDifferenceUnadjusted, expected: expStats.raw_diff_unadjusted },
+      { name: 'raw_diff_matched', actual: row.rawDifferenceMatched, expected: expStats.raw_diff_matched },
+      { name: 'unadjusted_variance_ratio', actual: row.unadjustedVarianceRatio, expected: expStats.unadjusted_variance_ratio },
+      { name: 'matched_variance_ratio', actual: row.matchedVarianceRatio, expected: expStats.matched_variance_ratio }
+    ];
+
+    for (const f of statFields) {
+      if (f.expected === null) {
+        if (f.actual !== null && f.actual !== undefined) {
+          const comp = {
+            fixture_id: fixtureId,
+            covariate_name: expName,
+            statistic_name: f.name,
+            reference_value: null,
+            actual_canonical_value: f.actual,
+            absolute_numerical_difference: Math.abs(f.actual),
+            applicable_tolerance: 0,
+            pass: false,
+            reference_provenance: 'OFFICIAL_R_COBALT_BAL_TAB_EVALUATION'
+          };
+          comparisons.push(comp);
+          return { pass: false, error: `Expected undefined statistic "${f.name}" for "${expName}" to be null, got ${f.actual}`, comparisons };
+        }
+        comparisons.push({
+          fixture_id: fixtureId,
+          covariate_name: expName,
+          statistic_name: f.name,
+          reference_value: null,
+          actual_canonical_value: null,
+          absolute_numerical_difference: 0,
+          applicable_tolerance: 0,
+          pass: true,
+          reference_provenance: 'OFFICIAL_R_COBALT_BAL_TAB_EVALUATION'
+        });
+      } else {
+        if (typeof f.actual !== 'number' || isNaN(f.actual)) {
+          const comp = {
+            fixture_id: fixtureId,
+            covariate_name: expName,
+            statistic_name: f.name,
+            reference_value: f.expected,
+            actual_canonical_value: f.actual,
+            absolute_numerical_difference: NaN,
+            applicable_tolerance: tolerance,
+            pass: false,
+            reference_provenance: 'OFFICIAL_R_COBALT_BAL_TAB_EVALUATION'
+          };
+          comparisons.push(comp);
+          return { pass: false, error: `Non-numeric actual value for "${f.name}" on "${expName}": ${f.actual}`, comparisons };
+        }
+
+        const diff = Math.abs(f.actual - f.expected);
+        const statPass = diff <= tolerance;
+        comparisons.push({
+          fixture_id: fixtureId,
+          covariate_name: expName,
+          statistic_name: f.name,
+          reference_value: f.expected,
+          actual_canonical_value: f.actual,
+          absolute_numerical_difference: diff,
+          applicable_tolerance: tolerance,
+          pass: statPass,
+          reference_provenance: 'OFFICIAL_R_COBALT_BAL_TAB_EVALUATION'
+        });
+
+        if (!statPass) {
+          return {
+            pass: false,
+            error: `Numerical difference for "${f.name}" on "${expName}" (${diff.toExponential(4)}) exceeds tolerance (${tolerance})`,
+            comparisons
+          };
+        }
+      }
+    }
+  }
+
+  return { pass: true, comparisons };
 }
 
 export function verifyBalanceDiagnostics(result) {
@@ -288,6 +404,10 @@ async function main() {
 
   const fix01OraclePath = path.resolve('experiments/cp-webr-02a/fixtures/fix_01_oracle_full_precision.json');
   const fix01Oracle = JSON.parse(fs.readFileSync(fix01OraclePath, 'utf-8'));
+
+  const cobaltRefPath = path.resolve('experiments/cp-webr-02a/r1.2a/COBALT-NUMERICAL-REFERENCE.json');
+  const cobaltReference = JSON.parse(fs.readFileSync(cobaltRefPath, 'utf-8'));
+  const allCobaltComparisons = [];
 
   const executedResults = {};
 
@@ -519,11 +639,29 @@ async function main() {
           } else {
             assertions.push('Cobalt balance diagnostics verified: finite SMDs, valid variance ratios, and pre/post balance improvement');
           }
+
+          const cobaltCheck01 = compareCobaltBalanceDiagnostics(result, cobaltReference.fixtures.fix_01_well_conditioned, 'fix_01_well_conditioned', 1e-4);
+          if (!cobaltCheck01.pass) {
+            fixtureSpecificPass = false;
+            console.error(`FAIL [fix_01 cobalt numerical comparison]: ${cobaltCheck01.error}`);
+          } else {
+            allCobaltComparisons.push(...cobaltCheck01.comparisons);
+            assertions.push('Cobalt numerical balance parity verified against official bal.tab reference (3 continuous covariates, eps <= 1e-4)');
+          }
         } else if (fix.id === 'fix_02_mixed_types') {
           assertions.push("Categorical variable x_cat bound as factor with reference level 'low'");
           assertions.push("Model terms include contrast indicators 'cov_02med' and 'cov_02high'");
           const balCheck = verifyBalanceDiagnostics(result);
           if (balCheck.pass) assertions.push('Cobalt balance table correctly distinguishes continuous and categorical contrast indicators');
+
+          const cobaltCheck02 = compareCobaltBalanceDiagnostics(result, cobaltReference.fixtures.fix_02_mixed_types, 'fix_02_mixed_types', 1e-4);
+          if (!cobaltCheck02.pass) {
+            fixtureSpecificPass = false;
+            console.error(`FAIL [fix_02 cobalt numerical comparison]: ${cobaltCheck02.error}`);
+          } else {
+            allCobaltComparisons.push(...cobaltCheck02.comparisons);
+            assertions.push('Cobalt numerical balance parity verified against official bal.tab reference (continuous, binary, and categorical factor contrasts, eps <= 1e-4)');
+          }
         } else if (fix.id === 'fix_03_ref_level_change') {
           assertions.push("Categorical variable x_cat bound as factor with reference level 'med'");
           assertions.push("Model terms include contrast indicators 'cov_02low' and 'cov_02high'");
@@ -602,7 +740,7 @@ async function main() {
             console.error(`FAIL [fix_11]: ${saCheck.error}`);
           } else {
             assertions.push('Common support discard (both): discarded units properly accounted for');
-            assertions.push(`Sample accounting exact: totalCases (${result.sampleAccounting.totalCases}) == matched (32) + unmatched (64) + discarded (4)`);
+            assertions.push(`Sample accounting exact: completeCases (${result.sampleAccounting.completeCases}) == matched (32) + unmatched (64) + discarded (4)`);
             assertions.push(`All 16 matched pairs satisfy effective caliper`);
           }
         } else if (fix.id === 'fix_12_caliper_unmatched') {
@@ -697,9 +835,9 @@ async function main() {
   const fix11Clean = executedResults['fix_11_pre_match_discard'];
 
   const mutationAudit = {
-    suite: 'CP-WEBR-02A R1.2 Genuine Falsifiable Mutation Audit',
+    suite: 'CP-WEBR-02A R1.2a Genuine Falsifiable Mutation Audit',
     executed_at: new Date().toISOString(),
-    total_mutations: 7,
+    total_mutations: 12,
     mutations: []
   };
 
@@ -766,22 +904,138 @@ async function main() {
     });
   }
 
-  // Mutation 4: Mutate cobalt balance SMD
+  // Mutation 4 (Cobalt 1): Mutate matched SMD by small plausible amount (+0.05)
   {
     const mutResult = JSON.parse(JSON.stringify(fix01Clean));
     const origVal = mutResult.balanceTable[0].matchedSmd;
-    mutResult.balanceTable[0].matchedSmd = 99.0;
-    const check = verifyBalanceDiagnostics(mutResult);
+    mutResult.balanceTable[0].matchedSmd += 0.05;
+    const check = compareCobaltBalanceDiagnostics(mutResult, cobaltReference.fixtures.fix_01_well_conditioned, 'fix_01_well_conditioned', 1e-4);
     const caught = check.pass === false;
-    assert(caught, 'Mutation 4: Mutated balance SMD caught by verifyBalanceDiagnostics');
+    assert(caught, 'Mutation 4: Mutated matched SMD (+0.05) caught by compareCobaltBalanceDiagnostics');
     mutationAudit.mutations.push({
-      mutation_id: 'MUT_04_BALANCE_SMD',
+      mutation_id: 'MUT_COBALT_01_MATCHED_SMD',
       target_fixture: 'fix_01_well_conditioned',
-      mutation_description: 'Corrupt matched SMD of age to 99.0',
+      mutation_description: 'Perturb matched SMD of age by +0.05 (finite and plausible)',
       original_value: origVal,
-      mutated_value: 99.0,
-      verifier_invoked: 'verifyBalanceDiagnostics',
-      expected_verifier_failure: 'Matched SMD is unreasonably large',
+      mutated_value: origVal + 0.05,
+      verifier_invoked: 'compareCobaltBalanceDiagnostics',
+      expected_verifier_failure: 'Numerical difference for "matched_smd" on "age" exceeds tolerance',
+      observed_failure: check.error,
+      pass: caught
+    });
+  }
+
+  // Mutation 5 (Cobalt 2): Mutate binary raw difference by +0.05
+  {
+    const mutResult = JSON.parse(JSON.stringify(fix02Clean));
+    const binRow = mutResult.balanceTable.find(r => r.displayName === 'x_bin' || r.originalHeader === 'x_bin' || r.covariateName === 'x_bin');
+    const origVal = binRow.rawDifferenceMatched;
+    binRow.rawDifferenceMatched += 0.05;
+    const check = compareCobaltBalanceDiagnostics(mutResult, cobaltReference.fixtures.fix_02_mixed_types, 'fix_02_mixed_types', 1e-4);
+    const caught = check.pass === false;
+    assert(caught, 'Mutation 5: Mutated binary raw difference caught by compareCobaltBalanceDiagnostics');
+    mutationAudit.mutations.push({
+      mutation_id: 'MUT_COBALT_02_BINARY_RAW_DIFF',
+      target_fixture: 'fix_02_mixed_types',
+      mutation_description: 'Perturb binary raw difference matched of x_bin by +0.05',
+      original_value: origVal,
+      mutated_value: origVal + 0.05,
+      verifier_invoked: 'compareCobaltBalanceDiagnostics',
+      expected_verifier_failure: 'Numerical difference for "raw_diff_matched" on "x_bin" exceeds tolerance',
+      observed_failure: check.error,
+      pass: caught
+    });
+  }
+
+  // Mutation 6 (Cobalt 3): Mutate categorical factor-level balance result by +0.05
+  {
+    const mutResult = JSON.parse(JSON.stringify(fix02Clean));
+    const catRow = mutResult.balanceTable.find(r => r.displayName === 'cov_02_med' || r.originalHeader === 'cov_02_med' || r.covariateName === 'cov_02_med');
+    const origVal = catRow.matchedSmd;
+    catRow.matchedSmd += 0.05;
+    const check = compareCobaltBalanceDiagnostics(mutResult, cobaltReference.fixtures.fix_02_mixed_types, 'fix_02_mixed_types', 1e-4);
+    const caught = check.pass === false;
+    assert(caught, 'Mutation 6: Mutated categorical contrast SMD caught by compareCobaltBalanceDiagnostics');
+    mutationAudit.mutations.push({
+      mutation_id: 'MUT_COBALT_03_CATEGORICAL_SMD',
+      target_fixture: 'fix_02_mixed_types',
+      mutation_description: 'Perturb categorical contrast matched SMD of cov_02_med by +0.05',
+      original_value: origVal,
+      mutated_value: origVal + 0.05,
+      verifier_invoked: 'compareCobaltBalanceDiagnostics',
+      expected_verifier_failure: 'Numerical difference for "matched_smd" on "cov_02_med" exceeds tolerance',
+      observed_failure: check.error,
+      pass: caught
+    });
+  }
+
+  // Mutation 7 (Cobalt 4): Undefined statistic incorrectly replaced with zero
+  {
+    const mutResult = JSON.parse(JSON.stringify(fix01Clean));
+    const origVal = mutResult.balanceTable[0].unadjustedVarianceRatio;
+    mutResult.balanceTable[0].unadjustedVarianceRatio = 0.0;
+    const check = compareCobaltBalanceDiagnostics(mutResult, cobaltReference.fixtures.fix_01_well_conditioned, 'fix_01_well_conditioned', 1e-4);
+    const caught = check.pass === false;
+    assert(caught, 'Mutation 7: Undefined statistic replaced with zero caught by compareCobaltBalanceDiagnostics');
+    mutationAudit.mutations.push({
+      mutation_id: 'MUT_COBALT_04_UNDEFINED_REPLACED_WITH_ZERO',
+      target_fixture: 'fix_01_well_conditioned',
+      mutation_description: 'Incorrectly replace null unadjustedVarianceRatio for age with 0.0',
+      original_value: origVal,
+      mutated_value: 0.0,
+      verifier_invoked: 'compareCobaltBalanceDiagnostics',
+      expected_verifier_failure: 'Expected undefined statistic "unadjusted_variance_ratio" for "age" to be null, got 0',
+      observed_failure: check.error,
+      pass: caught
+    });
+  }
+
+  // Mutation 8 (Cobalt 5): Missing cobalt result row
+  {
+    const mutResult = JSON.parse(JSON.stringify(fix01Clean));
+    const origRowsCount = mutResult.balanceTable.length;
+    mutResult.balanceTable = mutResult.balanceTable.filter(r => r.displayName !== 'sbp' && r.originalHeader !== 'sbp' && r.covariateName !== 'sbp');
+    const check = compareCobaltBalanceDiagnostics(mutResult, cobaltReference.fixtures.fix_01_well_conditioned, 'fix_01_well_conditioned', 1e-4);
+    const caught = check.pass === false;
+    assert(caught, 'Mutation 8: Missing cobalt result row caught by compareCobaltBalanceDiagnostics');
+    mutationAudit.mutations.push({
+      mutation_id: 'MUT_COBALT_05_MISSING_ROW',
+      target_fixture: 'fix_01_well_conditioned',
+      mutation_description: 'Remove sbp row from cobalt balanceTable',
+      original_value: origRowsCount,
+      mutated_value: mutResult.balanceTable.length,
+      verifier_invoked: 'compareCobaltBalanceDiagnostics',
+      expected_verifier_failure: 'Missing expected covariate "sbp" in balanceTable',
+      observed_failure: check.error,
+      pass: caught
+    });
+  }
+
+  // Mutation 9 (Cobalt 6): Extra cobalt result row
+  {
+    const mutResult = JSON.parse(JSON.stringify(fix01Clean));
+    const origRowsCount = mutResult.balanceTable.length;
+    mutResult.balanceTable.push({
+      covariateName: 'spurious_covariate',
+      type: 'continuous',
+      unadjustedSmd: 0.1,
+      matchedSmd: 0.01,
+      rawDifferenceUnadjusted: null,
+      rawDifferenceMatched: null,
+      unadjustedVarianceRatio: null,
+      matchedVarianceRatio: null
+    });
+    const check = compareCobaltBalanceDiagnostics(mutResult, cobaltReference.fixtures.fix_01_well_conditioned, 'fix_01_well_conditioned', 1e-4);
+    const caught = check.pass === false;
+    assert(caught, 'Mutation 9: Extra cobalt result row caught by compareCobaltBalanceDiagnostics');
+    mutationAudit.mutations.push({
+      mutation_id: 'MUT_COBALT_06_EXTRA_ROW',
+      target_fixture: 'fix_01_well_conditioned',
+      mutation_description: 'Inject extraneous spurious covariate row into cobalt balanceTable',
+      original_value: origRowsCount,
+      mutated_value: mutResult.balanceTable.length,
+      verifier_invoked: 'compareCobaltBalanceDiagnostics',
+      expected_verifier_failure: 'Row count mismatch in balanceTable',
       observed_failure: check.error,
       pass: caught
     });
@@ -879,15 +1133,33 @@ async function main() {
   fs.writeFileSync(parityOutPath, JSON.stringify(parityReport, null, 2), 'utf-8');
   console.log(`Wrote scientific parity report to ${parityOutPath}`);
 
-  // Write machine-readable assertion matrix to r1.2
+  // Write machine-readable assertion matrix to r1.2 and r1.2a
   const matrixOutPath = path.resolve('experiments/cp-webr-02a/r1.2/FIXTURE-ASSERTION-MATRIX.json');
   fs.writeFileSync(matrixOutPath, JSON.stringify(assertionMatrix, null, 2), 'utf-8');
-  console.log(`Wrote machine-readable fixture assertion matrix to ${matrixOutPath}`);
+  const matrix12aOutPath = path.resolve('experiments/cp-webr-02a/r1.2a/FIXTURE-ASSERTION-MATRIX.json');
+  fs.writeFileSync(matrix12aOutPath, JSON.stringify(assertionMatrix, null, 2), 'utf-8');
+  console.log(`Wrote machine-readable fixture assertion matrix to ${matrixOutPath} and ${matrix12aOutPath}`);
 
-  // Also write mutation falsification audit to r1.2
+  // Also write mutation falsification audit to r1.2 and r1.2a
   const mutOutPath = path.resolve('experiments/cp-webr-02a/r1.2/MUTATION-FALSIFICATION-AUDIT.json');
   fs.writeFileSync(mutOutPath, JSON.stringify(mutationAudit, null, 2), 'utf-8');
-  console.log(`Wrote mutation falsification audit to ${mutOutPath}`);
+  const mut12aOutPath = path.resolve('experiments/cp-webr-02a/r1.2a/NUMERICAL-MUTATION-FALSIFICATION-AUDIT.json');
+  fs.writeFileSync(mut12aOutPath, JSON.stringify(mutationAudit, null, 2), 'utf-8');
+  console.log(`Wrote mutation falsification audit to ${mutOutPath} and ${mut12aOutPath}`);
+
+  // Write authoritative Cobalt numerical comparison matrix
+  const cobaltMatrixReport = {
+    suite: 'CP-WEBR-02A R1.2a Authoritative Cobalt Numerical Parity Matrix',
+    executed_at: new Date().toISOString(),
+    commit_sha: getGitCommitSha(),
+    tolerance: 1e-4,
+    total_comparisons: allCobaltComparisons.length,
+    all_comparisons_pass: allCobaltComparisons.length > 0 && allCobaltComparisons.every(c => c.pass === true),
+    comparisons: allCobaltComparisons
+  };
+  const cobaltMatrixOutPath = path.resolve('experiments/cp-webr-02a/r1.2a/COBALT-NUMERICAL-COMPARISON-MATRIX.json');
+  fs.writeFileSync(cobaltMatrixOutPath, JSON.stringify(cobaltMatrixReport, null, 2), 'utf-8');
+  console.log(`Wrote authoritative Cobalt numerical comparison matrix to ${cobaltMatrixOutPath} (${allCobaltComparisons.length} comparisons, pass: ${cobaltMatrixReport.all_comparisons_pass})`);
 
   server.close();
 

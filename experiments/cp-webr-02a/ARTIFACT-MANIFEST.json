@@ -1,8 +1,8 @@
 {
-  "manifest_version": "2.3.0",
-  "generated_at": "2026-10-20T18:21:49.705Z",
-  "phase": "CP-WEBR-02A-R1.2",
-  "baseline_sha": "12f79579c6e59d174a8d2bc91f5cc5819acd6b64",
+  "manifest_version": "2.4.0",
+  "generated_at": "2026-10-20T20:42:17.136Z",
+  "phase": "CP-WEBR-02A-R1.2a",
+  "baseline_sha": "338d89a281c7d7d09e116498a6b8d106199f3881",
   "manifest_classification": "COMMITTED_BASELINE_IMMUTABLE_INPUTS",
   "artifacts": {
     "experiments/cp-webr-02a/CP-WEBR-02A-EXPERIMENT-CONTRACT.md": {
@@ -41,6 +41,18 @@
       "bytes": 6853,
       "sha256": "35a72a57f150929d7502167fff67c5c15c124f73c3d52cba2f1d543c61887bef"
     },
+    "experiments/cp-webr-02a/CP-WEBR-02A-R1.2a-TEST-CONTRACT.md": {
+      "bytes": 6086,
+      "sha256": "d52d7dab68c6150bddcb1e471aa8ecfc9904964b51042b5a9ce2222900f86850"
+    },
+    "experiments/cp-webr-02a/CP-WEBR-02A-R1.2a-RED-TEAM-REMEDIATION.md": {
+      "bytes": 10728,
+      "sha256": "17eefef4bc52693a0ab4b634e7fa9a501be0af73ea525588c8b8b3549c41ee34"
+    },
+    "experiments/cp-webr-02a/CP-WEBR-02A-R1.2a-RESULT.md": {
+      "bytes": 7660,
+      "sha256": "0600eabda8bbae5ac7cb20e3699293b0abe3ffeede8b976b38902caaef8890a0"
+    },
     "experiments/cp-webr-02a/adapter/types.ts": {
       "bytes": 6259,
       "sha256": "a74a076d9a65cb05516a4adc3118c06492f5039fffc2c7daf45e42f6d42b510b"
@@ -66,36 +78,36 @@
       "sha256": "e049959ad24fb916c8892c270ebe05745a07b86a2bd3c1e5dbe65cf2c5c0df29"
     },
     "experiments/cp-webr-02a/adapter/worker_manager.mjs": {
-      "bytes": 11989,
-      "sha256": "11d4d4aed3866d1bb83b34ad23e26265b8281b98bc23078890373bca59f74524"
+      "bytes": 15962,
+      "sha256": "25de3cb267ab476e183d074a49a803c8f6243051e11e019f23bfe7698d9718c7"
     },
     "experiments/cp-webr-02a/browser-harness/server.mjs": {
       "bytes": 8010,
       "sha256": "bf81c0612429ee0236d0e14d702bdcd5310771100ac49b7c7294360d5155acb4"
     },
     "experiments/cp-webr-02a/browser-harness/worker.js": {
-      "bytes": 8002,
-      "sha256": "1528ba6668f43afa61250918619399f8f471e508addd09e1d3d0e8b946a2891a"
+      "bytes": 9754,
+      "sha256": "a59c8d0959c0d8ace410caf8647e19a690e2c00f70cbcd9da39c302da4eea2b6"
     },
     "experiments/cp-webr-02a/browser-harness/harness.js": {
-      "bytes": 37934,
-      "sha256": "900482754a65ede3f70fac72249030b10ce75c25e7940cdd55d4fc50fc2aad13"
+      "bytes": 38935,
+      "sha256": "3b8e196b7320fda3ab941a5b82adcaf4cafac8bf94701ff2135fd43c16db3fc9"
     },
     "experiments/cp-webr-02a/browser-harness/index.html": {
       "bytes": 306,
       "sha256": "49ba3b04774d6ea5cb3e614056316ff6855952a5b0bfa0a30858faeb67393408"
     },
     "experiments/cp-webr-02a/harness/test_adapter_unit.mjs": {
-      "bytes": 23717,
-      "sha256": "627bfcd1c0d7d454f9505dad6441889ec50fae697c90a37dddba423c6539cf7f"
+      "bytes": 36450,
+      "sha256": "8a831c235338694b4b713aae761a0f70b398340557f4de978f22832e8ff5c500"
     },
     "experiments/cp-webr-02a/harness/test_scientific_parity.mjs": {
-      "bytes": 42799,
-      "sha256": "2e2fc72eec625c912f4eed1153bc9f74a2761b545600961ace12102df8fd496f"
+      "bytes": 56543,
+      "sha256": "8e0a608198947e5d5e8b14a3f59cf07a6c12df9a07abc524a40d03549a67ee6f"
     },
     "experiments/cp-webr-02a/harness/test_browser_qualification.mjs": {
-      "bytes": 35080,
-      "sha256": "56a17ad6443e5cf1ed7b4157e6d366875c0d8838ba1d3cbe149ef75feeb3df7d"
+      "bytes": 38438,
+      "sha256": "35368650e68c154ecf24c6a0b60f2ae16aca8c3b283bdf18d1e0da13d7d1ac5e"
     },
     "experiments/cp-webr-02a/fixtures/fix_01_oracle_full_precision.json": {
       "bytes": 29484,

@@ -61,6 +61,8 @@ jobs:
             const report = JSON.parse(fs.readFileSync('experiments/cp-webr-02a/BROWSER-CI-QUALIFICATION-REPORT.json', 'utf-8'));
             console.log('Browser qualification verdicts:', report.verdicts);
             if (report.exit_code !== 0) throw new Error('Browser qualification exit code was non-zero');
+            if (report.verdicts.COBALT_BALANCE_PARITY !== 'PASS') throw new Error('COBALT_BALANCE_PARITY failed');
+            if (report.verdicts.WORKER_LIFECYCLE_CORRECTNESS !== 'PASS') throw new Error('WORKER_LIFECYCLE_CORRECTNESS failed');
             if (report.verdicts.EXACT_PAIR_AND_WEIGHT_PARITY !== 'PASS') throw new Error('EXACT_PAIR_AND_WEIGHT_PARITY failed');
             if (report.verdicts.WORKER_CSP_QUALIFICATION !== 'PASS') throw new Error('WORKER_CSP_QUALIFICATION failed');
             if (report.verdicts.WORKER_LIFECYCLE_SUITE !== 'PASS') throw new Error('WORKER_LIFECYCLE_SUITE failed');
@@ -85,5 +87,6 @@ jobs:
             experiments/cp-webr-02a/*.json
             experiments/cp-webr-02a/r1.1/*.json
             experiments/cp-webr-02a/r1.2/*.json
+            experiments/cp-webr-02a/r1.2a/*.json
             experiments/cp-webr-02a/fixtures/fix_01_oracle_full_precision.json
           retention-days: 90

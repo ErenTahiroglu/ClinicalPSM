@@ -1,10 +1,10 @@
 {
-  "executed_at": "2026-10-20T18:21:07.272Z",
-  "commit_sha": "12f79579c6e59d174a8d2bc91f5cc5819acd6b64",
+  "executed_at": "2026-10-20T20:41:45.797Z",
+  "commit_sha": "338d89a281c7d7d09e116498a6b8d106199f3881",
   "results": {
     "initialization": {
       "pass": true,
-      "latencyMs": 2043.2449999973178
+      "latencyMs": 2036.7749999910593
     },
     "repeatedAnalyses": {
       "pass": true,
@@ -22,7 +22,7 @@
       "cancelStatus": "GRACEFUL_INTERRUPT_CONFIRMED",
       "interruptRequested": true,
       "cancellationCompleted": true,
-      "durationMs": 1.2100000008940697,
+      "durationMs": 1.1849999874830246,
       "statePostCancel": "READY"
     },
     "hardTerminationAndRecovery": {
@@ -34,10 +34,15 @@
       "status": "WORKER_ERROR",
       "error": "Error in evalR: Deliberate R runtime exception during interrupt request"
     },
+    "adversarialTextNegativeControl": {
+      "pass": true,
+      "status": "WORKER_ERROR",
+      "error": "Error in evalR: execution interrupted by syntax simulation"
+    },
     "hardTerminationFallback": {
       "pass": true,
       "status": "HARD_TERMINATED",
-      "durationMs": 201.42000000178814
+      "durationMs": 201.1899999976158
     },
     "recoveryAndFreshAnalysis": {
       "pass": true,

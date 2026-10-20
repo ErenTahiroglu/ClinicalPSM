@@ -1,0 +1,97 @@
+{
+  "version": "1.2.0a",
+  "generated_at": "2026-10-20T00:00:00.000Z",
+  "toolchain": {
+    "r": "4.6.0",
+    "webr": "0.6.0",
+    "matchit": "4.8.1",
+    "cobalt": "5.0.0"
+  },
+  "provenance": "OFFICIAL_R_COBALT_BAL_TAB_EVALUATION",
+  "method_description": "cobalt::bal.tab(m_out, s.d.denom = 'treated', binary = 'raw', un = TRUE) and cobalt::bal.tab(m_out, s.d.denom = 'treated', binary = 'std', un = TRUE)",
+  "tolerance": 0.0001,
+  "fixtures": {
+    "fix_01_well_conditioned": {
+      "name": "Well-conditioned logistic regression",
+      "covariates": {
+        "age": {
+          "type": "continuous",
+          "unadjusted_smd": -0.0007151561270170839,
+          "matched_smd": -0.007499609443220876,
+          "raw_diff_unadjusted": null,
+          "raw_diff_matched": null,
+          "unadjusted_variance_ratio": null,
+          "matched_variance_ratio": null
+        },
+        "bmi": {
+          "type": "continuous",
+          "unadjusted_smd": -0.000606497286469651,
+          "matched_smd": 0.06307305771696738,
+          "raw_diff_unadjusted": null,
+          "raw_diff_matched": null,
+          "unadjusted_variance_ratio": null,
+          "matched_variance_ratio": null
+        },
+        "sbp": {
+          "type": "continuous",
+          "unadjusted_smd": -0.15074080321281266,
+          "matched_smd": -0.03158141342218009,
+          "raw_diff_unadjusted": null,
+          "raw_diff_matched": null,
+          "unadjusted_variance_ratio": null,
+          "matched_variance_ratio": null
+        }
+      }
+    },
+    "fix_02_mixed_types": {
+      "name": "Mixed factor types",
+      "covariates": {
+        "x_cont": {
+          "type": "continuous",
+          "unadjusted_smd": -0.14882152334462226,
+          "matched_smd": 0.004366674068920566,
+          "raw_diff_unadjusted": null,
+          "raw_diff_matched": null,
+          "unadjusted_variance_ratio": null,
+          "matched_variance_ratio": null
+        },
+        "x_bin": {
+          "type": "binary",
+          "unadjusted_smd": -0.08066190279763126,
+          "matched_smd": 0.025693869820655406,
+          "raw_diff_unadjusted": -0.04024800336275747,
+          "raw_diff_matched": 0.01282051282051283,
+          "unadjusted_variance_ratio": null,
+          "matched_variance_ratio": null
+        },
+        "cov_02_low": {
+          "type": "binary",
+          "unadjusted_smd": 0.07844528814039867,
+          "matched_smd": 0.05287472460292058,
+          "raw_diff_unadjusted": 0.038041193778898696,
+          "raw_diff_matched": 0.025641025641025605,
+          "unadjusted_variance_ratio": null,
+          "matched_variance_ratio": null
+        },
+        "cov_02_med": {
+          "type": "binary",
+          "unadjusted_smd": 0.055061593616985205,
+          "matched_smd": 0.013598207330510481,
+          "raw_diff_unadjusted": 0.025956284153005438,
+          "raw_diff_matched": 0.0064102564102563875,
+          "unadjusted_variance_ratio": null,
+          "matched_variance_ratio": null
+        },
+        "cov_02_high": {
+          "type": "binary",
+          "unadjusted_smd": -0.14126016569759975,
+          "matched_smd": -0.07074605999633493,
+          "raw_diff_unadjusted": -0.06399747793190419,
+          "raw_diff_matched": -0.032051282051282104,
+          "unadjusted_variance_ratio": null,
+          "matched_variance_ratio": null
+        }
+      }
+    }
+  }
+}

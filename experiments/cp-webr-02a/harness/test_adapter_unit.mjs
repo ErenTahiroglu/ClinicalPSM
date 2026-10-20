@@ -5,11 +5,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { SymbolMapper } from '../adapter/symbol_mapper.mjs';
 import {
-  defensiveClone,
-  deepFreeze,
-  serializeCanonical,
-  wrapInVersionedEnvelope,
-  verifyEnvelope,
   validateCanonicalResult,
   computeCanonicalResultHash
 } from '../adapter/canonical_serializer.mjs';
@@ -517,13 +512,25 @@ class MockWorkerHarness {
         }
         if (this.onmessage && !this.terminated) {
           // Cessation signal: error returned from analysis execution
-          this.onmessage({ data: { type: 'ERROR', id: msg.targetJobId, code: 'INTERRUPTED', error: 'WebR execution interrupted' } });
+          this.onmessage({ data: { type: 'ERROR', id: msg.targetJobId, targetJobId: msg.targetJobId, code: 'OPERATION_CANCELLED', error: 'WebR evaluation unwound on user interrupt' } });
         }
       }
     }, 10);
   }
   terminate() {
     this.terminated = true;
+  }
+}
+
+async function withTimeout(promise, ms = 1000, description = 'Operation') {
+  let timer;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`TIMEOUT: ${description} hung and did not settle within ${ms}ms`)), ms);
+  });
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -622,6 +629,276 @@ await managerStale.initialize();
 // Inject stale message with unknown id
 managerStale.worker.onmessage({ data: { type: 'ANALYSIS_COMPLETE', id: 'stale_unknown_id_999', payload: {} } });
 assert(managerStale.getState() === 'READY', 'Stale or unknown worker message safely ignored');
+
+// -------------------------------------------------------------
+// 5B. Mandatory Worker Fatal Error Settlement Audit Suite
+// -------------------------------------------------------------
+console.log('\n--- 5B. Testing Worker Fatal Error Settlement & Recovery ---');
+
+const fatalAudit = {
+  suite: 'CP-WEBR-02A R1.2a Worker Fatal Error Settlement Audit',
+  executed_at: new Date().toISOString(),
+  total_tests: 10,
+  tests: []
+};
+
+// Fatal Test 1: Worker onerror with pending analysis
+{
+  const m = new WorkerLifecycleManager(() => new MockWorkerHarness());
+  await m.initialize();
+  const p = m.submitAnalysis({ rows: [{ id: '1' }] });
+  let caught = false;
+  let errorMsg = null;
+  p.catch(err => { caught = true; errorMsg = err.message; });
+
+  m.worker.onerror({ message: 'Crash: Worker out of memory' });
+
+  try { await withTimeout(p, 500, 'Fatal 1 onerror job rejection'); } catch {}
+  const handlersCleared = m.messageHandlers.size === 0;
+  const stateIsRecoverable = m.getState() === 'RECOVERABLE_ERROR';
+  await m.initialize();
+  const freshRes = await m.submitAnalysis({ rows: [{ id: '1' }] });
+  const freshOk = freshRes.success === true && m.getState() === 'READY';
+  const pass = caught && handlersCleared && stateIsRecoverable && freshOk;
+  assert(pass, 'Fatal 1: Worker onerror rejects pending job, clears handlers, and recovers cleanly', errorMsg);
+  fatalAudit.tests.push({ id: 'FATAL_01_ONERROR', pass, error: errorMsg });
+}
+
+// Fatal Test 2: Worker onmessageerror with pending analysis
+{
+  const m = new WorkerLifecycleManager(() => new MockWorkerHarness());
+  await m.initialize();
+  const p = m.submitAnalysis({ rows: [{ id: '1' }] });
+  let caught = false;
+  let errorMsg = null;
+  p.catch(err => { caught = true; errorMsg = err.message; });
+
+  m.worker.onmessageerror({});
+
+  try { await withTimeout(p, 500, 'Fatal 2 onmessageerror job rejection'); } catch {}
+  const handlersCleared = m.messageHandlers.size === 0;
+  const stateIsRecoverable = m.getState() === 'RECOVERABLE_ERROR';
+  await m.initialize();
+  const freshRes = await m.submitAnalysis({ rows: [{ id: '1' }] });
+  const freshOk = freshRes.success === true && m.getState() === 'READY';
+  const pass = caught && handlersCleared && stateIsRecoverable && freshOk;
+  assert(pass, 'Fatal 2: Worker onmessageerror rejects pending job, clears handlers, and recovers cleanly', errorMsg);
+  fatalAudit.tests.push({ id: 'FATAL_02_ONMESSAGEERROR', pass, error: errorMsg });
+}
+
+// Fatal Test 3: Unsolicited fatal Worker error while request active
+{
+  const m = new WorkerLifecycleManager(() => new MockWorkerHarness());
+  await m.initialize();
+  const p = m.submitAnalysis({ rows: [{ id: '1' }] });
+  let caught = false;
+  let errorMsg = null;
+  p.catch(err => { caught = true; errorMsg = err.message; });
+
+  m.worker.onmessage({ data: { type: 'ERROR', error: 'Unsolicited fatal WebAssembly trap' } });
+
+  try { await withTimeout(p, 500, 'Fatal 3 unsolicited error job rejection'); } catch {}
+  const handlersCleared = m.messageHandlers.size === 0;
+  const stateIsRecoverable = m.getState() === 'RECOVERABLE_ERROR';
+  await m.initialize();
+  const freshRes = await m.submitAnalysis({ rows: [{ id: '1' }] });
+  const freshOk = freshRes.success === true && m.getState() === 'READY';
+  const pass = caught && handlersCleared && stateIsRecoverable && freshOk;
+  assert(pass, 'Fatal 3: Unsolicited fatal error rejects pending job and recovers cleanly', errorMsg);
+  fatalAudit.tests.push({ id: 'FATAL_03_UNSOLICITED_ERROR', pass, error: errorMsg });
+}
+
+// Fatal Test 4: Worker fails during initialization
+{
+  let initThrow = false;
+  class FailingInitWorker extends MockWorkerHarness {
+    postMessage(msg) {
+      if (msg.type === 'INIT') {
+        setTimeout(() => {
+          if (this.onmessage) this.onmessage({ data: { type: 'ERROR', id: msg.id, error: 'Init failed: cannot load Wasm' } });
+        }, 10);
+      }
+    }
+  }
+  let factoryReturnsFailing = true;
+  const m = new WorkerLifecycleManager(() => factoryReturnsFailing ? new FailingInitWorker() : new MockWorkerHarness());
+  try {
+    await withTimeout(m.initialize(), 500, 'Fatal 4 init failure');
+  } catch {
+    initThrow = true;
+  }
+  const stateIsRecoverable = m.getState() === 'RECOVERABLE_ERROR';
+  const workerIsNull = m.worker === null;
+  factoryReturnsFailing = false;
+  await m.initialize();
+  const freshRes = await m.submitAnalysis({ rows: [{ id: '1' }] });
+  const freshOk = freshRes.success === true && m.getState() === 'READY';
+  const pass = initThrow && stateIsRecoverable && workerIsNull && freshOk;
+  assert(pass, 'Fatal 4: Initialization failure enters RECOVERABLE_ERROR without dangling worker and recovers', `initThrow=${initThrow}`);
+  fatalAudit.tests.push({ id: 'FATAL_04_INIT_FAILURE', pass });
+}
+
+// Fatal Test 5: Multiple pending message handlers exist during fatal failure
+{
+  const m = new WorkerLifecycleManager(() => new MockWorkerHarness());
+  await m.initialize();
+  const p1 = m.sendMessage('PING_1');
+  const p2 = m.sendMessage('PING_2');
+  let p1Caught = false;
+  let p2Caught = false;
+  p1.catch(() => { p1Caught = true; });
+  p2.catch(() => { p2Caught = true; });
+
+  m.worker.onerror({ message: 'Fatal crash aborting all operations' });
+
+  try { await withTimeout(p1, 500, 'Fatal 5 p1 rejection'); } catch {}
+  try { await withTimeout(p2, 500, 'Fatal 5 p2 rejection'); } catch {}
+  const handlersCleared = m.messageHandlers.size === 0;
+  await m.initialize();
+  const freshRes = await m.submitAnalysis({ rows: [{ id: '1' }] });
+  const freshOk = freshRes.success === true && m.getState() === 'READY';
+  const pass = p1Caught && p2Caught && handlersCleared && freshOk;
+  assert(pass, 'Fatal 5: Multiple pending message handlers are all rejected and cleared on fatal error');
+  fatalAudit.tests.push({ id: 'FATAL_05_MULTIPLE_HANDLERS', pass });
+}
+
+// Fatal Test 6: Stale Worker delivers late message after recovery
+{
+  const m = new WorkerLifecycleManager(() => new MockWorkerHarness());
+  await m.initialize();
+  const oldWorker = m.worker;
+  m.terminateAndRecover('Manual reset');
+  await m.initialize();
+  assert(m.getState() === 'READY', 'Fatal 6 setup: Manager in READY state post-recovery');
+
+  // Stale worker emits message
+  oldWorker.onmessage?.({ data: { type: 'ANALYSIS_COMPLETE', id: 'stale_id_001', payload: { data: 'corrupt' } } });
+  oldWorker.onerror?.({ message: 'Stale error' });
+  const freshRes = await m.submitAnalysis({ rows: [{ id: '1' }] });
+  const pass = freshRes.success === true && m.getState() === 'READY';
+  assert(pass, 'Fatal 6: Stale worker messages and errors after recovery are safely ignored without state corruption');
+  fatalAudit.tests.push({ id: 'FATAL_06_STALE_WORKER_ISOLATION', pass });
+}
+
+// Fatal Test 7: Duplicate success/error events for same job
+{
+  const m = new WorkerLifecycleManager(() => new MockWorkerHarness());
+  await m.initialize();
+  let settleCount = 0;
+  const p = m.submitAnalysis({ rows: [{ id: '1' }] });
+  p.then(() => { settleCount++; });
+  p.catch(() => { settleCount++; });
+
+  const activeJobId = m.currentJob.id;
+  // Deliver first success
+  m.worker.onmessage({ data: { type: 'ANALYSIS_COMPLETE', id: activeJobId, payload: { success: true } } });
+  // Attempt duplicate success
+  m.worker.onmessage({ data: { type: 'ANALYSIS_COMPLETE', id: activeJobId, payload: { success: true } } });
+  // Attempt duplicate error
+  m.worker.onmessage({ data: { type: 'ERROR', id: activeJobId, error: 'Late error' } });
+
+  await withTimeout(p, 500, 'Fatal 7 duplicate events');
+  const pass = settleCount === 1 && m.getState() === 'READY';
+  assert(pass, 'Fatal 7: Exactly-once settlement enforced under duplicate events; consumer promise settles once');
+  fatalAudit.tests.push({ id: 'FATAL_07_EXACTLY_ONCE_SETTLEMENT', pass });
+}
+
+// Fatal Test 8: Worker error occurs during cancellation
+{
+  const m = new WorkerLifecycleManager(() => new MockWorkerHarness(), { cancelTimeoutMs: 500 });
+  await m.initialize();
+  const p = m.submitAnalysis({ rows: [{ id: '1' }] });
+  let jobCaught = false;
+  p.catch(() => { jobCaught = true; });
+
+  const cancelPromise = m.cancelCurrentJob();
+  // Trigger worker fatal error while cancellation is in flight
+  m.worker.onerror({ message: 'Worker crashed during cancel' });
+
+  const cancelRes = await withTimeout(cancelPromise, 500, 'Fatal 8 cancel resolution');
+  try { await withTimeout(p, 500, 'Fatal 8 job rejection'); } catch {}
+  const handlersCleared = m.messageHandlers.size === 0;
+  const cancelSettled = cancelRes.status === 'WORKER_ERROR' || cancelRes.status === 'HARD_TERMINATED';
+  await m.initialize();
+  const freshRes = await m.submitAnalysis({ rows: [{ id: '1' }] });
+  const freshOk = freshRes.success === true && m.getState() === 'READY';
+  const pass = jobCaught && cancelSettled && handlersCleared && freshOk;
+  assert(pass, 'Fatal 8: Worker error during cancellation settles both job and cancel promise without dangling');
+  fatalAudit.tests.push({ id: 'FATAL_08_ERROR_DURING_CANCEL', pass });
+}
+
+// Fatal Test 9: Worker terminates before posting expected response
+{
+  const m = new WorkerLifecycleManager(() => new MockWorkerHarness());
+  await m.initialize();
+  const p = m.submitAnalysis({ rows: [{ id: '1' }] });
+  let jobCaught = false;
+  let errCode = null;
+  p.catch(err => { jobCaught = true; errCode = err.code; });
+
+  m.terminateAndRecover('Sudden worker host shutdown');
+
+  try { await withTimeout(p, 500, 'Fatal 9 termination rejection'); } catch {}
+  const handlersCleared = m.messageHandlers.size === 0;
+  const stateIsRecoverable = m.getState() === 'RECOVERABLE_ERROR';
+  await m.initialize();
+  const freshRes = await m.submitAnalysis({ rows: [{ id: '1' }] });
+  const freshOk = freshRes.success === true && m.getState() === 'READY';
+  const pass = jobCaught && errCode === 'HARD_TERMINATED' && handlersCleared && stateIsRecoverable && freshOk;
+  assert(pass, 'Fatal 9: Sudden worker termination rejects job with HARD_TERMINATED and recovers cleanly');
+  fatalAudit.tests.push({ id: 'FATAL_09_SUDDEN_TERMINATION', pass });
+}
+
+// Adversarial Cancellation Test: Deliberate unrelated R error containing word "interrupted"
+{
+  class AdversarialTextWorker extends MockWorkerHarness {
+    postMessage(msg) {
+      setTimeout(() => {
+        if (this.terminated) return;
+        if (msg.type === 'INIT') {
+          if (this.onmessage) this.onmessage({ data: { type: 'INIT_COMPLETE', id: msg.id, payload: { initialized: true } } });
+        } else if (msg.type === 'RUN_ANALYSIS') {
+          setTimeout(() => {
+            if (this.onmessage && !this.terminated) {
+              // Deliberately uses message text containing "interrupted", but code is NOT OPERATION_CANCELLED
+              this.onmessage({
+                data: {
+                  type: 'ERROR',
+                  id: msg.id,
+                  code: 'R_EVAL_ERROR',
+                  error: 'Error in evalR: process execution interrupted due to syntax constraint'
+                }
+              });
+            }
+          }, 40);
+        } else if (msg.type === 'INTERRUPT') {
+          if (this.onmessage) this.onmessage({ data: { type: 'INTERRUPT_ACK', id: msg.id } });
+        }
+      }, 10);
+    }
+  }
+
+  const m = new WorkerLifecycleManager(() => new AdversarialTextWorker(), { cancelTimeoutMs: 300 });
+  await m.initialize();
+  const p = m.submitAnalysis({ rows: [{ id: '1' }] });
+  let jobCaught = false;
+  p.catch(() => { jobCaught = true; });
+
+  const cancelRes = await m.cancelCurrentJob();
+  try { await withTimeout(p, 500, 'Adversarial cancellation job rejection'); } catch {}
+
+  const classifiedAsWorkerError = cancelRes.status === 'WORKER_ERROR';
+  const notGraceful = cancelRes.status !== 'GRACEFUL_INTERRUPT_CONFIRMED';
+  const statePostCancel = m.getState() === 'RECOVERABLE_ERROR';
+  const pass = classifiedAsWorkerError && notGraceful && statePostCancel && jobCaught;
+  assert(pass, 'Adversarial: Error containing "interrupted" text is NOT classified as graceful interrupt, worker safely terminated');
+  fatalAudit.tests.push({ id: 'ADVERSARIAL_INTERRUPT_TEXT', pass, status: cancelRes.status });
+}
+
+// Write Fatal Error Settlement Audit artifact to r1.2a
+const fatalAuditPath = path.resolve('experiments/cp-webr-02a/r1.2a/WORKER-FATAL-ERROR-SETTLEMENT-AUDIT.json');
+fs.writeFileSync(fatalAuditPath, JSON.stringify(fatalAudit, null, 2), 'utf-8');
+console.log(`Wrote fatal error settlement audit to ${fatalAuditPath}`);
 
 // -------------------------------------------------------------
 // 6. Template Integrity Verification

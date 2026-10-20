@@ -8,6 +8,7 @@ let adapter = null;
 let webR = null;
 let templateLoaded = false;
 let currentExecutionPromise = null;
+let activeInterruptJobId = null;
 
 // Pinned cryptographic digest of the authoritative R template (CP-WEBR-02A R1.1/R1.2)
 const PINNED_TEMPLATE_SHA256 = '7989403c7d093031b93a9c971a6d4f055101bab83c0ec4417fc52e4dceee24a4';
@@ -166,6 +167,36 @@ self.onmessage = async (event) => {
         break;
       }
 
+      case 'RUN_ADVERSARIAL_INTERRUPT_TEXT_WORKLOAD': {
+        // Deliberate unrelated R error containing the word "interrupted" in its message
+        // Must NOT be classified as GRACEFUL_INTERRUPT_CONFIRMED!
+        if (currentExecutionPromise) {
+          const err = new Error('Worker is already executing a workload');
+          err.code = 'CONCURRENCY_ERROR';
+          throw err;
+        }
+
+        const advPromise = (async () => {
+          try {
+            await new Promise((_, reject) => {
+              setTimeout(() => {
+                const err = new Error('Error in evalR: execution interrupted by syntax simulation');
+                err.code = 'R_RUNTIME_ERROR';
+                err.name = 'WebRError';
+                reject(err);
+              }, 80);
+            });
+            return { completed: false };
+          } finally {
+            currentExecutionPromise = null;
+          }
+        })();
+
+        currentExecutionPromise = advPromise;
+        await advPromise;
+        break;
+      }
+
       case 'RUN_UNINTERRUPTIBLE_WORKLOAD': {
         // Deliberately busy-waits ignoring webR.interrupt() to test timeout hard termination
         if (currentExecutionPromise) {
@@ -197,6 +228,8 @@ self.onmessage = async (event) => {
       }
 
       case 'INTERRUPT': {
+        const targetId = targetJobId || payload?.targetJobId || (typeof msgId === 'string' ? msgId.replace('interrupt_', '') : null);
+        activeInterruptJobId = targetId;
         if (webR) {
           try {
             await webR.interrupt();
@@ -205,10 +238,10 @@ self.onmessage = async (event) => {
           }
         }
         self.postMessage({
-          type: 'INTERRUPT_COMPLETE',
+          type: 'INTERRUPT_ACK',
           id: msgId,
-          targetJobId: targetJobId || payload?.targetJobId,
-          payload: { interrupted: true }
+          targetJobId: targetId,
+          payload: { acknowledged: true }
         });
         break;
       }
@@ -244,15 +277,31 @@ self.onmessage = async (event) => {
         throw new Error(`Unknown message type: "${type}"`);
     }
   } catch (err) {
-    const isInterrupt =
-      err.code === 'OPERATION_CANCELLED' ||
-      err.name === 'UnwindProtectException' ||
-      /interrupted|operation cancelled|non-local transfer of control/i.test(err.message);
-    self.postMessage({
-      type: 'ERROR',
-      id: msgId,
-      code: isInterrupt ? 'OPERATION_CANCELLED' : (err.code || 'WORKER_ERROR'),
-      error: err.message || String(err)
-    });
+    // Strictly require genuine WebR unwind exception and matching job correlation
+    const isGenuineWebRInterrupt =
+      (err.name === 'UnwindProtectException' || err.isWebRInterrupt === true || err.code === 'OPERATION_CANCELLED') &&
+      activeInterruptJobId !== null &&
+      (activeInterruptJobId === msgId || activeInterruptJobId === targetJobId);
+
+    if (isGenuineWebRInterrupt) {
+      const correlatedJobId = activeInterruptJobId;
+      activeInterruptJobId = null;
+      self.postMessage({
+        type: 'ERROR',
+        id: msgId,
+        targetJobId: correlatedJobId,
+        code: 'OPERATION_CANCELLED',
+        error: 'WebR evaluation unwound on user interrupt'
+      });
+    } else {
+      activeInterruptJobId = null;
+      self.postMessage({
+        type: 'ERROR',
+        id: msgId,
+        targetJobId: targetJobId || msgId,
+        code: err.code || 'WORKER_ERROR',
+        error: err.message || String(err)
+      });
+    }
   }
 };

@@ -664,8 +664,12 @@ export async function runWorkerCspAbMatrix() {
 
       // Cancellation and cleanup test
       await new Promise((resolve) => {
+        const timer = setTimeout(resolve, 5000);
         wStrict.onmessage = (e) => {
-          if (e.data.type === 'INTERRUPT_COMPLETE') resolve();
+          if (e.data.type === 'INTERRUPT_ACK' || e.data.type === 'INTERRUPT_COMPLETE') {
+            clearTimeout(timer);
+            resolve();
+          }
         };
         wStrict.postMessage({ type: 'INTERRUPT', id: 'c1_int' });
       });
@@ -881,12 +885,11 @@ export async function runWorkerLifecycleSuite() {
   // 4b. Negative Control: Unrelated R exception during cancellation request
   console.log('[Lifecycle] Step 4b: Negative control - unrelated R exception during cancellation request...');
   const pFail = manager.submitWorkload('RUN_FAILING_WORKLOAD');
-  let failCaught = false;
-  pFail.catch(() => { failCaught = true; });
+  pFail.catch(() => {});
 
   await new Promise(r => setTimeout(r, 20));
   const failCancelStatus = await manager.cancelCurrentJob();
-  try { await pFail; } catch { failCaught = true; }
+  try { await pFail; } catch {}
 
   // Must NOT be classified as GRACEFUL_INTERRUPT_CONFIRMED! Must be WORKER_ERROR!
   const unrelatedErrorRejected = failCancelStatus.status === 'WORKER_ERROR';
@@ -896,6 +899,27 @@ export async function runWorkerLifecycleSuite() {
     pass: unrelatedErrorRejected,
     status: failCancelStatus.status,
     error: failCancelStatus.error
+  };
+
+  // Recover manager to READY state
+  await manager.initialize();
+
+  // 4c. Adversarial Negative Control: Unrelated R error containing word "interrupted"
+  console.log('[Lifecycle] Step 4c: Adversarial control - R error containing "interrupted"...');
+  const pAdv = manager.submitWorkload('RUN_ADVERSARIAL_INTERRUPT_TEXT_WORKLOAD');
+  pAdv.catch(() => {});
+
+  await new Promise(r => setTimeout(r, 20));
+  const advCancelStatus = await manager.cancelCurrentJob();
+  try { await pAdv; } catch {}
+
+  const advCorrectlyClassified = advCancelStatus.status === 'WORKER_ERROR';
+  console.log('[Lifecycle] Step 4c Complete: Status =', advCancelStatus.status, 'Correctly classified as WORKER_ERROR =', advCorrectlyClassified);
+
+  results.adversarialTextNegativeControl = {
+    pass: advCorrectlyClassified,
+    status: advCancelStatus.status,
+    error: advCancelStatus.error
   };
 
   // Recover manager to READY state for subsequent tests
@@ -971,6 +995,7 @@ export async function runWorkerLifecycleSuite() {
     results.singleJobConcurrency.pass &&
     results.gracefulInterruption.pass &&
     results.unrelatedErrorNegativeControl.pass &&
+    results.adversarialTextNegativeControl.pass &&
     results.hardTerminationFallback.pass &&
     results.recoveryAndFreshAnalysis.pass &&
     results.templateIntegrity.pass

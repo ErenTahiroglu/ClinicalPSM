@@ -1,0 +1,439 @@
+{
+  "version": "1.2.0",
+  "generated_at": "2026-10-20T20:41:34.297Z",
+  "total_fixtures": 25,
+  "fixtures": {
+    "fix_01_well_conditioned": {
+      "name": "Well-conditioned logistic regression",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "100% exact bidirectional matched pair correspondence against full precision reference (119/119 pairs)",
+        "Full 300-unit keyed matching weights vector verified against reference (300/300 units)",
+        "Model coefficients match reference within frozen numerical tolerance eps <= 1e-4",
+        "Cobalt balance diagnostics verified: finite SMDs, valid variance ratios, and pre/post balance improvement",
+        "Cobalt numerical balance parity verified against official bal.tab reference (3 continuous covariates, eps <= 1e-4)",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
+      "details": {
+        "totalMatchedPairs": 119,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "REGRESSION_REFERENCE_VERIFIED"
+    },
+    "fix_02_mixed_types": {
+      "name": "Mixed factor types",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Categorical variable x_cat bound as factor with reference level 'low'",
+        "Model terms include contrast indicators 'cov_02med' and 'cov_02high'",
+        "Cobalt balance table correctly distinguishes continuous and categorical contrast indicators",
+        "Cobalt numerical balance parity verified against official bal.tab reference (continuous, binary, and categorical factor contrasts, eps <= 1e-4)",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
+      "details": {
+        "totalMatchedPairs": 156,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_03_ref_level_change": {
+      "name": "Reference level change",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Categorical variable x_cat bound as factor with reference level 'med'",
+        "Model terms include contrast indicators 'cov_02low' and 'cov_02high'",
+        "Verified exact GLM dummy-coding contrast transformation theorem between reference low and reference med (eps <= 1e-4)",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
+      "details": {
+        "totalMatchedPairs": 156,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_04_input_row_order": {
+      "name": "Row order permutation",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Exact pair identity invariant under row order permutation by unit ID",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
+      "details": {
+        "totalMatchedPairs": 119,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_05_exact_distance_ties": {
+      "name": "Exact distance ties",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Exact distance ties handled deterministically under m.order=largest",
+        "50/50 treated units matched to controls",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
+      "details": {
+        "totalMatchedPairs": 50,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_06_no_caliper_nearest": {
+      "name": "No-caliper nearest neighbor",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Unconstrained nearest-neighbor matching formed 119 pairs (zero caliper restriction)",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
+      "details": {
+        "totalMatchedPairs": 119,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_07_prob_scale_caliper": {
+      "name": "Probability scale caliper",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Probability-scale unstandardized caliper (0.1) propagated and applied on logit scale",
+        "Every matched pair distance satisfies pair_dist <= 0.1 on matching scale",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
+      "details": {
+        "totalMatchedPairs": 119,
+        "effectiveCaliper": 0.1,
+        "distanceScale": "logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_08_linear_logit_caliper": {
+      "name": "Linear-logit caliper",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Linear-logit unstandardized caliper (0.2) propagated and applied on linear.logit scale",
+        "Every matched pair distance satisfies pair_dist <= 0.2 on linear.logit scale",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
+      "details": {
+        "totalMatchedPairs": 119,
+        "effectiveCaliper": 0.2,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_09_standardized_caliper": {
+      "name": "Standardized distance caliper",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Standardized caliper computed via sd(distance[!discarded]): effective raw width = 0.0309",
+        "All 114 matched pairs satisfy pair_dist <= 0.0309",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
+      "details": {
+        "totalMatchedPairs": 114,
+        "effectiveCaliper": 0.030861520481003147,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_10_whole_vs_pooled_sd": {
+      "name": "Whole-sample vs pooled SD difference",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Standardized caliper on differing treated/control SDs: effective raw width = 0.8690",
+        "21 matched pairs formed satisfying caliper bound",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
+      "details": {
+        "totalMatchedPairs": 21,
+        "effectiveCaliper": 0.8690320210741936,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_11_pre_match_discard": {
+      "name": "Pre-match discarded units with standardized caliper",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Common support discard (both): discarded units properly accounted for",
+        "Sample accounting exact: completeCases (200) == matched (32) + unmatched (64) + discarded (4)",
+        "All 16 matched pairs satisfy effective caliper",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
+      "details": {
+        "totalMatchedPairs": 16,
+        "effectiveCaliper": 0.3943529622251058,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_12_caliper_unmatched": {
+      "name": "Caliper unmatched units",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Strict caliper 0.05 formed 117 pairs with 2 unmatched treated units",
+        "All matched pair distances satisfy pair_dist <= 0.05",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
+      "details": {
+        "totalMatchedPairs": 117,
+        "effectiveCaliper": 0.05,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_13_more_treated_than_control": {
+      "name": "More treated than control",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Fewer controls (75) than treated (150); matched pairs bounded by control pool (75 pairs)",
+        "75 treated units remain unmatched",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
+      "details": {
+        "totalMatchedPairs": 75,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_14_more_controls_than_treated": {
+      "name": "More controls than treated",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "More controls (160) than treated (40); all 40 treated units matched",
+        "120 control units remain unmatched",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
+      "details": {
+        "totalMatchedPairs": 40,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_15_quasi_separation": {
+      "name": "Quasi-separation",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Quasi-separation handled with GLM convergence and valid balance diagnostics",
+        "Automated separation safety remains explicitly BLOCKED",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
+      "details": {
+        "totalMatchedPairs": 50,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_16_complete_separation": {
+      "name": "Complete separation",
+      "classification": "NUMERICAL_TOLERANCE_EXCEPTIONS",
+      "pass": true,
+      "assertions": [
+        "Extreme coefficient standard error flagged: max SE = 39815.88 > 1000",
+        "Conservative non-diagnostic safeguard triggered; publication restricted",
+        "Automated separation detection remains explicitly BLOCKED"
+      ],
+      "details": {
+        "glmConvergence": true,
+        "maxCoefficientStandardError": 39815.87849877388,
+        "safeguardTriggered": true,
+        "publicationVerdict": "OUTPUT_GENERATION_RESTRICTED",
+        "outputGenerationAllowed": false
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_17_rank_deficient": {
+      "name": "Rank-deficient design matrix",
+      "classification": "DIAGNOSTIC_ONLY_RESULTS",
+      "pass": true,
+      "assertions": [
+        "Collinear rank-deficient term dropped and marked aliased=true",
+        "Publication restricted due to singular design matrix"
+      ],
+      "details": {
+        "hasAliased": true,
+        "matchedPairs": 39,
+        "publicationVerdict": "OUTPUT_GENERATION_RESTRICTED"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_18_zero_variance": {
+      "name": "Zero-variance covariate",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Zero-variance constant covariate dropped from model matrix",
+        "Publication restricted due to single non-informative predictor",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
+      "details": {
+        "totalMatchedPairs": 43,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_GENERATION_RESTRICTED"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_19_missing_values": {
+      "name": "Missing covariate values",
+      "classification": "EXPECTED_NATIVE_REFERENCE_ERRORS",
+      "pass": true,
+      "assertions": [
+        "Fail-closed MISSING_COVARIATE triggered on missing values",
+        "Zero silent imputation or NaN coercion permitted"
+      ],
+      "details": {
+        "code": "MISSING_COVARIATE",
+        "error": "MISSING_DATA_REJECTED: Missing values detected in covariate \"x1\" at rows: [sub_0005]"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_19b_missing_treatment": {
+      "name": "Missing treatment value",
+      "classification": "EXPECTED_NATIVE_REFERENCE_ERRORS",
+      "pass": true,
+      "assertions": [
+        "Fail-closed MISSING_TREATMENT triggered on missing values",
+        "Zero silent imputation or NaN coercion permitted"
+      ],
+      "details": {
+        "code": "MISSING_TREATMENT",
+        "error": "MISSING_DATA_REJECTED: Missing value detected in treatment column \"treat\" at rows: [sub_0012]"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_20_malformed_category": {
+      "name": "Malformed category values",
+      "classification": "PRODUCT_POLICY_REJECTIONS",
+      "pass": true,
+      "assertions": [
+        "Rejected unlisted/blank category observation under fail-closed missingness policy",
+        "Historical manifest expectation: SUCCESS; Documented ClinicalPSM versioned policy override: PRODUCT_POLICY_REJECTIONS"
+      ],
+      "details": {
+        "code": "UNLISTED_FACTOR_OBSERVATION_REJECTED",
+        "error": "UNLISTED_FACTOR_OBSERVATION_REJECTED: Value \"0\" at row sub_0100 is not listed in declared levels [ValidGroupA, ValidGroupB] for covariate \"cat_var\"",
+        "policy_override": "ClinicalPSM strict categorical fail-closed policy rejects unlisted/blank category values (manifest historical expectation: SUCCESS)"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_21_extreme_propensities": {
+      "name": "Extreme propensity scores",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Extreme propensities near 0 and 1 handled with GLM non-convergence warning trapped",
+        "Publication restricted under conservative numerical safeguard",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
+      "details": {
+        "totalMatchedPairs": 60,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_GENERATION_RESTRICTED"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_22_small_sample": {
+      "name": "Small degenerate sample",
+      "classification": "SUCCESSFUL_ANALYSES",
+      "pass": true,
+      "assertions": [
+        "Small sample N=10 (4 treated, 6 control) formed 4 matched pairs without crash",
+        "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
+      ],
+      "details": {
+        "totalMatchedPairs": 4,
+        "effectiveCaliper": null,
+        "distanceScale": "linear.logit",
+        "pairDistancesValid": true,
+        "publicationVerdict": "OUTPUT_READY"
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_23_no_eligible_match": {
+      "name": "No eligible match",
+      "classification": "EXPECTED_NATIVE_REFERENCE_ERRORS",
+      "pass": true,
+      "assertions": [
+        "Zero eligible matches correctly identified and handled under strict caliper 0.01",
+        "Safe handling of empty match matrix without unhandled null pointer"
+      ],
+      "details": {
+        "status": "EXPECTED_ZERO_MATCHES",
+        "error": "Error in unknown source: No units were matched."
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    },
+    "fix_24_duplicate_ids": {
+      "name": "Duplicate unit IDs",
+      "classification": "PRODUCT_POLICY_REJECTIONS",
+      "pass": true,
+      "assertions": [
+        "Rejected duplicate unit ID at ingestion boundary",
+        "Fail-closed integrity policy enforced before R memory allocation"
+      ],
+      "details": {
+        "code": "DUPLICATE_UNIT_ID_REJECTED",
+        "error": "DUPLICATE_UNIT_ID_REJECTED: Duplicate row identifier detected: \"sub_0001\""
+      },
+      "comparator_status": "WEB_R_INTERNAL_PARITY"
+    }
+  }
+}

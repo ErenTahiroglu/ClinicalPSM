@@ -51,7 +51,12 @@ export class WorkerLifecycleManager {
 
     try {
       if (this.worker) {
-        try { this.worker.terminate(); } catch {}
+        try {
+          this.worker.onmessage = null;
+          this.worker.onerror = null;
+          this.worker.onmessageerror = null;
+          this.worker.terminate();
+        } catch {}
         this.worker = null;
       }
       this.messageHandlers.clear();
@@ -69,22 +74,39 @@ export class WorkerLifecycleManager {
       this.setState('READY', { initResult });
       return initResult;
     } catch (err) {
-      this.setState('BLOCKED', { error: err.message });
+      if (this.worker) {
+        try {
+          this.worker.onmessage = null;
+          this.worker.onerror = null;
+          this.worker.onmessageerror = null;
+          this.worker.terminate();
+        } catch {}
+        this.worker = null;
+      }
+      this.messageHandlers.clear();
+      this.setState('RECOVERABLE_ERROR', { error: err.message, phase: 'INITIALIZATION' });
       throw err;
     }
   }
 
   setupWorkerListeners() {
-    this.worker.onmessage = (event) => {
+    const workerInstance = this.worker;
+
+    workerInstance.onmessage = (event) => {
+      // Discard messages from stale or previously terminated worker instances
+      if (this.worker !== workerInstance) {
+        return;
+      }
       const data = event.data || {};
-      const { id, payload, error, type, targetJobId } = data;
+      const { id, payload, error, type, targetJobId, code } = data;
 
       if (id && this.messageHandlers.has(id)) {
         const handler = this.messageHandlers.get(id);
         this.messageHandlers.delete(id);
         if (error) {
           const err = new Error(error);
-          if (data.code) err.code = data.code;
+          if (code) err.code = code;
+          if (targetJobId) err.targetJobId = targetJobId;
           handler.reject(err);
         } else {
           handler.resolve(payload);
@@ -92,36 +114,77 @@ export class WorkerLifecycleManager {
         return;
       }
 
-      // Handle unsolicited error reports from worker
-      if (type === 'ERROR') {
-        const err = new Error(error || 'Worker error event');
-        if (data.code) err.code = data.code;
-        this.handleWorkerLevelError(err);
+      // Discard unexpected or stale messages with an id
+      if (id) {
+        console.warn(`[WorkerLifecycle] Discarding stale or unhandled worker message id=${id}, type=${type}`);
         return;
       }
 
-      // Discard unexpected or stale messages
-      if (id) {
-        console.warn(`[WorkerLifecycle] Discarding stale or unhandled worker message id=${id}, type=${type}`);
+      // Handle unsolicited global error reports from worker
+      if (type === 'ERROR') {
+        const err = new Error(error || 'Worker unsolicited error event');
+        if (code) err.code = code;
+        this.handleWorkerLevelError(err, 'UNSOLICITED_WORKER_ERROR');
+        return;
       }
     };
 
-    this.worker.onerror = (err) => {
-      console.error('Worker error caught in lifecycle manager:', err);
-      const errorObj = new Error(`Worker execution error: ${err.message || 'Unknown error'}`);
-      this.handleWorkerLevelError(errorObj);
+    workerInstance.onerror = (event) => {
+      if (this.worker !== workerInstance) return;
+      const msg = event?.message || (typeof event === 'string' ? event : 'Worker execution error');
+      const err = new Error(`Worker onerror: ${msg}`);
+      err.code = 'WORKER_ONERROR';
+      this.handleWorkerLevelError(err, 'WORKER_ONERROR');
+    };
+
+    workerInstance.onmessageerror = (_event) => {
+      if (this.worker !== workerInstance) return;
+      const err = new Error('Worker onmessageerror: Message deserialization failure');
+      err.code = 'WORKER_ONMESSAGEERROR';
+      this.handleWorkerLevelError(err, 'WORKER_ONMESSAGEERROR');
     };
   }
 
-  handleWorkerLevelError(err) {
-    if (this.currentJob && !this.currentJob.settled) {
-      this.currentJob.settled = true;
-      this.currentJob.state = 'WORKER_ERROR';
-      this.currentJob.error = err.message;
-      this.currentJob.reject(err);
-      this.currentJob = null;
+  handleWorkerLevelError(err, source = 'WORKER_ERROR') {
+    // 1. Terminate the broken worker instance and detach listeners
+    if (this.worker) {
+      try {
+        this.worker.onmessage = null;
+        this.worker.onerror = null;
+        this.worker.onmessageerror = null;
+        this.worker.terminate();
+      } catch (e) {
+        console.warn('Error during worker.terminate():', e);
+      }
+      this.worker = null;
     }
-    this.setState('RECOVERABLE_ERROR', { error: err.message });
+
+    // 2. Settle current active job if not settled
+    if (this.currentJob && !this.currentJob.settled) {
+      const activeJob = this.currentJob;
+      activeJob.state = 'WORKER_ERROR';
+      this.currentJob = null;
+      activeJob.reject(err);
+    }
+
+    // 3. Reject all pending message handlers and clear map
+    for (const [id, handler] of this.messageHandlers.entries()) {
+      try {
+        const handlerErr = new Error(`Worker fatal failure (${source}): operation aborted for id=${id}. ${err.message}`);
+        handlerErr.code = 'WORKER_FATAL_ERROR';
+        handler.reject(handlerErr);
+      } catch {}
+    }
+    this.messageHandlers.clear();
+
+    // 4. Clean up any pending cancellation listeners/timers
+    if (this.activeCancellationCleanup) {
+      try { this.activeCancellationCleanup(); } catch {}
+      this.activeCancellationCleanup = null;
+    }
+
+    // 5. Transition state to RECOVERABLE_ERROR
+    this.setState('RECOVERABLE_ERROR', { error: err.message, source });
   }
 
   /**
@@ -148,7 +211,7 @@ export class WorkerLifecycleManager {
         err.code = 'CONCURRENCY_ERROR';
         throw err;
       }
-      throw new Error(`Worker not ready for analysis: current state is ${this.state}`);
+      throw new Error(`Worker not ready for analysis: current state is ${this.state}. Call initialize() first.`);
     }
 
     const jobId = `job_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -169,6 +232,7 @@ export class WorkerLifecycleManager {
         reject: (err) => {
           if (jobRecord.settled) return;
           jobRecord.settled = true;
+          jobRecord.error = err?.message || String(err);
           reject(err);
         }
       };
@@ -176,6 +240,7 @@ export class WorkerLifecycleManager {
 
       this.sendMessage(type, payload, jobId)
         .then((result) => {
+          if (jobRecord.settled) return;
           if (jobRecord.state === 'INTERRUPT_REQUESTED' || jobRecord.state === 'GRACEFUL_INTERRUPT_CONFIRMED' || jobRecord.state === 'HARD_TERMINATED') {
             // Late success received after cancellation was requested!
             // Computation failed to cease upon interrupt request.
@@ -194,14 +259,14 @@ export class WorkerLifecycleManager {
           jobRecord.resolve(result);
         })
         .catch((err) => {
+          if (jobRecord.settled) return;
           if (jobRecord.state === 'INTERRUPT_REQUESTED') {
-            // Explicitly validate that error is a genuine interruption, NOT an unrelated R runtime error
-            const isInterruptError =
-              err.code === 'OPERATION_CANCELLED' ||
-              err.name === 'UnwindProtectException' ||
-              /interrupted|operation cancelled|webR\.interrupt|non-local transfer of control/i.test(err.message);
+            // Strict cancellation verification: requires OPERATION_CANCELLED code, NO text-based regex inference
+            const isConfirmedCancellation =
+              err.code === 'OPERATION_CANCELLED' &&
+              (err.targetJobId ? err.targetJobId === jobId : true);
 
-            if (isInterruptError) {
+            if (isConfirmedCancellation) {
               // Confirmed graceful cessation from webR.interrupt()
               jobRecord.state = 'GRACEFUL_INTERRUPT_CONFIRMED';
               const cancelErr = new Error(`OPERATION_CANCELLED: Job ${jobId} was interrupted by user request`);
@@ -210,10 +275,19 @@ export class WorkerLifecycleManager {
               this.setState('READY');
               jobRecord.reject(cancelErr);
             } else {
-              // Unrelated execution error during cancellation window! Must NOT be classified as graceful interrupt!
+              // Unrelated execution error or unverified cancellation! Must NOT be classified as graceful interrupt!
               jobRecord.state = 'WORKER_ERROR';
               jobRecord.error = err.message;
               this.currentJob = null;
+              if (this.worker) {
+                try {
+                  this.worker.onmessage = null;
+                  this.worker.onerror = null;
+                  this.worker.onmessageerror = null;
+                  this.worker.terminate();
+                } catch {}
+                this.worker = null;
+              }
               this.setState('RECOVERABLE_ERROR', { jobId, error: err.message });
               jobRecord.reject(err);
             }
@@ -248,10 +322,20 @@ export class WorkerLifecycleManager {
       this.worker.postMessage({
         type: 'INTERRUPT',
         id: `interrupt_${activeJob.id}`,
-        targetJobId: activeJob.id
+        targetJobId: activeJob.id,
+        payload: { targetJobId: activeJob.id }
       });
     } catch (err) {
       console.warn('Failed to post INTERRUPT message, proceeding to hard termination:', err);
+      this.terminateAndRecover('Failed to post INTERRUPT message');
+      return {
+        status: 'HARD_TERMINATED',
+        jobId: activeJob.id,
+        interruptRequested: true,
+        cancellationCompleted: true,
+        durationMs: performance.now() - interruptRequestedAt,
+        error: err.message
+      };
     }
 
     return new Promise((resolve) => {
@@ -262,6 +346,7 @@ export class WorkerLifecycleManager {
         resolved = true;
         clearTimeout(timer);
         removeListener();
+        this.activeCancellationCleanup = null;
         const durationMs = performance.now() - interruptRequestedAt;
 
         resolve({
@@ -275,7 +360,7 @@ export class WorkerLifecycleManager {
       };
 
       const timer = setTimeout(() => {
-        if (this.state === 'CANCELLING') {
+        if (this.state === 'CANCELLING' && !resolved) {
           activeJob.state = 'HARD_TERMINATED';
           activeJob.error = 'Timeout exceeded waiting for graceful cessation';
           this.terminateAndRecover('Hard termination fallback after cancellation timeout');
@@ -294,6 +379,23 @@ export class WorkerLifecycleManager {
           finishCancellation('WORKER_ERROR', new Error(activeJob.error || 'Worker execution error during cancellation'));
         }
       });
+
+      this.activeCancellationCleanup = () => {
+        clearTimeout(timer);
+        removeListener();
+        if (!resolved) {
+          resolved = true;
+          const status = activeJob.state === 'WORKER_ERROR' ? 'WORKER_ERROR' : 'HARD_TERMINATED';
+          resolve({
+            status,
+            jobId: activeJob.id,
+            interruptRequested: true,
+            cancellationCompleted: true,
+            durationMs: performance.now() - interruptRequestedAt,
+            error: activeJob.error || 'Aborted by lifecycle manager error'
+          });
+        }
+      };
     });
   }
 
@@ -303,6 +405,9 @@ export class WorkerLifecycleManager {
   terminateAndRecover(reason = 'Manual termination') {
     if (this.worker) {
       try {
+        this.worker.onmessage = null;
+        this.worker.onerror = null;
+        this.worker.onmessageerror = null;
         this.worker.terminate();
       } catch (err) {
         console.warn('Error during worker.terminate():', err);
@@ -313,19 +418,25 @@ export class WorkerLifecycleManager {
     if (this.currentJob && !this.currentJob.settled) {
       const err = new Error(`Job terminated: ${reason}`);
       err.code = 'HARD_TERMINATED';
-      this.currentJob.reject(err);
+      const activeJob = this.currentJob;
       this.currentJob = null;
+      activeJob.reject(err);
     }
 
     // Clear all pending message handlers and reject their promises
-    for (const handler of this.messageHandlers.values()) {
+    for (const [id, handler] of this.messageHandlers.entries()) {
       try {
-        const err = new Error(`Worker terminated (${reason}): pending operation aborted.`);
+        const err = new Error(`Worker terminated (${reason}): pending operation aborted for id=${id}.`);
         err.code = 'WORKER_TERMINATED';
         handler.reject(err);
       } catch {}
     }
     this.messageHandlers.clear();
+
+    if (this.activeCancellationCleanup) {
+      try { this.activeCancellationCleanup(); } catch {}
+      this.activeCancellationCleanup = null;
+    }
 
     this.setState('RECOVERABLE_ERROR', { reason });
   }

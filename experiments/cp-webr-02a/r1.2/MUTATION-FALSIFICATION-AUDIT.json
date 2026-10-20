@@ -1,7 +1,7 @@
 {
-  "suite": "CP-WEBR-02A R1.2 Genuine Falsifiable Mutation Audit",
-  "executed_at": "2026-10-20T18:21:02.955Z",
-  "total_mutations": 7,
+  "suite": "CP-WEBR-02A R1.2a Genuine Falsifiable Mutation Audit",
+  "executed_at": "2026-10-20T20:41:40.948Z",
+  "total_mutations": 12,
   "mutations": [
     {
       "mutation_id": "MUT_01_PAIR_CONTROL_ID",
@@ -37,14 +37,69 @@
       "pass": true
     },
     {
-      "mutation_id": "MUT_04_BALANCE_SMD",
+      "mutation_id": "MUT_COBALT_01_MATCHED_SMD",
       "target_fixture": "fix_01_well_conditioned",
-      "mutation_description": "Corrupt matched SMD of age to 99.0",
+      "mutation_description": "Perturb matched SMD of age by +0.05 (finite and plausible)",
       "original_value": -0.007499609443220876,
-      "mutated_value": 99,
-      "verifier_invoked": "verifyBalanceDiagnostics",
-      "expected_verifier_failure": "Matched SMD is unreasonably large",
-      "observed_failure": "Matched SMD for cov_00 is unreasonably large: 99",
+      "mutated_value": 0.04250039055677913,
+      "verifier_invoked": "compareCobaltBalanceDiagnostics",
+      "expected_verifier_failure": "Numerical difference for \"matched_smd\" on \"age\" exceeds tolerance",
+      "observed_failure": "Numerical difference for \"matched_smd\" on \"age\" (5.0000e-2) exceeds tolerance (0.0001)",
+      "pass": true
+    },
+    {
+      "mutation_id": "MUT_COBALT_02_BINARY_RAW_DIFF",
+      "target_fixture": "fix_02_mixed_types",
+      "mutation_description": "Perturb binary raw difference matched of x_bin by +0.05",
+      "original_value": 0.01282051282051283,
+      "mutated_value": 0.06282051282051283,
+      "verifier_invoked": "compareCobaltBalanceDiagnostics",
+      "expected_verifier_failure": "Numerical difference for \"raw_diff_matched\" on \"x_bin\" exceeds tolerance",
+      "observed_failure": "Numerical difference for \"raw_diff_matched\" on \"x_bin\" (5.0000e-2) exceeds tolerance (0.0001)",
+      "pass": true
+    },
+    {
+      "mutation_id": "MUT_COBALT_03_CATEGORICAL_SMD",
+      "target_fixture": "fix_02_mixed_types",
+      "mutation_description": "Perturb categorical contrast matched SMD of cov_02_med by +0.05",
+      "original_value": 0.013598207330510481,
+      "mutated_value": 0.06359820733051048,
+      "verifier_invoked": "compareCobaltBalanceDiagnostics",
+      "expected_verifier_failure": "Numerical difference for \"matched_smd\" on \"cov_02_med\" exceeds tolerance",
+      "observed_failure": "Numerical difference for \"matched_smd\" on \"cov_02_med\" (5.0000e-2) exceeds tolerance (0.0001)",
+      "pass": true
+    },
+    {
+      "mutation_id": "MUT_COBALT_04_UNDEFINED_REPLACED_WITH_ZERO",
+      "target_fixture": "fix_01_well_conditioned",
+      "mutation_description": "Incorrectly replace null unadjustedVarianceRatio for age with 0.0",
+      "original_value": null,
+      "mutated_value": 0,
+      "verifier_invoked": "compareCobaltBalanceDiagnostics",
+      "expected_verifier_failure": "Expected undefined statistic \"unadjusted_variance_ratio\" for \"age\" to be null, got 0",
+      "observed_failure": "Expected undefined statistic \"unadjusted_variance_ratio\" for \"age\" to be null, got 0",
+      "pass": true
+    },
+    {
+      "mutation_id": "MUT_COBALT_05_MISSING_ROW",
+      "target_fixture": "fix_01_well_conditioned",
+      "mutation_description": "Remove sbp row from cobalt balanceTable",
+      "original_value": 3,
+      "mutated_value": 2,
+      "verifier_invoked": "compareCobaltBalanceDiagnostics",
+      "expected_verifier_failure": "Missing expected covariate \"sbp\" in balanceTable",
+      "observed_failure": "Missing expected covariate \"sbp\" in balanceTable for fix_01_well_conditioned",
+      "pass": true
+    },
+    {
+      "mutation_id": "MUT_COBALT_06_EXTRA_ROW",
+      "target_fixture": "fix_01_well_conditioned",
+      "mutation_description": "Inject extraneous spurious covariate row into cobalt balanceTable",
+      "original_value": 3,
+      "mutated_value": 4,
+      "verifier_invoked": "compareCobaltBalanceDiagnostics",
+      "expected_verifier_failure": "Row count mismatch in balanceTable",
+      "observed_failure": "Row count mismatch in balanceTable for fix_01_well_conditioned: expected 3 (age, bmi, sbp), got 4 (age, bmi, sbp, spurious_covariate)",
       "pass": true
     },
     {

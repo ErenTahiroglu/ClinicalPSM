@@ -1,6 +1,6 @@
 {
   "version": "1.2.0",
-  "generated_at": "2026-10-20T18:20:56.118Z",
+  "generated_at": "2026-10-20T20:41:34.297Z",
   "total_fixtures": 25,
   "fixtures": {
     "fix_01_well_conditioned": {
@@ -12,6 +12,7 @@
         "Full 300-unit keyed matching weights vector verified against reference (300/300 units)",
         "Model coefficients match reference within frozen numerical tolerance eps <= 1e-4",
         "Cobalt balance diagnostics verified: finite SMDs, valid variance ratios, and pre/post balance improvement",
+        "Cobalt numerical balance parity verified against official bal.tab reference (3 continuous covariates, eps <= 1e-4)",
         "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
       ],
       "details": {
@@ -31,6 +32,7 @@
         "Categorical variable x_cat bound as factor with reference level 'low'",
         "Model terms include contrast indicators 'cov_02med' and 'cov_02high'",
         "Cobalt balance table correctly distinguishes continuous and categorical contrast indicators",
+        "Cobalt numerical balance parity verified against official bal.tab reference (continuous, binary, and categorical factor contrasts, eps <= 1e-4)",
         "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
       ],
       "details": {
@@ -191,7 +193,7 @@
       "pass": true,
       "assertions": [
         "Common support discard (both): discarded units properly accounted for",
-        "Sample accounting exact: totalCases (undefined) == matched (32) + unmatched (64) + discarded (4)",
+        "Sample accounting exact: completeCases (200) == matched (32) + unmatched (64) + discarded (4)",
         "All 16 matched pairs satisfy effective caliper",
         "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
       ],

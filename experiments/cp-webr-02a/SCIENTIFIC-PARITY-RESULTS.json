@@ -1,7 +1,7 @@
 {
   "suite": "CP-WEBR-02A R1.2 Scientific Parity Suite (25 Preserved Fixtures)",
-  "executed_at": "2026-10-20T18:20:56.102Z",
-  "commit_sha": "12f79579c6e59d174a8d2bc91f5cc5819acd6b64",
+  "executed_at": "2026-10-20T20:41:34.281Z",
+  "commit_sha": "338d89a281c7d7d09e116498a6b8d106199f3881",
   "toolchain": {
     "webr": "0.6.0",
     "r": "4.6.0",
@@ -42,6 +42,7 @@
         "Full 300-unit keyed matching weights vector verified against reference (300/300 units)",
         "Model coefficients match reference within frozen numerical tolerance eps <= 1e-4",
         "Cobalt balance diagnostics verified: finite SMDs, valid variance ratios, and pre/post balance improvement",
+        "Cobalt numerical balance parity verified against official bal.tab reference (3 continuous covariates, eps <= 1e-4)",
         "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
       ],
       "details": {
@@ -62,6 +63,7 @@
         "Categorical variable x_cat bound as factor with reference level 'low'",
         "Model terms include contrast indicators 'cov_02med' and 'cov_02high'",
         "Cobalt balance table correctly distinguishes continuous and categorical contrast indicators",
+        "Cobalt numerical balance parity verified against official bal.tab reference (continuous, binary, and categorical factor contrasts, eps <= 1e-4)",
         "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
       ],
       "details": {
@@ -231,7 +233,7 @@
       "pass": true,
       "assertions": [
         "Common support discard (both): discarded units properly accounted for",
-        "Sample accounting exact: totalCases (undefined) == matched (32) + unmatched (64) + discarded (4)",
+        "Sample accounting exact: completeCases (200) == matched (32) + unmatched (64) + discarded (4)",
         "All 16 matched pairs satisfy effective caliper",
         "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
       ],
@@ -504,8 +506,33 @@
       "caught": true
     },
     {
-      "mutation_id": "MUT_04_BALANCE_SMD",
-      "description": "Corrupt matched SMD of age to 99.0",
+      "mutation_id": "MUT_COBALT_01_MATCHED_SMD",
+      "description": "Perturb matched SMD of age by +0.05 (finite and plausible)",
+      "caught": true
+    },
+    {
+      "mutation_id": "MUT_COBALT_02_BINARY_RAW_DIFF",
+      "description": "Perturb binary raw difference matched of x_bin by +0.05",
+      "caught": true
+    },
+    {
+      "mutation_id": "MUT_COBALT_03_CATEGORICAL_SMD",
+      "description": "Perturb categorical contrast matched SMD of cov_02_med by +0.05",
+      "caught": true
+    },
+    {
+      "mutation_id": "MUT_COBALT_04_UNDEFINED_REPLACED_WITH_ZERO",
+      "description": "Incorrectly replace null unadjustedVarianceRatio for age with 0.0",
+      "caught": true
+    },
+    {
+      "mutation_id": "MUT_COBALT_05_MISSING_ROW",
+      "description": "Remove sbp row from cobalt balanceTable",
+      "caught": true
+    },
+    {
+      "mutation_id": "MUT_COBALT_06_EXTRA_ROW",
+      "description": "Inject extraneous spurious covariate row into cobalt balanceTable",
       "caught": true
     },
     {

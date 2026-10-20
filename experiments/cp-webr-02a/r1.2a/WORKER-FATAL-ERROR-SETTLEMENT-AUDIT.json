@@ -1,0 +1,51 @@
+{
+  "suite": "CP-WEBR-02A R1.2a Worker Fatal Error Settlement Audit",
+  "executed_at": "2026-10-20T20:41:20.722Z",
+  "total_tests": 10,
+  "tests": [
+    {
+      "id": "FATAL_01_ONERROR",
+      "pass": true,
+      "error": "Worker onerror: Crash: Worker out of memory"
+    },
+    {
+      "id": "FATAL_02_ONMESSAGEERROR",
+      "pass": true,
+      "error": "Worker onmessageerror: Message deserialization failure"
+    },
+    {
+      "id": "FATAL_03_UNSOLICITED_ERROR",
+      "pass": true,
+      "error": "Unsolicited fatal WebAssembly trap"
+    },
+    {
+      "id": "FATAL_04_INIT_FAILURE",
+      "pass": true
+    },
+    {
+      "id": "FATAL_05_MULTIPLE_HANDLERS",
+      "pass": true
+    },
+    {
+      "id": "FATAL_06_STALE_WORKER_ISOLATION",
+      "pass": true
+    },
+    {
+      "id": "FATAL_07_EXACTLY_ONCE_SETTLEMENT",
+      "pass": true
+    },
+    {
+      "id": "FATAL_08_ERROR_DURING_CANCEL",
+      "pass": true
+    },
+    {
+      "id": "FATAL_09_SUDDEN_TERMINATION",
+      "pass": true
+    },
+    {
+      "id": "ADVERSARIAL_INTERRUPT_TEXT",
+      "pass": true,
+      "status": "WORKER_ERROR"
+    }
+  ]
+}

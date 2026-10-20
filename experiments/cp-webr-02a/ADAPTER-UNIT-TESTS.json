@@ -1,7 +1,7 @@
 {
   "suite": "CP-WEBR-02A R1.1 Adapter Unit & Adversarial Suite",
-  "executed_at": "2026-10-20T18:20:52.089Z",
-  "tests_passed": 40,
+  "executed_at": "2026-10-20T20:41:20.473Z",
+  "tests_passed": 51,
   "tests_failed": 0,
   "cases": [
     {
@@ -191,6 +191,61 @@
     },
     {
       "name": "Stale or unknown worker message safely ignored",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Fatal 1: Worker onerror rejects pending job, clears handlers, and recovers cleanly",
+      "status": "PASS",
+      "details": "Worker onerror: Crash: Worker out of memory"
+    },
+    {
+      "name": "Fatal 2: Worker onmessageerror rejects pending job, clears handlers, and recovers cleanly",
+      "status": "PASS",
+      "details": "Worker onmessageerror: Message deserialization failure"
+    },
+    {
+      "name": "Fatal 3: Unsolicited fatal error rejects pending job and recovers cleanly",
+      "status": "PASS",
+      "details": "Unsolicited fatal WebAssembly trap"
+    },
+    {
+      "name": "Fatal 4: Initialization failure enters RECOVERABLE_ERROR without dangling worker and recovers",
+      "status": "PASS",
+      "details": "initThrow=true"
+    },
+    {
+      "name": "Fatal 5: Multiple pending message handlers are all rejected and cleared on fatal error",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Fatal 6 setup: Manager in READY state post-recovery",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Fatal 6: Stale worker messages and errors after recovery are safely ignored without state corruption",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Fatal 7: Exactly-once settlement enforced under duplicate events; consumer promise settles once",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Fatal 8: Worker error during cancellation settles both job and cancel promise without dangling",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Fatal 9: Sudden worker termination rejects job with HARD_TERMINATED and recovers cleanly",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Adversarial: Error containing \"interrupted\" text is NOT classified as graceful interrupt, worker safely terminated",
       "status": "PASS",
       "details": ""
     },

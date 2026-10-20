@@ -451,7 +451,7 @@ async function main() {
   const unitData = JSON.parse(fs.readFileSync(unitPath, 'utf8'));
   const currentTemplateSha256 = crypto.createHash('sha256').update(fs.readFileSync(templatePath, 'utf8')).digest('hex');
 
-  function deriveScientificGates(pData, uData, mData, currentCommit, currentTmpl, matrixData, mutationAudit) {
+  function deriveScientificGates(pData, uData, mData, currentCommit, currentTmpl, matrixData, mutationAudit, cobaltData, fatalAudit) {
     if (!pData || !uData || !mData) {
       throw new Error('Null evidence provided to deriveScientificGates');
     }
@@ -496,15 +496,15 @@ async function main() {
       Object.values(matrixData.fixtures).every(f => f.pass === true && Array.isArray(f.assertions) && f.assertions.length > 0)
     );
 
-    // Check mutations
+    // Check mutations (12 genuine mutations)
     const mutationsChecked = Array.isArray(pData.mutation_tests) &&
-      pData.mutation_tests.length === 7 &&
+      pData.mutation_tests.length === 12 &&
       pData.mutation_tests.every(m => m.caught === true);
 
     const mutationAuditPass = !mutationAudit || (
-      mutationAudit.total_mutations === 7 &&
+      mutationAudit.total_mutations === 12 &&
       Array.isArray(mutationAudit.mutations) &&
-      mutationAudit.mutations.length === 7 &&
+      mutationAudit.mutations.length === 12 &&
       mutationAudit.mutations.every(m => m.pass === true)
     );
 
@@ -512,6 +512,7 @@ async function main() {
     const singleEngine = (templateMatch && unitPass) ? 'PASS' : 'FAIL';
 
     // GATE 2: STRUCTURED_BINDING_AND_FACTOR_SEMANTICS
+    const fix01 = findFixture('fix_01_well_conditioned');
     const fix02 = findFixture('fix_02_mixed_types');
     const fix03 = findFixture('fix_03_ref_level_change');
     const fix20 = findFixture('fix_20_malformed_category');
@@ -556,13 +557,26 @@ async function main() {
     const pairCaliper = (unitPass && caliperAssertionsValid && mutationsChecked) ? 'PASS' : 'FAIL';
 
     // GATE 6: COBALT_BALANCE_PARITY
-    // Derived from executed numerical cobalt balance assertions, not arbitrary counts
-    const fix01 = findFixture('fix_01_well_conditioned');
+    // P0 R1.2a: Must require valid numerical comparison records against official bal.tab reference
+    let cobaltBalance = 'FAIL';
     const cobaltAssertionVerified = fix01?.assertions?.some(a =>
-      a.includes('Cobalt balance diagnostics verified: finite SMDs')
+      a.includes('Cobalt balance diagnostics verified') || a.includes('Cobalt numerical balance parity verified')
     );
-    const cobaltBalanceMutCaught = pData.mutation_tests?.find(m => m.mutation_id === 'MUT_04_BALANCE_SMD')?.caught === true;
-    const cobaltBalance = (allFixturesPassed && cobaltAssertionVerified && cobaltBalanceMutCaught) ? 'PASS' : 'FAIL';
+    if (cobaltData && Array.isArray(cobaltData.comparisons) && cobaltData.total_comparisons >= 40) {
+      const recordsValid = cobaltData.comparisons.every(c =>
+        typeof c.fixture_id === 'string' &&
+        typeof c.covariate_name === 'string' &&
+        typeof c.statistic_name === 'string' &&
+        c.reference_provenance === 'OFFICIAL_R_COBALT_BAL_TAB_EVALUATION' &&
+        typeof c.applicable_tolerance === 'number' &&
+        typeof c.absolute_numerical_difference === 'number' &&
+        c.absolute_numerical_difference <= c.applicable_tolerance &&
+        c.pass === true
+      );
+      if (recordsValid && cobaltData.all_comparisons_pass === true && allFixturesPassed && mutationsChecked && cobaltAssertionVerified) {
+        cobaltBalance = 'PASS';
+      }
+    }
 
     // GATE 7: FULL_FIXTURE_QUALIFICATION
     // Requires exact manifest match, every fixture passing with specific non-empty assertions, and matching accounting
@@ -590,6 +604,16 @@ async function main() {
     // GATE 9: CI_EVIDENCE_PROVENANCE
     const ciEvidence = (templateMatch && exactManifestMatch && pData.commit_sha === currentCommit) ? 'PASS' : 'FAIL';
 
+    // GATE 10: WORKER_LIFECYCLE_CORRECTNESS
+    // P0 R1.2a: Must depend on fatal-error settlement and recovery assertions
+    let workerLifecycleGate = 'FAIL';
+    if (fatalAudit && Array.isArray(fatalAudit.tests) && fatalAudit.total_tests === 10) {
+      const allFatalPassed = fatalAudit.tests.every(t => t.pass === true);
+      if (allFatalPassed && unitPass) {
+        workerLifecycleGate = 'PASS';
+      }
+    }
+
     return {
       SINGLE_SCIENTIFIC_ENGINE: singleEngine,
       STRUCTURED_BINDING_AND_FACTOR_SEMANTICS: structuredBinding,
@@ -599,15 +623,21 @@ async function main() {
       COBALT_BALANCE_PARITY: cobaltBalance,
       FULL_FIXTURE_QUALIFICATION: fullFixture,
       EXACT_PAIR_AND_WEIGHT_PARITY: exactPairWeight,
-      CI_EVIDENCE_PROVENANCE: ciEvidence
+      CI_EVIDENCE_PROVENANCE: ciEvidence,
+      WORKER_LIFECYCLE_CORRECTNESS: workerLifecycleGate
     };
   }
 
-  // Load auxiliary R1.2 audit artifacts
-  const matrixPath = path.resolve('experiments/cp-webr-02a/r1.2/FIXTURE-ASSERTION-MATRIX.json');
-  const mutationAuditPath = path.resolve('experiments/cp-webr-02a/r1.2/MUTATION-FALSIFICATION-AUDIT.json');
+  // Load auxiliary R1.2 and R1.2a audit artifacts
+  const matrixPath = path.resolve('experiments/cp-webr-02a/r1.2a/FIXTURE-ASSERTION-MATRIX.json');
+  const mutationAuditPath = path.resolve('experiments/cp-webr-02a/r1.2a/NUMERICAL-MUTATION-FALSIFICATION-AUDIT.json');
+  const cobaltMatrixPath = path.resolve('experiments/cp-webr-02a/r1.2a/COBALT-NUMERICAL-COMPARISON-MATRIX.json');
+  const fatalAuditPath = path.resolve('experiments/cp-webr-02a/r1.2a/WORKER-FATAL-ERROR-SETTLEMENT-AUDIT.json');
+
   const matrixData = fs.existsSync(matrixPath) ? JSON.parse(fs.readFileSync(matrixPath, 'utf8')) : null;
   const mutationAuditData = fs.existsSync(mutationAuditPath) ? JSON.parse(fs.readFileSync(mutationAuditPath, 'utf8')) : null;
+  const cobaltMatrixData = fs.existsSync(cobaltMatrixPath) ? JSON.parse(fs.readFileSync(cobaltMatrixPath, 'utf8')) : null;
+  const fatalAuditData = fs.existsSync(fatalAuditPath) ? JSON.parse(fs.readFileSync(fatalAuditPath, 'utf8')) : null;
 
   // Run comprehensive semantic falsification tests
   console.log('Running gate falsification positive controls...');
@@ -616,7 +646,7 @@ async function main() {
   const mutatedParityFail = JSON.parse(JSON.stringify(parityData));
   mutatedParityFail.fixtures_tested[0].pass = false;
   mutatedParityFail.verdict = 'FAIL';
-  const falsifiedGates1 = deriveScientificGates(mutatedParityFail, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData);
+  const falsifiedGates1 = deriveScientificGates(mutatedParityFail, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData, cobaltMatrixData, fatalAuditData);
   if (falsifiedGates1.FULL_FIXTURE_QUALIFICATION !== 'FAIL' || falsifiedGates1.EXACT_PAIR_AND_WEIGHT_PARITY !== 'FAIL') {
     throw new Error('FALSIFICATION_CHECK_FAILED: Gate evaluator accepted corrupted fixture pass state!');
   }
@@ -624,7 +654,7 @@ async function main() {
   // 2. Template digest tampering
   const mutatedTemplateFail = JSON.parse(JSON.stringify(parityData));
   mutatedTemplateFail.r_template_sha256 = '0000000000000000000000000000000000000000000000000000000000000000';
-  const falsifiedGates2 = deriveScientificGates(mutatedTemplateFail, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData);
+  const falsifiedGates2 = deriveScientificGates(mutatedTemplateFail, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData, cobaltMatrixData, fatalAuditData);
   if (falsifiedGates2.SINGLE_SCIENTIFIC_ENGINE !== 'FAIL' || falsifiedGates2.CI_EVIDENCE_PROVENANCE !== 'FAIL') {
     throw new Error('FALSIFICATION_CHECK_FAILED: Gate evaluator accepted tampered template digest!');
   }
@@ -632,42 +662,60 @@ async function main() {
   // 3. Cobalt balance assertion tampering (corrupting underlying cobalt proof)
   const mutatedCobaltFail = JSON.parse(JSON.stringify(parityData));
   const fix01Test = mutatedCobaltFail.fixtures_tested.find(f => f.fixture_id === 'fix_01_well_conditioned');
-  fix01Test.assertions = fix01Test.assertions.filter(a => !a.includes('Cobalt balance'));
-  const falsifiedGates3 = deriveScientificGates(mutatedCobaltFail, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData);
+  fix01Test.assertions = fix01Test.assertions.filter(a => !a.toLowerCase().includes('cobalt'));
+  const falsifiedGates3 = deriveScientificGates(mutatedCobaltFail, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData, cobaltMatrixData, fatalAuditData);
   if (falsifiedGates3.COBALT_BALANCE_PARITY !== 'FAIL') {
     throw new Error('FALSIFICATION_CHECK_FAILED: Gate evaluator accepted missing cobalt balance numerical verification!');
   }
 
-  // 4. Keyed reference weights tampering (corrupting underlying weight proof)
+  // 4. Cobalt numerical evidence falsification: Alter underlying numeric diff without changing any assertion text
+  const mutatedCobaltNumFail = JSON.parse(JSON.stringify(cobaltMatrixData));
+  mutatedCobaltNumFail.comparisons[0].absolute_numerical_difference = 0.05; // exceeds tolerance 0.0001
+  mutatedCobaltNumFail.comparisons[0].pass = false;
+  mutatedCobaltNumFail.all_comparisons_pass = false;
+  const falsifiedGatesCobaltNum = deriveScientificGates(parityData, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData, mutatedCobaltNumFail, fatalAuditData);
+  if (falsifiedGatesCobaltNum.COBALT_BALANCE_PARITY !== 'FAIL') {
+    throw new Error('FALSIFICATION_CHECK_FAILED: Gate evaluator accepted numerical error in cobalt comparison matrix!');
+  }
+
+  // 5. Worker fatal error settlement falsification: Alter fatal settlement audit test pass status
+  const mutatedFatalFail = JSON.parse(JSON.stringify(fatalAuditData));
+  mutatedFatalFail.tests[0].pass = false;
+  const falsifiedGatesFatal = deriveScientificGates(parityData, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData, cobaltMatrixData, mutatedFatalFail);
+  if (falsifiedGatesFatal.WORKER_LIFECYCLE_CORRECTNESS !== 'FAIL') {
+    throw new Error('FALSIFICATION_CHECK_FAILED: Gate evaluator accepted unpassed worker fatal error settlement test!');
+  }
+
+  // 6. Keyed reference weights tampering (corrupting underlying weight proof)
   const mutatedWeightFail = JSON.parse(JSON.stringify(parityData));
   const fix01TestW = mutatedWeightFail.fixtures_tested.find(f => f.fixture_id === 'fix_01_well_conditioned');
   fix01TestW.assertions = fix01TestW.assertions.filter(a => !a.includes('keyed matching weights'));
-  const falsifiedGates4 = deriveScientificGates(mutatedWeightFail, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData);
+  const falsifiedGates4 = deriveScientificGates(mutatedWeightFail, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData, cobaltMatrixData, fatalAuditData);
   if (falsifiedGates4.EXACT_PAIR_AND_WEIGHT_PARITY !== 'FAIL') {
     throw new Error('FALSIFICATION_CHECK_FAILED: Gate evaluator accepted missing keyed weights verification!');
   }
 
-  // 5. Factor contrast theorem tampering
+  // 7. Factor contrast theorem tampering
   const mutatedFactorFail = JSON.parse(JSON.stringify(parityData));
   const fix03Test = mutatedFactorFail.fixtures_tested.find(f => f.fixture_id === 'fix_03_ref_level_change');
   fix03Test.assertions = fix03Test.assertions.filter(a => !a.includes('contrast transformation theorem'));
-  const falsifiedGates5 = deriveScientificGates(mutatedFactorFail, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData);
+  const falsifiedGates5 = deriveScientificGates(mutatedFactorFail, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData, cobaltMatrixData, fatalAuditData);
   if (falsifiedGates5.STRUCTURED_BINDING_AND_FACTOR_SEMANTICS !== 'FAIL') {
     throw new Error('FALSIFICATION_CHECK_FAILED: Gate evaluator accepted missing factor contrast theorem verification!');
   }
 
-  // 6. Empty assertion array tampering (claiming pass without executed assertions)
+  // 8. Empty assertion array tampering (claiming pass without executed assertions)
   const mutatedEmptyAssertionsFail = JSON.parse(JSON.stringify(parityData));
   mutatedEmptyAssertionsFail.fixtures_tested[4].assertions = [];
-  const falsifiedGates6 = deriveScientificGates(mutatedEmptyAssertionsFail, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData);
+  const falsifiedGates6 = deriveScientificGates(mutatedEmptyAssertionsFail, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData, cobaltMatrixData, fatalAuditData);
   if (falsifiedGates6.FULL_FIXTURE_QUALIFICATION !== 'FAIL') {
     throw new Error('FALSIFICATION_CHECK_FAILED: Gate evaluator accepted fixture with empty assertions list!');
   }
 
-  console.log('All 6 semantic falsification positive controls passed: tampering is caught deterministically.\n');
+  console.log('All 8 semantic falsification positive controls passed: tampering is caught deterministically.\n');
 
   // Derive genuine live gates
-  const scientificGates = deriveScientificGates(parityData, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData);
+  const scientificGates = deriveScientificGates(parityData, unitData, manifest, commitSha, currentTemplateSha256, matrixData, mutationAuditData, cobaltMatrixData, fatalAuditData);
 
   const allScientificGatesPass = Object.values(scientificGates).every(v => v === 'PASS');
   const allBrowserSecurityGatesPass =
@@ -705,7 +753,7 @@ async function main() {
       PAIR_AND_CALIPER_SEMANTICS: scientificGates.PAIR_AND_CALIPER_SEMANTICS,
       COBALT_BALANCE_PARITY: scientificGates.COBALT_BALANCE_PARITY,
       FULL_FIXTURE_QUALIFICATION: scientificGates.FULL_FIXTURE_QUALIFICATION,
-      WORKER_LIFECYCLE_CORRECTNESS: workerLifecycleReport.verdict,
+      WORKER_LIFECYCLE_CORRECTNESS: (workerLifecycleReport.verdict === 'PASS' && scientificGates.WORKER_LIFECYCLE_CORRECTNESS === 'PASS') ? 'PASS' : 'FAIL',
       STRICT_CSP_EXECUTION: cspQualificationReport.matrix.profileC1_strict.pipelineSuccess ? 'PASS' : 'FAIL',
       CHROMIUM_SHARED_ADAPTER_E2E: allTestsPassed ? 'PASS' : 'FAIL',
       CI_EVIDENCE_PROVENANCE: scientificGates.CI_EVIDENCE_PROVENANCE,
