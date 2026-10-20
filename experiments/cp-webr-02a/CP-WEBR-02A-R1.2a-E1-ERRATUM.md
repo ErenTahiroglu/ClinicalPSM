@@ -1,9 +1,9 @@
 # CP-WEBR-02A R1.2a-E1 Evidence Integrity Erratum Report
 
-**Repository:** `ErenTahiroglu/ClinicalPSM`  
-**Branch:** `development`  
-**Baseline SHA:** `f8d5fd6265509bb6913bfecb576ef64a26e136e3`  
-**Phase:** `CP-WEBR-02A-R1.2a-E1`  
+**Repository:** `ErenTahiroglu/ClinicalPSM`
+**Branch:** `development`
+**Baseline SHA:** `f8d5fd6265509bb6913bfecb576ef64a26e136e3`
+**Phase:** `CP-WEBR-02A-R1.2a-E1`
 **Status:** `PASS — READY FOR RED TEAM REVIEW`
 
 ---
@@ -12,18 +12,18 @@
 
 In accordance with the Red Team directive (`ADAPTER_INSUFFICIENT — EVIDENCE_PATCH_REQUIRED`), four targeted evidence-integrity corrections were executed without modifying frozen fixture inputs, application code (`apps/web`), or introducing structural changes to the WebR Worker:
 
-1. **Corrected `fix_11_pre_match_discard` Sample Accounting:**  
-   Replaced the mathematically inconsistent string `completeCases (200) == matched (32) + unmatched (64) + discarded (4)` (which summed to 100 != 200) with strictly verified canonical arithmetic derived from structured result fields:  
-   `completeCases (200) == matchedUnits (32) + unmatchedUnits (42) + discardedUnits (126)`.  
+1. **Corrected `fix_11_pre_match_discard` Sample Accounting:**
+   Replaced the mathematically inconsistent string `completeCases (200) == matched (32) + unmatched (64) + discarded (4)` (which summed to 100 != 200) with strictly verified canonical arithmetic derived from structured result fields:
+   `completeCases (200) == matchedUnits (32) + unmatchedUnits (42) + discardedUnits (126)`.
    Explicitly distinguished 16 paired matches from 32 matched units, and verified both treated (16 + 7 + 77 = 100) and control (16 + 35 + 49 = 100) accounting. Added negative mutation test (`MUT_13_ACCOUNTING_EQUATION_INCONSISTENCY`) and CI gate falsification control.
 
-2. **Cobalt Comparison Coverage & Claims Rectification:**  
+2. **Cobalt Comparison Coverage & Claims Rectification:**
    Disaggregated the 48 cobalt comparisons into **24 numerical-value comparisons** and **24 null-semantics checks**. Removed unsupported claims of numerical variance-ratio parity; documented that variance ratios are legitimately `null` under default ATT options (`disp.v.ratio = FALSE`).
 
-3. **Reproducible Reference Provenance:**  
+3. **Reproducible Reference Provenance:**
    Implemented `experiments/cp-webr-02a/harness/generate_cobalt_reference.mjs`, an independently executable reference generator running MatchIt 4.8.1 and cobalt 5.0.0 on R 4.6.0 via official WebR directly on raw synthetic CSV inputs (no adapter or template layers). Confirmed 100% numerical identity (difference = 0.0000000000 across all 24 numerical stats) against the pinned reference without auto-overwriting. Recorded in `COBALT-REFERENCE-REPRODUCIBILITY-AUDIT.json`.
 
-4. **Strengthened CI Numerical-Evidence Gate:**  
+4. **Strengthened CI Numerical-Evidence Gate:**
    Enhanced `deriveScientificGates` in `test_browser_qualification.mjs` to independently recompute absolute differences `|reference_value - actual_canonical_value|`, reject discrepancies with stored differences (> 1e-12), recompute pass/fail, enforce null semantics separately, verify cardinality (exactly 24 numerical + 24 null = 48 records), verify commit SHA and reference file SHA-256, and enforce 8 explicit falsification positive controls.
 
 ---
@@ -70,7 +70,7 @@ Under standard MatchIt ATT nearest-neighbor matching, cobalt default balance tab
 
 - **Generator Command:** `node experiments/cp-webr-02a/harness/generate_cobalt_reference.mjs`
 - **Execution Mode:** Direct evaluation in official WebR R 4.6.0; MatchIt 4.8.1; cobalt 5.0.0; isolated R workspace without adapter or template.
-- **Generator Script SHA-256:** `c8fee5976d740c7a31a7ef79528579376b333b9c633238f4031b48c8b3074888`
+- **Generator Script SHA-256:** `ddc127f27350d7b70c2a5c9b6134c6561827723779f259113cdfcdfdfea9cb62`
 - **Input Fixture CSV Hashes:**
   - `fix_01_well_conditioned.csv`: `5a76a1d6921f59eb92accd464f41817b360798d23c7d54bfb0c904544c2639dc`
   - `fix_02_mixed_types.csv`: `d2410f4639e9a23c295b42747ed787b2db018e929bdc0e49db3c0c093ab076ad`
