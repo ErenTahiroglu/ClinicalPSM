@@ -187,4 +187,3 @@ To guarantee reproducible hashing across platforms and engines:
 | **Separation Interpretation** | Falsely claimed converged == FALSE | Clarified algorithmic convergence vs mathematical separation | `WEBR-BINDING-QUALIFICATION.json` |
 | **IndexedDB Privacy Gate** | Silent fail-open on DB errors | Fail-closed explicit states with 5-fault injection | `INDEXEDDB-LIFECYCLE-AUDIT.json` |
 | **Worker CSP Qualification** | Theoretical note on eval | Executable A/B matrix (strict vs permissive) | `CSP-QUALIFICATION.json` |
-

@@ -19,20 +19,20 @@
       "sha256": "1d8de82e439213b7fd7f8dd1208d88d2eda69ea3cdd8dfcee8fac1b3857ac7e5"
     },
     "experiments/cp-webr-01b/CP-WEBR-01B-RESULT.md": {
-      "bytes": 9327,
-      "sha256": "8a1c3d76fd2ed0710f9b95a7568a12678f779b774944e2c72af701a6cdf82853"
+      "bytes": 9315,
+      "sha256": "058ffbdd12ed3157b52a7dacb0d42c4642abf6fb7b9bb40cf4ca3a9f837bee07"
     },
     "experiments/cp-webr-01b/CP-WEBR-01B-R1-RED-TEAM-REMEDIATION.md": {
       "bytes": 12196,
       "sha256": "9a17695d98c523804e7ee82494b99596186de817ddaa5ca43426a6b7d1960398"
     },
     "experiments/cp-webr-01b/CP-WEBR-01B-R1.1-EVIDENCE-CLOSURE.md": {
-      "bytes": 15884,
-      "sha256": "848e993145293b18fa1ef7f0b79482e1002a0801bd0ca6db8dcf2fc947243943"
+      "bytes": 15870,
+      "sha256": "fcc3890c26cd70bd111f42a4e90518a222e8def4c9408d25c8b9c7b7787c8a83"
     },
     "docs/audits/CP-WEBR-01B-ARCHITECTURE-ERRATA.md": {
-      "bytes": 14715,
-      "sha256": "94b8a2ebc695e8e94cc58c13ab47b481ce4c5ffc135cf6af035b23a35453dd3a"
+      "bytes": 14714,
+      "sha256": "8f36db8f25819887b0e65f9392b7d64ae9b3ceb60ebf13e5cb18c9654f09a069"
     },
     "experiments/cp-webr-01b/fixtures/fix_01_oracle_full_precision.json": {
       "bytes": 29484,

@@ -1,11 +1,11 @@
 # CP-WEBR-01B Experimental Result & Security Qualification Report (R1.1 Remediation)
 
-**Repository:** `ErenTahiroglu/ClinicalPSM`  
-**Phase:** `CP-WEBR-01B R1.1 — Final Scientific Oracle, CI Provenance & Security Evidence Closure`  
-**Required Branch:** `development`  
-**Required Baseline SHA:** `e56739d4a0671dc075075ccc74f451257b78706b`  
-**Document Status:** Final Qualification Evidence & Gate Report  
-**Reviewer:** ChatGPT — Independent Scientific and Security Red Team  
+**Repository:** `ErenTahiroglu/ClinicalPSM`
+**Phase:** `CP-WEBR-01B R1.1 — Final Scientific Oracle, CI Provenance & Security Evidence Closure`
+**Required Branch:** `development`
+**Required Baseline SHA:** `e56739d4a0671dc075075ccc74f451257b78706b`
+**Document Status:** Final Qualification Evidence & Gate Report
+**Reviewer:** ChatGPT — Independent Scientific and Security Red Team
 
 ---
 
