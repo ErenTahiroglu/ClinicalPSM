@@ -1,7 +1,7 @@
 {
-  "suite": "CP-WEBR-02A R1.2a Genuine Falsifiable Mutation Audit",
-  "executed_at": "2026-10-20T20:41:40.948Z",
-  "total_mutations": 12,
+  "suite": "CP-WEBR-02A R1.2a-E1 Genuine Falsifiable Mutation Audit",
+  "executed_at": "2026-10-20T22:10:02.995Z",
+  "total_mutations": 13,
   "mutations": [
     {
       "mutation_id": "MUT_01_PAIR_CONTROL_ID",
@@ -133,6 +133,17 @@
       "verifier_invoked": "verifySampleAccounting",
       "expected_verifier_failure": "Treated sum != totalTreatedCases",
       "observed_failure": "Treated sum (110) != treatedTotal (100)",
+      "pass": true
+    },
+    {
+      "mutation_id": "MUT_13_ACCOUNTING_EQUATION_INCONSISTENCY",
+      "target_fixture": "fix_11_pre_match_discard",
+      "mutation_description": "Intentionally inconsistent displayed sample accounting equation (32+64+4=100 != completeCases 200) fails verifier",
+      "original_value": "completeCases (200) == matchedUnits (32) + unmatchedUnits (42) + discardedUnits (126)",
+      "mutated_value": "Sample accounting exact: completeCases (200) == matched (32) + unmatched (64) + discarded (4)",
+      "verifier_invoked": "verifyAccountingEquationString",
+      "expected_verifier_failure": "Sample accounting equation arithmetic violated",
+      "observed_failure": "Malformed sample accounting equation string: \"Sample accounting exact: completeCases (200) == matched (32) + unmatched (64) + discarded (4)\"",
       "pass": true
     }
   ]

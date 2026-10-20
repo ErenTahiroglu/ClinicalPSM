@@ -152,12 +152,14 @@ export function compareCobaltBalanceDiagnostics(result, referenceFixture, fixtur
             fixture_id: fixtureId,
             covariate_name: expName,
             statistic_name: f.name,
+            comparison_type: 'NULL_SEMANTICS',
+            is_numerical: false,
             reference_value: null,
             actual_canonical_value: f.actual,
             absolute_numerical_difference: Math.abs(f.actual),
             applicable_tolerance: 0,
             pass: false,
-            reference_provenance: 'OFFICIAL_R_COBALT_BAL_TAB_EVALUATION'
+            reference_provenance: 'OFFICIAL_R_COBALT_BAL_TAB_INDEPENDENT_EVALUATION'
           };
           comparisons.push(comp);
           return { pass: false, error: `Expected undefined statistic "${f.name}" for "${expName}" to be null, got ${f.actual}`, comparisons };
@@ -166,12 +168,14 @@ export function compareCobaltBalanceDiagnostics(result, referenceFixture, fixtur
           fixture_id: fixtureId,
           covariate_name: expName,
           statistic_name: f.name,
+          comparison_type: 'NULL_SEMANTICS',
+          is_numerical: false,
           reference_value: null,
           actual_canonical_value: null,
           absolute_numerical_difference: 0,
           applicable_tolerance: 0,
           pass: true,
-          reference_provenance: 'OFFICIAL_R_COBALT_BAL_TAB_EVALUATION'
+          reference_provenance: 'OFFICIAL_R_COBALT_BAL_TAB_INDEPENDENT_EVALUATION'
         });
       } else {
         if (typeof f.actual !== 'number' || isNaN(f.actual)) {
@@ -179,12 +183,14 @@ export function compareCobaltBalanceDiagnostics(result, referenceFixture, fixtur
             fixture_id: fixtureId,
             covariate_name: expName,
             statistic_name: f.name,
+            comparison_type: 'NUMERICAL_VALUE',
+            is_numerical: true,
             reference_value: f.expected,
             actual_canonical_value: f.actual,
             absolute_numerical_difference: NaN,
             applicable_tolerance: tolerance,
             pass: false,
-            reference_provenance: 'OFFICIAL_R_COBALT_BAL_TAB_EVALUATION'
+            reference_provenance: 'OFFICIAL_R_COBALT_BAL_TAB_INDEPENDENT_EVALUATION'
           };
           comparisons.push(comp);
           return { pass: false, error: `Non-numeric actual value for "${f.name}" on "${expName}": ${f.actual}`, comparisons };
@@ -196,12 +202,14 @@ export function compareCobaltBalanceDiagnostics(result, referenceFixture, fixtur
           fixture_id: fixtureId,
           covariate_name: expName,
           statistic_name: f.name,
+          comparison_type: 'NUMERICAL_VALUE',
+          is_numerical: true,
           reference_value: f.expected,
           actual_canonical_value: f.actual,
           absolute_numerical_difference: diff,
           applicable_tolerance: tolerance,
           pass: statPass,
-          reference_provenance: 'OFFICIAL_R_COBALT_BAL_TAB_EVALUATION'
+          reference_provenance: 'OFFICIAL_R_COBALT_BAL_TAB_INDEPENDENT_EVALUATION'
         });
 
         if (!statPass) {
@@ -298,7 +306,7 @@ export function verifyFactorContrasts(res02, res03, tolerance = 1e-4) {
 }
 
 export function verifySampleAccounting(result) {
-  const sa = result.sampleAccounting;
+  const sa = result?.sampleAccounting;
   if (!sa) return { pass: false, error: 'Missing sampleAccounting' };
   const treatedSum = sa.matchedTreatedCount + sa.unmatchedTreatedCount + sa.discardedTreatedCount;
   const controlSum = sa.matchedControlCount + sa.unmatchedControlCount + sa.discardedControlCount;
@@ -311,11 +319,71 @@ export function verifySampleAccounting(result) {
   if (sa.completeCases !== sa.treatedTotal + sa.controlTotal) {
     return { pass: false, error: `Complete cases mismatch: ${sa.completeCases} != ${sa.treatedTotal + sa.controlTotal}` };
   }
-  return { pass: true };
+
+  const matchedUnits = sa.matchedTreatedCount + sa.matchedControlCount;
+  const unmatchedUnits = sa.unmatchedTreatedCount + sa.unmatchedControlCount;
+  const discardedUnits = sa.discardedTreatedCount + sa.discardedControlCount;
+  const totalUnits = matchedUnits + unmatchedUnits + discardedUnits;
+
+  if (totalUnits !== sa.completeCases) {
+    return { pass: false, error: `Total accounted units (${totalUnits}) != completeCases (${sa.completeCases})` };
+  }
+
+  const pairedMatches = sa.matchedTreatedCount; // 1:1 nearest neighbor ATT
+  const equation = `completeCases (${sa.completeCases}) == matchedUnits (${matchedUnits}) + unmatchedUnits (${unmatchedUnits}) + discardedUnits (${discardedUnits})`;
+
+  return {
+    pass: true,
+    arithmetic: {
+      completeCases: sa.completeCases,
+      treatedTotal: sa.treatedTotal,
+      controlTotal: sa.controlTotal,
+      matchedTreatedCount: sa.matchedTreatedCount,
+      matchedControlCount: sa.matchedControlCount,
+      unmatchedTreatedCount: sa.unmatchedTreatedCount,
+      unmatchedControlCount: sa.unmatchedControlCount,
+      discardedTreatedCount: sa.discardedTreatedCount,
+      discardedControlCount: sa.discardedControlCount,
+      matchedUnits,
+      unmatchedUnits,
+      discardedUnits,
+      pairedMatches,
+      equation
+    }
+  };
+}
+
+export function verifyAccountingEquationString(equationStr, sa) {
+  if (typeof equationStr !== 'string') {
+    return { pass: false, error: 'Equation must be a string' };
+  }
+  const match = equationStr.match(/completeCases\s*\((\d+)\)\s*==\s*matchedUnits\s*\((\d+)\)\s*\+\s*unmatchedUnits\s*\((\d+)\)\s*\+\s*discardedUnits\s*\((\d+)\)/);
+  if (!match) {
+    return { pass: false, error: `Malformed sample accounting equation string: "${equationStr}"` };
+  }
+  const cc = parseInt(match[1], 10);
+  const mu = parseInt(match[2], 10);
+  const uu = parseInt(match[3], 10);
+  const du = parseInt(match[4], 10);
+
+  if (mu + uu + du !== cc) {
+    return { pass: false, error: `Sample accounting equation arithmetic violated: ${mu} + ${uu} + ${du} = ${mu + uu + du} != ${cc}` };
+  }
+
+  if (sa) {
+    const actualMu = sa.matchedTreatedCount + sa.matchedControlCount;
+    const actualUu = sa.unmatchedTreatedCount + sa.unmatchedControlCount;
+    const actualDu = sa.discardedTreatedCount + sa.discardedControlCount;
+    if (cc !== sa.completeCases || mu !== actualMu || uu !== actualUu || du !== actualDu) {
+      return { pass: false, error: `Accounting equation values (${cc}, ${mu}, ${uu}, ${du}) do not match underlying structured fields (${sa.completeCases}, ${actualMu}, ${actualUu}, ${actualDu})` };
+    }
+  }
+
+  return { pass: true, completeCases: cc, matchedUnits: mu, unmatchedUnits: uu, discardedUnits: du };
 }
 
 const parityReport = {
-  suite: 'CP-WEBR-02A R1.2 Scientific Parity Suite (25 Preserved Fixtures)',
+  suite: 'CP-WEBR-02A R1.2a-E1 Scientific Parity Suite (25 Preserved Fixtures)',
   executed_at: new Date().toISOString(),
   commit_sha: getGitCommitSha(),
   toolchain: {
@@ -352,7 +420,7 @@ const parityReport = {
 };
 
 const assertionMatrix = {
-  version: '1.2.0',
+  version: '1.2.0a-E1',
   generated_at: new Date().toISOString(),
   total_fixtures: 25,
   fixtures: {}
@@ -739,9 +807,11 @@ async function main() {
             fixtureSpecificPass = false;
             console.error(`FAIL [fix_11]: ${saCheck.error}`);
           } else {
+            const arith = saCheck.arithmetic;
             assertions.push('Common support discard (both): discarded units properly accounted for');
-            assertions.push(`Sample accounting exact: completeCases (${result.sampleAccounting.completeCases}) == matched (32) + unmatched (64) + discarded (4)`);
-            assertions.push(`All 16 matched pairs satisfy effective caliper`);
+            assertions.push(`Sample accounting exact: ${arith.equation}`);
+            assertions.push(`Distinction verified: ${arith.pairedMatches} paired matches formed from ${arith.matchedUnits} matched units (${arith.matchedTreatedCount} treated, ${arith.matchedControlCount} control); unmatched = ${arith.unmatchedUnits} (${arith.unmatchedTreatedCount} treated, ${arith.unmatchedControlCount} control); discarded = ${arith.discardedUnits} (${arith.discardedTreatedCount} treated, ${arith.discardedControlCount} control)`);
+            assertions.push(`All ${arith.pairedMatches} matched pairs satisfy effective caliper`);
           }
         } else if (fix.id === 'fix_12_caliper_unmatched') {
           if (result.sampleAccounting.unmatchedTreatedCount <= 0) {
@@ -784,7 +854,8 @@ async function main() {
           effectiveCaliper: result.matchingConfiguration.effectiveCaliperWidthRaw,
           distanceScale: result.matchingConfiguration.matchingDistanceScale,
           pairDistancesValid,
-          publicationVerdict: result.publicationStatus.verdict
+          publicationVerdict: result.publicationStatus.verdict,
+          sampleAccounting: result.sampleAccounting
         };
         console.log(`PASS: Execution succeeded. Matched pairs: ${totalPairs}, publication: ${result.publicationStatus.verdict}`);
       } else {
@@ -835,9 +906,9 @@ async function main() {
   const fix11Clean = executedResults['fix_11_pre_match_discard'];
 
   const mutationAudit = {
-    suite: 'CP-WEBR-02A R1.2a Genuine Falsifiable Mutation Audit',
+    suite: 'CP-WEBR-02A R1.2a-E1 Genuine Falsifiable Mutation Audit',
     executed_at: new Date().toISOString(),
-    total_mutations: 12,
+    total_mutations: 13,
     mutations: []
   };
 
@@ -1104,6 +1175,25 @@ async function main() {
     });
   }
 
+  // Mutation 13: Sample accounting equation corruption / inconsistent displayed value
+  {
+    const bogusEquationStr = `Sample accounting exact: completeCases (${fix11Clean.sampleAccounting.completeCases}) == matched (32) + unmatched (64) + discarded (4)`;
+    const check = verifyAccountingEquationString(bogusEquationStr, fix11Clean.sampleAccounting);
+    const caught = check.pass === false;
+    assert(caught, 'Mutation 13: Inconsistent sample accounting equation string caught by verifyAccountingEquationString');
+    mutationAudit.mutations.push({
+      mutation_id: 'MUT_13_ACCOUNTING_EQUATION_INCONSISTENCY',
+      target_fixture: 'fix_11_pre_match_discard',
+      mutation_description: 'Intentionally inconsistent displayed sample accounting equation (32+64+4=100 != completeCases 200) fails verifier',
+      original_value: `completeCases (200) == matchedUnits (32) + unmatchedUnits (42) + discardedUnits (126)`,
+      mutated_value: bogusEquationStr,
+      verifier_invoked: 'verifyAccountingEquationString',
+      expected_verifier_failure: 'Sample accounting equation arithmetic violated',
+      observed_failure: check.error,
+      pass: caught
+    });
+  }
+
   parityReport.mutation_tests = mutationAudit.mutations.map(m => ({
     mutation_id: m.mutation_id,
     description: m.mutation_description,
@@ -1148,18 +1238,56 @@ async function main() {
   console.log(`Wrote mutation falsification audit to ${mutOutPath} and ${mut12aOutPath}`);
 
   // Write authoritative Cobalt numerical comparison matrix
+  const numericalComparisons = allCobaltComparisons.filter(c => c.is_numerical);
+  const nullComparisons = allCobaltComparisons.filter(c => !c.is_numerical);
+  const refFileSha256 = fs.existsSync(cobaltRefPath)
+    ? crypto.createHash('sha256').update(fs.readFileSync(cobaltRefPath)).digest('hex')
+    : null;
+
   const cobaltMatrixReport = {
-    suite: 'CP-WEBR-02A R1.2a Authoritative Cobalt Numerical Parity Matrix',
+    suite: 'CP-WEBR-02A R1.2a-E1 Authoritative Cobalt Numerical Parity Matrix',
     executed_at: new Date().toISOString(),
     commit_sha: getGitCommitSha(),
+    reference_file_sha256: refFileSha256,
+    reference_provenance: 'OFFICIAL_R_COBALT_BAL_TAB_INDEPENDENT_EVALUATION',
     tolerance: 1e-4,
+    summary: {
+      total_comparisons: allCobaltComparisons.length,
+      numerical_value_comparisons: numericalComparisons.length,
+      null_semantics_checks: nullComparisons.length,
+      all_numerical_pass: numericalComparisons.length > 0 && numericalComparisons.every(c => c.pass === true),
+      all_null_pass: nullComparisons.length > 0 && nullComparisons.every(c => c.pass === true),
+      evaluated_statistics: {
+        numerical: [
+          'continuous_unadjusted_smd',
+          'continuous_matched_smd',
+          'binary_unadjusted_smd',
+          'binary_matched_smd',
+          'binary_raw_diff_unadjusted',
+          'binary_raw_diff_matched',
+          'categorical_contrast_unadjusted_smd',
+          'categorical_contrast_matched_smd',
+          'categorical_contrast_raw_diff_unadjusted',
+          'categorical_contrast_raw_diff_matched'
+        ],
+        null_semantics_verified: [
+          'continuous_raw_diff_unadjusted (null: unstandardized raw difference not reported for standardized continuous balance)',
+          'continuous_raw_diff_matched (null: unstandardized raw difference not reported for standardized continuous balance)',
+          'unadjusted_variance_ratio (null: variance ratio not enabled by default bal.tab in 1:1 nearest neighbor ATT balance table)',
+          'matched_variance_ratio (null: variance ratio not enabled by default bal.tab in 1:1 nearest neighbor ATT balance table)'
+        ]
+      },
+      variance_ratio_claim_clarification: 'Variance ratios are legitimately null under default cobalt ATT bal.tab options (disp.v.ratio = FALSE). Parity is established for null-semantics preservation, NOT numerical variance-ratio equality.'
+    },
     total_comparisons: allCobaltComparisons.length,
+    numerical_comparisons: numericalComparisons.length,
+    null_comparisons: nullComparisons.length,
     all_comparisons_pass: allCobaltComparisons.length > 0 && allCobaltComparisons.every(c => c.pass === true),
     comparisons: allCobaltComparisons
   };
   const cobaltMatrixOutPath = path.resolve('experiments/cp-webr-02a/r1.2a/COBALT-NUMERICAL-COMPARISON-MATRIX.json');
   fs.writeFileSync(cobaltMatrixOutPath, JSON.stringify(cobaltMatrixReport, null, 2), 'utf-8');
-  console.log(`Wrote authoritative Cobalt numerical comparison matrix to ${cobaltMatrixOutPath} (${allCobaltComparisons.length} comparisons, pass: ${cobaltMatrixReport.all_comparisons_pass})`);
+  console.log(`Wrote authoritative Cobalt numerical comparison matrix to ${cobaltMatrixOutPath} (${allCobaltComparisons.length} comparisons: ${numericalComparisons.length} numerical, ${nullComparisons.length} null, pass: ${cobaltMatrixReport.all_comparisons_pass})`);
 
   server.close();
 
@@ -1169,7 +1297,9 @@ async function main() {
   process.exit(0);
 }
 
-main().catch(err => {
-  console.error('Fatal error in scientific parity suite:', err);
-  process.exit(1);
-});
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch(err => {
+    console.error('Fatal error in scientific parity suite:', err);
+    process.exit(1);
+  });
+}

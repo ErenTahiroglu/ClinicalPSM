@@ -1,8 +1,8 @@
 {
   "manifest_type": "POST_RUN_CI_EVIDENCE_MANIFEST",
-  "manifest_version": "2.0.0",
-  "generated_at": "2026-10-20T20:42:24.630Z",
-  "commit_sha": "338d89a281c7d7d09e116498a6b8d106199f3881",
+  "manifest_version": "2.1.0",
+  "generated_at": "2026-10-20T22:13:55.658Z",
+  "commit_sha": "f8d5fd6265509bb6913bfecb576ef64a26e136e3",
   "environment": {
     "operating_system": "darwin 27.0.0 (arm64)",
     "node_version": "v26.12.0",
@@ -24,6 +24,7 @@
       "experiments/cp-webr-02a/r1.2/MUTATION-FALSIFICATION-AUDIT.json",
       "experiments/cp-webr-02a/r1.2a/COBALT-NUMERICAL-REFERENCE.json",
       "experiments/cp-webr-02a/r1.2a/COBALT-NUMERICAL-COMPARISON-MATRIX.json",
+      "experiments/cp-webr-02a/r1.2a/COBALT-REFERENCE-REPRODUCIBILITY-AUDIT.json",
       "experiments/cp-webr-02a/r1.2a/WORKER-FATAL-ERROR-SETTLEMENT-AUDIT.json",
       "experiments/cp-webr-02a/r1.2a/NUMERICAL-MUTATION-FALSIFICATION-AUDIT.json",
       "experiments/cp-webr-02a/r1.2a/FIXTURE-ASSERTION-MATRIX.json"
@@ -32,63 +33,67 @@
   "artifacts": {
     "experiments/cp-webr-02a/ADAPTER-UNIT-TESTS.json": {
       "bytes": 7657,
-      "sha256": "af615fa058e2bde4d617c7fa0f4341fa809ce93bbc81d0e884863044b6f10c4b"
+      "sha256": "0342964303858ce3d6a24dedec7bd5645840ddbfe0e0b66f031818e1be8f8f23"
     },
     "experiments/cp-webr-02a/SCIENTIFIC-PARITY-RESULTS.json": {
-      "bytes": 21095,
-      "sha256": "83335347d16baedc98fb3745b12077863108489266cc9ee3d1e2011e6db3bda5"
+      "bytes": 29321,
+      "sha256": "8bcf02f81277d7743a33c62ef3a6391d414fe7ec390f3bb478da832a19c0f35c"
     },
     "experiments/cp-webr-02a/CSP-AB-QUALIFICATION.json": {
       "bytes": 1552,
-      "sha256": "9ad87fd1a1c818ce0a8da531d28dba32340be6118312bdcf35a751d2bb50330a"
+      "sha256": "17d3143a27dbe817d7ad1da498b3b3b2d9cb538aa0a7d4dc3d4f827572dbef3a"
     },
     "experiments/cp-webr-02a/WORKER-LIFECYCLE-AUDIT.json": {
-      "bytes": 1495,
-      "sha256": "206cdf0daa3f031ac4eca43cd236f41e335d1f628390859020d752492910066b"
+      "bytes": 1494,
+      "sha256": "e5b07ff28b0d8ef351134115321e79430ebbfe9c0f6ea38c6d1f25c1ad611f41"
     },
     "experiments/cp-webr-02a/STORAGE-PRIVACY-AUDIT.json": {
       "bytes": 7873,
-      "sha256": "f172d223052844902b9169555a2bd9f8ffc50518cbbd901ad1bc4575921875aa"
+      "sha256": "0d5bd69f9c89116e3a8ac45b13c930a5985ca9496a687367f9dfc3e29a4d60f2"
     },
     "experiments/cp-webr-02a/BROWSER-CI-QUALIFICATION-REPORT.json": {
       "bytes": 1455,
-      "sha256": "9323c6cba348eed973f7b4c3bcecb01df5967ac3718298d6c283e82917da7b25"
+      "sha256": "667245bf1780332f0fd817c587c69bc78d7a2eac36f134f22216d1ce5fc9580a"
     },
     "experiments/cp-webr-02a/r1.1/FIXTURE-ASSERTION-MATRIX.json": {
       "bytes": 12755,
       "sha256": "ee92e798d9da1fc6d8203a6c2897afcf5723041082814db8f2a9c84aeff6c301"
     },
     "experiments/cp-webr-02a/r1.2/FIXTURE-ASSERTION-MATRIX.json": {
-      "bytes": 17762,
-      "sha256": "100cbb561c850ad807c8ec8b77b2c409e1e332f547d85e31baf60eda903160c4"
+      "bytes": 25751,
+      "sha256": "c53ed65845adfa0bdd61011ab7ba6667b5662f4144a438a0443898adc0cabeea"
     },
     "experiments/cp-webr-02a/r1.2/MUTATION-FALSIFICATION-AUDIT.json": {
-      "bytes": 6834,
-      "sha256": "e780f346e1bab2604140ab4fc297188df0e25d92d70283f0d14d9449e6428a08"
+      "bytes": 7683,
+      "sha256": "b06c883fa708b1612214b0852ca62a7eb1d4df28d2ac2a7f370b0475680cc376"
     },
     "experiments/cp-webr-02a/r1.2a/COBALT-NUMERICAL-REFERENCE.json": {
-      "bytes": 3363,
-      "sha256": "8df68574a1f4c51c39a079cbd68e3ceceafc3b5044b6d1c308b196f1c850848d"
+      "bytes": 3740,
+      "sha256": "01ffe9e02dd47fdc813f5071b0bd1b8b69f42ffacccce4e14980360e7b9131f4"
     },
     "experiments/cp-webr-02a/r1.2a/COBALT-NUMERICAL-COMPARISON-MATRIX.json": {
-      "bytes": 18945,
-      "sha256": "e472862fee5d49af8516f448a1da7f53eb60baad87817632673e18a09c636952"
+      "bytes": 24656,
+      "sha256": "cfefe866a0fb3d697678e1c839b1ed9b52f9eda3b7cfaa5ef45487adda7adbef"
     },
     "experiments/cp-webr-02a/r1.2a/WORKER-FATAL-ERROR-SETTLEMENT-AUDIT.json": {
       "bytes": 1109,
-      "sha256": "9c7522c9c6acd4d1d498f691c35daf15a5ea5b6e32d5ebb18b077594045ff62a"
+      "sha256": "24bc0e1b33498d68d73f7d87dece953469f882ac7610c1c37396d446af2378dd"
     },
     "experiments/cp-webr-02a/r1.2a/NUMERICAL-MUTATION-FALSIFICATION-AUDIT.json": {
-      "bytes": 6834,
-      "sha256": "e780f346e1bab2604140ab4fc297188df0e25d92d70283f0d14d9449e6428a08"
+      "bytes": 7683,
+      "sha256": "b06c883fa708b1612214b0852ca62a7eb1d4df28d2ac2a7f370b0475680cc376"
     },
     "experiments/cp-webr-02a/r1.2a/FIXTURE-ASSERTION-MATRIX.json": {
-      "bytes": 17762,
-      "sha256": "100cbb561c850ad807c8ec8b77b2c409e1e332f547d85e31baf60eda903160c4"
+      "bytes": 25751,
+      "sha256": "c53ed65845adfa0bdd61011ab7ba6667b5662f4144a438a0443898adc0cabeea"
     },
     "experiments/cp-webr-02a/fixtures/fix_01_oracle_full_precision.json": {
       "bytes": 29484,
       "sha256": "5efc3404e213c19f7663e5e09c3e96bda73a189efbf2e265fcf0315f4167c109"
+    },
+    "experiments/cp-webr-02a/r1.2a/COBALT-REFERENCE-REPRODUCIBILITY-AUDIT.json": {
+      "bytes": 13569,
+      "sha256": "9e4152459ad4ae2b6b8740298157c75072fd87ddec7a77f1cd701decb4d6aed6"
     }
   }
 }

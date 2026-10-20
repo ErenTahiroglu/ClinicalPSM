@@ -1,0 +1,497 @@
+{
+  "suite": "CP-WEBR-02A R1.2a-E1 Cobalt Reference Reproducibility Audit",
+  "executed_at": "2026-10-20T22:09:36.110Z",
+  "generator_script_sha256": "c8fee5976d740c7a31a7ef79528579376b333b9c633238f4031b48c8b3074888",
+  "input_fixture_hashes": {
+    "fix_01_well_conditioned": "5a76a1d6921f59eb92accd464f41817b360798d23c7d54bfb0c904544c2639dc",
+    "fix_02_mixed_types": "d2410f4639e9a23c295b42747ed787b2db018e929bdc0e49db3c0c093ab076ad"
+  },
+  "tolerance": 0.0001,
+  "total_comparisons": 48,
+  "numerical_comparisons": 24,
+  "null_comparisons": 24,
+  "reproducibility_pass": true,
+  "discrepancies": [],
+  "details": [
+    {
+      "fixture": "fix_01_well_conditioned",
+      "covariate": "age",
+      "statistic": "unadjusted_smd",
+      "is_numerical": true,
+      "pinned_value": -0.0007151561270170839,
+      "generated_value": -0.0007151561270170839,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_01_well_conditioned",
+      "covariate": "age",
+      "statistic": "matched_smd",
+      "is_numerical": true,
+      "pinned_value": -0.007499609443220876,
+      "generated_value": -0.007499609443220876,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_01_well_conditioned",
+      "covariate": "age",
+      "statistic": "raw_diff_unadjusted",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_01_well_conditioned",
+      "covariate": "age",
+      "statistic": "raw_diff_matched",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_01_well_conditioned",
+      "covariate": "age",
+      "statistic": "unadjusted_variance_ratio",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_01_well_conditioned",
+      "covariate": "age",
+      "statistic": "matched_variance_ratio",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_01_well_conditioned",
+      "covariate": "bmi",
+      "statistic": "unadjusted_smd",
+      "is_numerical": true,
+      "pinned_value": -0.000606497286469651,
+      "generated_value": -0.000606497286469651,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_01_well_conditioned",
+      "covariate": "bmi",
+      "statistic": "matched_smd",
+      "is_numerical": true,
+      "pinned_value": 0.06307305771696738,
+      "generated_value": 0.06307305771696738,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_01_well_conditioned",
+      "covariate": "bmi",
+      "statistic": "raw_diff_unadjusted",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_01_well_conditioned",
+      "covariate": "bmi",
+      "statistic": "raw_diff_matched",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_01_well_conditioned",
+      "covariate": "bmi",
+      "statistic": "unadjusted_variance_ratio",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_01_well_conditioned",
+      "covariate": "bmi",
+      "statistic": "matched_variance_ratio",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_01_well_conditioned",
+      "covariate": "sbp",
+      "statistic": "unadjusted_smd",
+      "is_numerical": true,
+      "pinned_value": -0.15074080321281266,
+      "generated_value": -0.15074080321281266,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_01_well_conditioned",
+      "covariate": "sbp",
+      "statistic": "matched_smd",
+      "is_numerical": true,
+      "pinned_value": -0.03158141342218009,
+      "generated_value": -0.03158141342218009,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_01_well_conditioned",
+      "covariate": "sbp",
+      "statistic": "raw_diff_unadjusted",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_01_well_conditioned",
+      "covariate": "sbp",
+      "statistic": "raw_diff_matched",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_01_well_conditioned",
+      "covariate": "sbp",
+      "statistic": "unadjusted_variance_ratio",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_01_well_conditioned",
+      "covariate": "sbp",
+      "statistic": "matched_variance_ratio",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "x_cont",
+      "statistic": "unadjusted_smd",
+      "is_numerical": true,
+      "pinned_value": -0.14882152334462226,
+      "generated_value": -0.14882152334462226,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "x_cont",
+      "statistic": "matched_smd",
+      "is_numerical": true,
+      "pinned_value": 0.004366674068920566,
+      "generated_value": 0.004366674068920566,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "x_cont",
+      "statistic": "raw_diff_unadjusted",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "x_cont",
+      "statistic": "raw_diff_matched",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "x_cont",
+      "statistic": "unadjusted_variance_ratio",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "x_cont",
+      "statistic": "matched_variance_ratio",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "x_bin",
+      "statistic": "unadjusted_smd",
+      "is_numerical": true,
+      "pinned_value": -0.08066190279763126,
+      "generated_value": -0.08066190279763126,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "x_bin",
+      "statistic": "matched_smd",
+      "is_numerical": true,
+      "pinned_value": 0.025693869820655406,
+      "generated_value": 0.025693869820655406,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "x_bin",
+      "statistic": "raw_diff_unadjusted",
+      "is_numerical": true,
+      "pinned_value": -0.04024800336275747,
+      "generated_value": -0.04024800336275747,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "x_bin",
+      "statistic": "raw_diff_matched",
+      "is_numerical": true,
+      "pinned_value": 0.01282051282051283,
+      "generated_value": 0.01282051282051283,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "x_bin",
+      "statistic": "unadjusted_variance_ratio",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "x_bin",
+      "statistic": "matched_variance_ratio",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "cov_02_low",
+      "statistic": "unadjusted_smd",
+      "is_numerical": true,
+      "pinned_value": 0.07844528814039867,
+      "generated_value": 0.07844528814039867,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "cov_02_low",
+      "statistic": "matched_smd",
+      "is_numerical": true,
+      "pinned_value": 0.05287472460292058,
+      "generated_value": 0.05287472460292058,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "cov_02_low",
+      "statistic": "raw_diff_unadjusted",
+      "is_numerical": true,
+      "pinned_value": 0.038041193778898696,
+      "generated_value": 0.038041193778898696,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "cov_02_low",
+      "statistic": "raw_diff_matched",
+      "is_numerical": true,
+      "pinned_value": 0.025641025641025605,
+      "generated_value": 0.025641025641025605,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "cov_02_low",
+      "statistic": "unadjusted_variance_ratio",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "cov_02_low",
+      "statistic": "matched_variance_ratio",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "cov_02_med",
+      "statistic": "unadjusted_smd",
+      "is_numerical": true,
+      "pinned_value": 0.055061593616985205,
+      "generated_value": 0.055061593616985205,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "cov_02_med",
+      "statistic": "matched_smd",
+      "is_numerical": true,
+      "pinned_value": 0.013598207330510481,
+      "generated_value": 0.013598207330510481,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "cov_02_med",
+      "statistic": "raw_diff_unadjusted",
+      "is_numerical": true,
+      "pinned_value": 0.025956284153005438,
+      "generated_value": 0.025956284153005438,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "cov_02_med",
+      "statistic": "raw_diff_matched",
+      "is_numerical": true,
+      "pinned_value": 0.0064102564102563875,
+      "generated_value": 0.0064102564102563875,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "cov_02_med",
+      "statistic": "unadjusted_variance_ratio",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "cov_02_med",
+      "statistic": "matched_variance_ratio",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "cov_02_high",
+      "statistic": "unadjusted_smd",
+      "is_numerical": true,
+      "pinned_value": -0.14126016569759975,
+      "generated_value": -0.14126016569759975,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "cov_02_high",
+      "statistic": "matched_smd",
+      "is_numerical": true,
+      "pinned_value": -0.07074605999633493,
+      "generated_value": -0.07074605999633493,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "cov_02_high",
+      "statistic": "raw_diff_unadjusted",
+      "is_numerical": true,
+      "pinned_value": -0.06399747793190419,
+      "generated_value": -0.06399747793190419,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "cov_02_high",
+      "statistic": "raw_diff_matched",
+      "is_numerical": true,
+      "pinned_value": -0.032051282051282104,
+      "generated_value": -0.032051282051282104,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "cov_02_high",
+      "statistic": "unadjusted_variance_ratio",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    },
+    {
+      "fixture": "fix_02_mixed_types",
+      "covariate": "cov_02_high",
+      "statistic": "matched_variance_ratio",
+      "is_numerical": false,
+      "pinned_value": null,
+      "generated_value": null,
+      "difference": 0,
+      "pass": true
+    }
+  ]
+}

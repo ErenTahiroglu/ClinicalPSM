@@ -102,12 +102,20 @@
       "sha256": "8a831c235338694b4b713aae761a0f70b398340557f4de978f22832e8ff5c500"
     },
     "experiments/cp-webr-02a/harness/test_scientific_parity.mjs": {
-      "bytes": 56543,
-      "sha256": "8e0a608198947e5d5e8b14a3f59cf07a6c12df9a07abc524a40d03549a67ee6f"
+      "bytes": 63630,
+      "sha256": "f949ac6fd87dae9ed7e5945db4a9ef9524866bee19049f6529dafb92d33bd839"
     },
     "experiments/cp-webr-02a/harness/test_browser_qualification.mjs": {
-      "bytes": 38438,
-      "sha256": "35368650e68c154ecf24c6a0b60f2ae16aca8c3b283bdf18d1e0da13d7d1ac5e"
+      "bytes": 46217,
+      "sha256": "510e4b0f09778dadf68a977bf8d2d04e3bdb803e4a6bf6fa40f824ec849bfcc2"
+    },
+    "experiments/cp-webr-02a/harness/generate_cobalt_reference.mjs": {
+      "bytes": 13637,
+      "sha256": "c8fee5976d740c7a31a7ef79528579376b333b9c633238f4031b48c8b3074888"
+    },
+    "experiments/cp-webr-02a/CP-WEBR-02A-R1.2a-E1-ERRATUM.md": {
+      "bytes": 10081,
+      "sha256": "0e217a3604e029c28888c3427ba1483cbea59cd47a14b33b9bb7494082b4e67e"
     },
     "experiments/cp-webr-02a/fixtures/fix_01_oracle_full_precision.json": {
       "bytes": 29484,

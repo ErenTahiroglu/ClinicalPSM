@@ -1,6 +1,6 @@
 {
-  "version": "1.2.0",
-  "generated_at": "2026-10-20T20:41:34.297Z",
+  "version": "1.2.0a-E1",
+  "generated_at": "2026-10-20T22:09:56.251Z",
   "total_fixtures": 25,
   "fixtures": {
     "fix_01_well_conditioned": {
@@ -20,7 +20,20 @@
         "effectiveCaliper": null,
         "distanceScale": "linear.logit",
         "pairDistancesValid": true,
-        "publicationVerdict": "OUTPUT_READY"
+        "publicationVerdict": "OUTPUT_READY",
+        "sampleAccounting": {
+          "importedTotal": 300,
+          "completeCases": 300,
+          "treatedTotal": 119,
+          "controlTotal": 181,
+          "matchedTreatedCount": 119,
+          "matchedControlCount": 119,
+          "unmatchedTreatedCount": 0,
+          "unmatchedControlCount": 62,
+          "discardedTreatedCount": 0,
+          "discardedControlCount": 0,
+          "treatedRetentionRate": 1
+        }
       },
       "comparator_status": "REGRESSION_REFERENCE_VERIFIED"
     },
@@ -40,7 +53,20 @@
         "effectiveCaliper": null,
         "distanceScale": "linear.logit",
         "pairDistancesValid": true,
-        "publicationVerdict": "OUTPUT_READY"
+        "publicationVerdict": "OUTPUT_READY",
+        "sampleAccounting": {
+          "importedTotal": 400,
+          "completeCases": 400,
+          "treatedTotal": 156,
+          "controlTotal": 244,
+          "matchedTreatedCount": 156,
+          "matchedControlCount": 156,
+          "unmatchedTreatedCount": 0,
+          "unmatchedControlCount": 88,
+          "discardedTreatedCount": 0,
+          "discardedControlCount": 0,
+          "treatedRetentionRate": 1
+        }
       },
       "comparator_status": "WEB_R_INTERNAL_PARITY"
     },
@@ -59,7 +85,20 @@
         "effectiveCaliper": null,
         "distanceScale": "linear.logit",
         "pairDistancesValid": true,
-        "publicationVerdict": "OUTPUT_READY"
+        "publicationVerdict": "OUTPUT_READY",
+        "sampleAccounting": {
+          "importedTotal": 400,
+          "completeCases": 400,
+          "treatedTotal": 156,
+          "controlTotal": 244,
+          "matchedTreatedCount": 156,
+          "matchedControlCount": 156,
+          "unmatchedTreatedCount": 0,
+          "unmatchedControlCount": 88,
+          "discardedTreatedCount": 0,
+          "discardedControlCount": 0,
+          "treatedRetentionRate": 1
+        }
       },
       "comparator_status": "WEB_R_INTERNAL_PARITY"
     },
@@ -76,7 +115,20 @@
         "effectiveCaliper": null,
         "distanceScale": "linear.logit",
         "pairDistancesValid": true,
-        "publicationVerdict": "OUTPUT_READY"
+        "publicationVerdict": "OUTPUT_READY",
+        "sampleAccounting": {
+          "importedTotal": 300,
+          "completeCases": 300,
+          "treatedTotal": 119,
+          "controlTotal": 181,
+          "matchedTreatedCount": 119,
+          "matchedControlCount": 119,
+          "unmatchedTreatedCount": 0,
+          "unmatchedControlCount": 62,
+          "discardedTreatedCount": 0,
+          "discardedControlCount": 0,
+          "treatedRetentionRate": 1
+        }
       },
       "comparator_status": "WEB_R_INTERNAL_PARITY"
     },
@@ -94,7 +146,20 @@
         "effectiveCaliper": null,
         "distanceScale": "linear.logit",
         "pairDistancesValid": true,
-        "publicationVerdict": "OUTPUT_READY"
+        "publicationVerdict": "OUTPUT_READY",
+        "sampleAccounting": {
+          "importedTotal": 100,
+          "completeCases": 100,
+          "treatedTotal": 50,
+          "controlTotal": 50,
+          "matchedTreatedCount": 50,
+          "matchedControlCount": 50,
+          "unmatchedTreatedCount": 0,
+          "unmatchedControlCount": 0,
+          "discardedTreatedCount": 0,
+          "discardedControlCount": 0,
+          "treatedRetentionRate": 1
+        }
       },
       "comparator_status": "WEB_R_INTERNAL_PARITY"
     },
@@ -111,7 +176,20 @@
         "effectiveCaliper": null,
         "distanceScale": "linear.logit",
         "pairDistancesValid": true,
-        "publicationVerdict": "OUTPUT_READY"
+        "publicationVerdict": "OUTPUT_READY",
+        "sampleAccounting": {
+          "importedTotal": 300,
+          "completeCases": 300,
+          "treatedTotal": 119,
+          "controlTotal": 181,
+          "matchedTreatedCount": 119,
+          "matchedControlCount": 119,
+          "unmatchedTreatedCount": 0,
+          "unmatchedControlCount": 62,
+          "discardedTreatedCount": 0,
+          "discardedControlCount": 0,
+          "treatedRetentionRate": 1
+        }
       },
       "comparator_status": "WEB_R_INTERNAL_PARITY"
     },
@@ -129,7 +207,20 @@
         "effectiveCaliper": 0.1,
         "distanceScale": "logit",
         "pairDistancesValid": true,
-        "publicationVerdict": "OUTPUT_READY"
+        "publicationVerdict": "OUTPUT_READY",
+        "sampleAccounting": {
+          "importedTotal": 300,
+          "completeCases": 300,
+          "treatedTotal": 119,
+          "controlTotal": 181,
+          "matchedTreatedCount": 119,
+          "matchedControlCount": 119,
+          "unmatchedTreatedCount": 0,
+          "unmatchedControlCount": 62,
+          "discardedTreatedCount": 0,
+          "discardedControlCount": 0,
+          "treatedRetentionRate": 1
+        }
       },
       "comparator_status": "WEB_R_INTERNAL_PARITY"
     },
@@ -147,7 +238,20 @@
         "effectiveCaliper": 0.2,
         "distanceScale": "linear.logit",
         "pairDistancesValid": true,
-        "publicationVerdict": "OUTPUT_READY"
+        "publicationVerdict": "OUTPUT_READY",
+        "sampleAccounting": {
+          "importedTotal": 300,
+          "completeCases": 300,
+          "treatedTotal": 119,
+          "controlTotal": 181,
+          "matchedTreatedCount": 119,
+          "matchedControlCount": 119,
+          "unmatchedTreatedCount": 0,
+          "unmatchedControlCount": 62,
+          "discardedTreatedCount": 0,
+          "discardedControlCount": 0,
+          "treatedRetentionRate": 1
+        }
       },
       "comparator_status": "WEB_R_INTERNAL_PARITY"
     },
@@ -165,7 +269,20 @@
         "effectiveCaliper": 0.030861520481003147,
         "distanceScale": "linear.logit",
         "pairDistancesValid": true,
-        "publicationVerdict": "OUTPUT_READY"
+        "publicationVerdict": "OUTPUT_READY",
+        "sampleAccounting": {
+          "importedTotal": 300,
+          "completeCases": 300,
+          "treatedTotal": 119,
+          "controlTotal": 181,
+          "matchedTreatedCount": 114,
+          "matchedControlCount": 114,
+          "unmatchedTreatedCount": 5,
+          "unmatchedControlCount": 67,
+          "discardedTreatedCount": 0,
+          "discardedControlCount": 0,
+          "treatedRetentionRate": 0.957983193277311
+        }
       },
       "comparator_status": "WEB_R_INTERNAL_PARITY"
     },
@@ -183,7 +300,20 @@
         "effectiveCaliper": 0.8690320210741936,
         "distanceScale": "linear.logit",
         "pairDistancesValid": true,
-        "publicationVerdict": "OUTPUT_READY"
+        "publicationVerdict": "OUTPUT_READY",
+        "sampleAccounting": {
+          "importedTotal": 200,
+          "completeCases": 200,
+          "treatedTotal": 100,
+          "controlTotal": 100,
+          "matchedTreatedCount": 21,
+          "matchedControlCount": 21,
+          "unmatchedTreatedCount": 79,
+          "unmatchedControlCount": 79,
+          "discardedTreatedCount": 0,
+          "discardedControlCount": 0,
+          "treatedRetentionRate": 0.21
+        }
       },
       "comparator_status": "WEB_R_INTERNAL_PARITY"
     },
@@ -193,7 +323,8 @@
       "pass": true,
       "assertions": [
         "Common support discard (both): discarded units properly accounted for",
-        "Sample accounting exact: completeCases (200) == matched (32) + unmatched (64) + discarded (4)",
+        "Sample accounting exact: completeCases (200) == matchedUnits (32) + unmatchedUnits (42) + discardedUnits (126)",
+        "Distinction verified: 16 paired matches formed from 32 matched units (16 treated, 16 control); unmatched = 42 (7 treated, 35 control); discarded = 126 (77 treated, 49 control)",
         "All 16 matched pairs satisfy effective caliper",
         "Sample accounting invariant verified: totalCases == matched + unmatched + discarded"
       ],
@@ -202,7 +333,20 @@
         "effectiveCaliper": 0.3943529622251058,
         "distanceScale": "linear.logit",
         "pairDistancesValid": true,
-        "publicationVerdict": "OUTPUT_READY"
+        "publicationVerdict": "OUTPUT_READY",
+        "sampleAccounting": {
+          "importedTotal": 200,
+          "completeCases": 200,
+          "treatedTotal": 100,
+          "controlTotal": 100,
+          "matchedTreatedCount": 16,
+          "matchedControlCount": 16,
+          "unmatchedTreatedCount": 7,
+          "unmatchedControlCount": 35,
+          "discardedTreatedCount": 77,
+          "discardedControlCount": 49,
+          "treatedRetentionRate": 0.16
+        }
       },
       "comparator_status": "WEB_R_INTERNAL_PARITY"
     },
@@ -220,7 +364,20 @@
         "effectiveCaliper": 0.05,
         "distanceScale": "linear.logit",
         "pairDistancesValid": true,
-        "publicationVerdict": "OUTPUT_READY"
+        "publicationVerdict": "OUTPUT_READY",
+        "sampleAccounting": {
+          "importedTotal": 300,
+          "completeCases": 300,
+          "treatedTotal": 119,
+          "controlTotal": 181,
+          "matchedTreatedCount": 117,
+          "matchedControlCount": 117,
+          "unmatchedTreatedCount": 2,
+          "unmatchedControlCount": 64,
+          "discardedTreatedCount": 0,
+          "discardedControlCount": 0,
+          "treatedRetentionRate": 0.9831932773109243
+        }
       },
       "comparator_status": "WEB_R_INTERNAL_PARITY"
     },
@@ -238,7 +395,20 @@
         "effectiveCaliper": null,
         "distanceScale": "linear.logit",
         "pairDistancesValid": true,
-        "publicationVerdict": "OUTPUT_READY"
+        "publicationVerdict": "OUTPUT_READY",
+        "sampleAccounting": {
+          "importedTotal": 225,
+          "completeCases": 225,
+          "treatedTotal": 150,
+          "controlTotal": 75,
+          "matchedTreatedCount": 75,
+          "matchedControlCount": 75,
+          "unmatchedTreatedCount": 75,
+          "unmatchedControlCount": 0,
+          "discardedTreatedCount": 0,
+          "discardedControlCount": 0,
+          "treatedRetentionRate": 0.5
+        }
       },
       "comparator_status": "WEB_R_INTERNAL_PARITY"
     },
@@ -256,7 +426,20 @@
         "effectiveCaliper": null,
         "distanceScale": "linear.logit",
         "pairDistancesValid": true,
-        "publicationVerdict": "OUTPUT_READY"
+        "publicationVerdict": "OUTPUT_READY",
+        "sampleAccounting": {
+          "importedTotal": 320,
+          "completeCases": 320,
+          "treatedTotal": 40,
+          "controlTotal": 280,
+          "matchedTreatedCount": 40,
+          "matchedControlCount": 40,
+          "unmatchedTreatedCount": 0,
+          "unmatchedControlCount": 240,
+          "discardedTreatedCount": 0,
+          "discardedControlCount": 0,
+          "treatedRetentionRate": 1
+        }
       },
       "comparator_status": "WEB_R_INTERNAL_PARITY"
     },
@@ -274,7 +457,20 @@
         "effectiveCaliper": null,
         "distanceScale": "linear.logit",
         "pairDistancesValid": true,
-        "publicationVerdict": "OUTPUT_READY"
+        "publicationVerdict": "OUTPUT_READY",
+        "sampleAccounting": {
+          "importedTotal": 100,
+          "completeCases": 100,
+          "treatedTotal": 50,
+          "controlTotal": 50,
+          "matchedTreatedCount": 50,
+          "matchedControlCount": 50,
+          "unmatchedTreatedCount": 0,
+          "unmatchedControlCount": 0,
+          "discardedTreatedCount": 0,
+          "discardedControlCount": 0,
+          "treatedRetentionRate": 1
+        }
       },
       "comparator_status": "WEB_R_INTERNAL_PARITY"
     },
@@ -325,7 +521,20 @@
         "effectiveCaliper": null,
         "distanceScale": "linear.logit",
         "pairDistancesValid": true,
-        "publicationVerdict": "OUTPUT_GENERATION_RESTRICTED"
+        "publicationVerdict": "OUTPUT_GENERATION_RESTRICTED",
+        "sampleAccounting": {
+          "importedTotal": 100,
+          "completeCases": 100,
+          "treatedTotal": 43,
+          "controlTotal": 57,
+          "matchedTreatedCount": 43,
+          "matchedControlCount": 43,
+          "unmatchedTreatedCount": 0,
+          "unmatchedControlCount": 14,
+          "discardedTreatedCount": 0,
+          "discardedControlCount": 0,
+          "treatedRetentionRate": 1
+        }
       },
       "comparator_status": "WEB_R_INTERNAL_PARITY"
     },
@@ -386,7 +595,20 @@
         "effectiveCaliper": null,
         "distanceScale": "linear.logit",
         "pairDistancesValid": true,
-        "publicationVerdict": "OUTPUT_GENERATION_RESTRICTED"
+        "publicationVerdict": "OUTPUT_GENERATION_RESTRICTED",
+        "sampleAccounting": {
+          "importedTotal": 120,
+          "completeCases": 120,
+          "treatedTotal": 60,
+          "controlTotal": 60,
+          "matchedTreatedCount": 60,
+          "matchedControlCount": 60,
+          "unmatchedTreatedCount": 0,
+          "unmatchedControlCount": 0,
+          "discardedTreatedCount": 0,
+          "discardedControlCount": 0,
+          "treatedRetentionRate": 1
+        }
       },
       "comparator_status": "WEB_R_INTERNAL_PARITY"
     },
@@ -403,7 +625,20 @@
         "effectiveCaliper": null,
         "distanceScale": "linear.logit",
         "pairDistancesValid": true,
-        "publicationVerdict": "OUTPUT_READY"
+        "publicationVerdict": "OUTPUT_READY",
+        "sampleAccounting": {
+          "importedTotal": 10,
+          "completeCases": 10,
+          "treatedTotal": 4,
+          "controlTotal": 6,
+          "matchedTreatedCount": 4,
+          "matchedControlCount": 4,
+          "unmatchedTreatedCount": 0,
+          "unmatchedControlCount": 2,
+          "discardedTreatedCount": 0,
+          "discardedControlCount": 0,
+          "treatedRetentionRate": 1
+        }
       },
       "comparator_status": "WEB_R_INTERNAL_PARITY"
     },

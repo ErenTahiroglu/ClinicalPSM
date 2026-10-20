@@ -1,10 +1,10 @@
 {
-  "executed_at": "2026-10-20T20:41:45.797Z",
-  "commit_sha": "338d89a281c7d7d09e116498a6b8d106199f3881",
+  "executed_at": "2026-10-20T22:10:33.343Z",
+  "commit_sha": "f8d5fd6265509bb6913bfecb576ef64a26e136e3",
   "results": {
     "initialization": {
       "pass": true,
-      "latencyMs": 2036.7749999910593
+      "latencyMs": 2034.6800000071526
     },
     "repeatedAnalyses": {
       "pass": true,
@@ -22,7 +22,7 @@
       "cancelStatus": "GRACEFUL_INTERRUPT_CONFIRMED",
       "interruptRequested": true,
       "cancellationCompleted": true,
-      "durationMs": 1.1849999874830246,
+      "durationMs": 1.280000001192093,
       "statePostCancel": "READY"
     },
     "hardTerminationAndRecovery": {
@@ -42,7 +42,7 @@
     "hardTerminationFallback": {
       "pass": true,
       "status": "HARD_TERMINATED",
-      "durationMs": 201.1899999976158
+      "durationMs": 201.4699999988079
     },
     "recoveryAndFreshAnalysis": {
       "pass": true,

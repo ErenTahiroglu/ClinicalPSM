@@ -1,14 +1,20 @@
 {
-  "version": "1.2.0a",
-  "generated_at": "2026-10-20T00:00:00.000Z",
+  "version": "1.2.0a-E1",
+  "generated_at": "2026-10-20T21:58:50.696Z",
   "toolchain": {
     "r": "4.6.0",
     "webr": "0.6.0",
     "matchit": "4.8.1",
     "cobalt": "5.0.0"
   },
-  "provenance": "OFFICIAL_R_COBALT_BAL_TAB_EVALUATION",
-  "method_description": "cobalt::bal.tab(m_out, s.d.denom = 'treated', binary = 'raw', un = TRUE) and cobalt::bal.tab(m_out, s.d.denom = 'treated', binary = 'std', un = TRUE)",
+  "provenance": "OFFICIAL_R_COBALT_BAL_TAB_INDEPENDENT_EVALUATION",
+  "method_description": "Direct R-side MatchIt::matchit and cobalt::bal.tab evaluation without adapter or template layers",
+  "execution_command": "node experiments/cp-webr-02a/harness/generate_cobalt_reference.mjs",
+  "generator_source_sha256": "c8fee5976d740c7a31a7ef79528579376b333b9c633238f4031b48c8b3074888",
+  "input_fixture_hashes": {
+    "fix_01_well_conditioned": "5a76a1d6921f59eb92accd464f41817b360798d23c7d54bfb0c904544c2639dc",
+    "fix_02_mixed_types": "d2410f4639e9a23c295b42747ed787b2db018e929bdc0e49db3c0c093ab076ad"
+  },
   "tolerance": 0.0001,
   "fixtures": {
     "fix_01_well_conditioned": {

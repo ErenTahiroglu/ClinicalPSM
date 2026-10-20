@@ -1,6 +1,6 @@
 {
-  "executed_at": "2026-10-20T20:41:45.797Z",
-  "commit_sha": "338d89a281c7d7d09e116498a6b8d106199f3881",
+  "executed_at": "2026-10-20T22:10:33.343Z",
+  "commit_sha": "f8d5fd6265509bb6913bfecb576ef64a26e136e3",
   "fault_injection_tests": {
     "fault_injection_verdict": "PASS",
     "faults_evaluated": 5,
@@ -73,7 +73,7 @@
   ],
   "checkpoints": {
     "T1_post_pipeline": {
-      "executed_at": "2026-10-20T20:42:05.869Z",
+      "executed_at": "2026-10-20T22:10:53.895Z",
       "sentinels_checked": [
         "SYNTH_PT_7a9f8c12_SEC_TRACE_01",
         "SYNTH_PT_b3e4d567_SEC_TRACE_02",
@@ -114,7 +114,7 @@
       "storage_accessible": true
     },
     "T2_post_termination": {
-      "executed_at": "2026-10-20T20:42:05.870Z",
+      "executed_at": "2026-10-20T22:10:53.897Z",
       "sentinels_checked": [
         "SYNTH_PT_7a9f8c12_SEC_TRACE_01",
         "SYNTH_PT_b3e4d567_SEC_TRACE_02",
@@ -155,7 +155,7 @@
       "storage_accessible": true
     },
     "T3_post_respawn": {
-      "executed_at": "2026-10-20T20:42:05.872Z",
+      "executed_at": "2026-10-20T22:10:53.898Z",
       "sentinels_checked": [
         "SYNTH_PT_7a9f8c12_SEC_TRACE_01",
         "SYNTH_PT_b3e4d567_SEC_TRACE_02",
@@ -196,7 +196,7 @@
       "storage_accessible": true
     },
     "T4_post_second_run": {
-      "executed_at": "2026-10-20T20:42:07.965Z",
+      "executed_at": "2026-10-20T22:10:56.035Z",
       "sentinels_checked": [
         "SYNTH_PT_7a9f8c12_SEC_TRACE_01",
         "SYNTH_PT_b3e4d567_SEC_TRACE_02",
@@ -237,7 +237,7 @@
       "storage_accessible": true
     },
     "T5_final_clean": {
-      "executed_at": "2026-10-20T20:42:07.967Z",
+      "executed_at": "2026-10-20T22:10:56.037Z",
       "sentinels_checked": [
         "SYNTH_PT_7a9f8c12_SEC_TRACE_01",
         "SYNTH_PT_b3e4d567_SEC_TRACE_02",
