@@ -58,15 +58,31 @@ await build({
 copyFileSync('src/style.css', (mkdirSync(join(OUT, 'assets'), { recursive: true }), join(OUT, 'assets/style.css')))
 copyFileSync('src/lang.js', join(OUT, 'assets/lang.js'))
 
+// Ensure pinned WebR and package cache exists via deterministic setup script
+const cacheDir = '../../experiments/cp-webr-00b/.cache'
+const hasCacheWebr = existsSync(join(cacheDir, 'webr/dist/R.wasm'))
+const hasNodeModulesWebr = existsSync('../../node_modules/webr/dist/R.wasm')
+const hasLocalRepo = existsSync(join(cacheDir, 'local-repo/bin/emscripten/contrib/4.6/PACKAGES'))
+
+if ((!hasCacheWebr && !hasNodeModulesWebr) || !hasLocalRepo) {
+  console.log('Ensuring WebR 0.6.0 and Wasm package cache via setup_experiment.mjs...')
+  const { execSync } = await import('node:child_process')
+  execSync('node ../../experiments/cp-webr-00b/harness/setup_experiment.mjs', { stdio: 'inherit' })
+}
+
+const resolvedDist = existsSync(join(cacheDir, 'webr/dist/R.wasm'))
+  ? join(cacheDir, 'webr/dist')
+  : (hasNodeModulesWebr ? '../../node_modules/webr/dist' : join(cacheDir, 'webr/dist'))
+
 // Copy WebR core runtime binaries & virtual filesystem
 const webrDir = join(OUT, 'assets/webr')
 mkdirSync(webrDir, { recursive: true })
 
 const webrCoreFiles = ['R.js', 'R.wasm', 'libRblas.so', 'libRlapack.so', 'webr-worker.js', 'webr.mjs', 'webr.js']
 for (const f of webrCoreFiles) {
-  copyFileSync(`../../node_modules/webr/dist/${f}`, join(webrDir, f))
+  copyFileSync(join(resolvedDist, f), join(webrDir, f))
 }
-cpSync('../../experiments/cp-webr-00b/.cache/webr/dist/vfs', join(webrDir, 'vfs'), { recursive: true })
+cpSync(join(resolvedDist, 'vfs'), join(webrDir, 'vfs'), { recursive: true })
 
 // Copy authoritative R computation template and verify SHA-256
 const PINNED_TEMPLATE_SHA256 = '7989403c7d093031b93a9c971a6d4f055101bab83c0ec4417fc52e4dceee24a4'
@@ -81,7 +97,7 @@ writeFileSync(join(webrDir, 'r_template.R'), templateSource, 'utf8')
 // Copy pre-compiled Wasm R package archives (MatchIt 4.8.1, cobalt 5.0.0 and dependencies)
 const repoDir = join(OUT, 'assets/repo')
 mkdirSync(repoDir, { recursive: true })
-cpSync('../../experiments/cp-webr-00b/.cache/local-repo', repoDir, { recursive: true })
+cpSync(join(cacheDir, 'local-repo'), repoDir, { recursive: true })
 
 const pages = ['', 'demo', 'pricing', 'limits', 'privacy']
 const path = (lang, p) => `/${lang}/${p ? p + '/' : ''}`

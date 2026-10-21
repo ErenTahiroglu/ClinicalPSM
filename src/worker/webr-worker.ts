@@ -2,11 +2,22 @@
 // Bridges UI thread (Layer 1) to WebR runtime (Layer 3)
 // Pinned to WebR 0.6.0, R 4.6.0, MatchIt 4.8.1, cobalt 5.0.0
 
-import { WebR } from 'webr';
 import { WebRStatisticalAdapter } from '../lib/webr/webr_adapter.mjs';
 
+interface WebRInstance {
+  init(): Promise<void>;
+  installPackages(packages: string[], options?: { repos?: string[] }): Promise<void>;
+  evalR(code: string): Promise<unknown>;
+  interrupt(): Promise<void>;
+}
+
+interface WebRConstructor {
+  new (options?: { baseUrl?: string }): WebRInstance;
+}
+
 let adapter: WebRStatisticalAdapter | null = null;
-let webR: WebR | null = null;
+let WebRClass: WebRConstructor | null = null;
+let webR: WebRInstance | null = null;
 let templateLoaded = false;
 let currentExecutionPromise: Promise<unknown> | null = null;
 
@@ -29,7 +40,13 @@ self.onmessage = async (event: MessageEvent) => {
           const baseUrl = payload?.baseUrl || '/assets/webr/';
           const repoUrl = payload?.repoUrl || '/assets/repo';
 
-          webR = new WebR({ baseUrl });
+          if (!WebRClass) {
+            const webrModuleUrl = `${baseUrl.replace(/\/$/, '')}/webr.mjs`;
+            const mod = (await import(/* @vite-ignore */ webrModuleUrl)) as { WebR: WebRConstructor };
+            WebRClass = mod.WebR;
+          }
+
+          webR = new WebRClass({ baseUrl });
           await webR.init();
 
           await webR.installPackages(REQUIRED_PACKAGES, { repos: [repoUrl] });

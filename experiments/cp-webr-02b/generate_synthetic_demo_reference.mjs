@@ -133,7 +133,7 @@ for (cn in cov_names) {
   is_bin <- cn == "sex_M"
   raw_row <- b_raw[cn, ]
   std_row <- b_std[cn, ]
-  
+
   vr_un <- if ("V.Ratio.Un" %in% names(std_row) && !is.na(std_row[["V.Ratio.Un"]])) as.numeric(std_row[["V.Ratio.Un"]]) else NULL
   vr_adj <- if ("V.Ratio.Adj" %in% names(std_row) && !is.na(std_row[["V.Ratio.Adj"]])) as.numeric(std_row[["V.Ratio.Adj"]]) else NULL
 
