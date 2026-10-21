@@ -28,7 +28,7 @@ for (const f of files) {
 rec(`all ${files.length - 1} built files are served and byte-identical to the local build`, mism.length === 0, mism.join(','))
 
 // 2. codes
-for (const p of ['/', '/en/', '/tr/', '/en/demo/', '/tr/demo/', '/en/pricing/', '/tr/pricing/', '/en/limits/', '/tr/limits/', '/en/privacy/', '/tr/privacy/', '/robots.txt', '/assets/psm-worker.js']) {
+for (const p of ['/', '/en/', '/tr/', '/en/demo/', '/tr/demo/', '/en/pricing/', '/tr/pricing/', '/en/limits/', '/tr/limits/', '/en/privacy/', '/tr/privacy/', '/robots.txt', '/assets/webr-worker.js']) {
   const r = await get(p); rec(`GET ${p} -> 200`, r.status === 200, String(r.status))
 }
 for (const p of ['/en', '/tr/demo']) { const r = await get(p); const l = r.headers.get('location') ?? ''; rec(`GET ${p} redirects once to its trailing-slash form on the same host`, [301, 307, 308].includes(r.status) && (l === p + '/' || l === base + p + '/'), `${r.status} ${l}`) }
@@ -37,7 +37,7 @@ rec('unknown path -> 404 with bilingual page', nf.status === 404 && /Page not fo
 
 // 3. nothing sensitive or diagnostic is reachable (must be 404, never 200/3xx)
 const hidden = ['/.env', '/.env.local', '/.dev.vars', '/.git/config', '/.git/HEAD', '/wrangler.jsonc', '/wrangler.staging.local.jsonc', '/package.json', '/package-lock.json', '/build.mjs', '/src/content.json', '/test/site.mjs', '/node_modules/', '/.vscode/settings.json',
-  '/api/me', '/api/auth/sign-up/email', '/api/auth/sign-in/email', '/api/upload', '/api/analyses', '/api/webhooks/polar', '/__diag', '/debug', '/admin', '/login', '/register', '/dashboard', '/.well-known/security.txt', '/sitemap.xml', '/psm-worker.js']
+  '/api/me', '/api/auth/sign-up/email', '/api/auth/sign-in/email', '/api/upload', '/api/analyses', '/api/webhooks/polar', '/__diag', '/debug', '/admin', '/login', '/register', '/dashboard', '/.well-known/security.txt', '/sitemap.xml', '/psm-worker.js', '/assets/psm-worker.js']
 const bad = []
 for (const p of hidden) { const r = await get(p); if (r.status !== 404) bad.push(`${p}:${r.status}`) }
 rec(`${hidden.length} sensitive/diagnostic/auth/upload/payment paths all 404`, bad.length === 0, bad.join(','))

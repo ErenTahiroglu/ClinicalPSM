@@ -51,11 +51,13 @@ rec('no console errors/CSP violations on any page (clean context)', cspMsgs.leng
 rec('no third-party requests on any page', ext2.length === 0, ext2.join(','))
 
 // headers
-for (const path of ['/en/', '/assets/style.css', '/assets/psm-worker.js', '/tr/demo/', '/nope']) {
+for (const path of ['/en/', '/assets/style.css', '/assets/webr-worker.js', '/tr/demo/', '/nope']) {
   const r = await ctx.request.get(base + path)
   const h = r.headers()
   rec(`headers on ${path}`, /frame-ancestors 'none'/.test(h['content-security-policy'] ?? '') && !/unsafe-/.test(h['content-security-policy'] ?? '') && h['x-content-type-options'] === 'nosniff' && h['x-frame-options'] === 'DENY' && h['referrer-policy'] === 'no-referrer', `status=${r.status()}`)
 }
+const legacyWorker = await ctx.request.get(base + '/assets/psm-worker.js')
+rec('single-engine: legacy psm-worker.js is 404', legacyWorker.status() === 404, `status=${legacyWorker.status()}`)
 
 // navigation + language switch + keyboard
 await page.goto(`${base}/en/`)
@@ -87,11 +89,11 @@ for (const lang of ['en', 'tr']) {
 for (const lang of ['en', 'tr']) {
   await page.goto(`${base}/${lang}/demo/`)
   await page.click('#run')
-  await page.waitForSelector('#out table', { timeout: 15000 })
+  await page.waitForSelector('#out table', { timeout: 45000 })
   const txt = await page.locator('main').innerText()
   const rows = await page.locator('#out tbody tr').count()
   const matched = await page.locator('#out .card strong').nth(2).innerText()
-  rec(`${lang} demo: result table rendered (${rows} covariates, ${matched} matched pairs)`, rows >= 3 && Number(matched) > 0)
+  rec(`${lang} demo: result table rendered (${rows} covariates, ${matched} matched pairs)`, rows === 3 && Number(matched) === 91)
   rec(`${lang} demo: output stays labelled unvalidated/synthetic`, /UNVALIDATED|DOĞRULANMAMIŞ/.test(txt) && /SYNTHETIC|SENTETİK/.test(txt))
   rec(`${lang} demo: button re-enabled after run`, await page.locator('#run').isEnabled())
 }
