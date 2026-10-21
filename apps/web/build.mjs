@@ -1,7 +1,8 @@
-// Generates public/ (static HTML for EN/TR, CSS, JS, the bundled PSM Web Worker, _headers). No framework, no CDN.
+// Generates public/ (static HTML for EN/TR, CSS, JS, WebR Worker and assets, _headers). No framework, no CDN.
 import { build } from 'esbuild'
-import { mkdirSync, readFileSync, writeFileSync, rmSync, copyFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync, rmSync, copyFileSync, cpSync, existsSync, readdirSync, statSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { createHash } from 'node:crypto'
 
 // ---- release configuration (env). --production fails closed when operator identity is missing ----
 const PROD = process.argv.includes('--production')
@@ -25,11 +26,62 @@ rmSync(OUT, { recursive: true, force: true })
 const w = (p, s) => { mkdirSync(dirname(join(OUT, p)), { recursive: true }); writeFileSync(join(OUT, p), s) }
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
 
-// ---- engine worker: bundles the repository's current PSM worker unmodified ----
-await build({ entryPoints: ['../../src/lib/psm/worker.ts'], bundle: true, format: 'iife', minify: true, outfile: join(OUT, 'assets/psm-worker.js'), target: 'es2022', logLevel: 'warning' })
+// ---- WebR Dedicated Application Worker ----
+await build({
+  entryPoints: ['../../src/worker/webr-worker.ts'],
+  bundle: true,
+  format: 'esm',
+  minify: true,
+  outfile: join(OUT, 'assets/webr-worker.js'),
+  target: 'es2022',
+  external: ['node:crypto'],
+  logLevel: 'warning'
+})
+
+// Single-engine enforcement: legacy psm-worker.js must NEVER be bundled
+if (existsSync(join(OUT, 'assets/psm-worker.js'))) {
+  console.error('CRITICAL BUILD ERROR: Legacy psm-worker.js was generated! Single-engine mandate violated.')
+  process.exit(1)
+}
+
+// Bundle main thread demo UI script
+await build({
+  entryPoints: ['src/demo.js'],
+  bundle: true,
+  format: 'iife',
+  minify: true,
+  outfile: join(OUT, 'assets/demo.js'),
+  target: 'es2022',
+  logLevel: 'warning'
+})
+
 copyFileSync('src/style.css', (mkdirSync(join(OUT, 'assets'), { recursive: true }), join(OUT, 'assets/style.css')))
-copyFileSync('src/demo.js', join(OUT, 'assets/demo.js'))
 copyFileSync('src/lang.js', join(OUT, 'assets/lang.js'))
+
+// Copy WebR core runtime binaries & virtual filesystem
+const webrDir = join(OUT, 'assets/webr')
+mkdirSync(webrDir, { recursive: true })
+
+const webrCoreFiles = ['R.js', 'R.wasm', 'libRblas.so', 'libRlapack.so', 'webr-worker.js', 'webr.mjs', 'webr.js']
+for (const f of webrCoreFiles) {
+  copyFileSync(`../../node_modules/webr/dist/${f}`, join(webrDir, f))
+}
+cpSync('../../experiments/cp-webr-00b/.cache/webr/dist/vfs', join(webrDir, 'vfs'), { recursive: true })
+
+// Copy authoritative R computation template and verify SHA-256
+const PINNED_TEMPLATE_SHA256 = '7989403c7d093031b93a9c971a6d4f055101bab83c0ec4417fc52e4dceee24a4'
+const templateSource = readFileSync('../../experiments/cp-webr-02a/adapter/r_template.R', 'utf8')
+const actualTemplateSha256 = createHash('sha256').update(templateSource).digest('hex')
+if (actualTemplateSha256 !== PINNED_TEMPLATE_SHA256) {
+  console.error(`CRITICAL BUILD ERROR: r_template.R SHA-256 mismatch! Expected ${PINNED_TEMPLATE_SHA256}, got ${actualTemplateSha256}`)
+  process.exit(1)
+}
+writeFileSync(join(webrDir, 'r_template.R'), templateSource, 'utf8')
+
+// Copy pre-compiled Wasm R package archives (MatchIt 4.8.1, cobalt 5.0.0 and dependencies)
+const repoDir = join(OUT, 'assets/repo')
+mkdirSync(repoDir, { recursive: true })
+cpSync('../../experiments/cp-webr-00b/.cache/local-repo', repoDir, { recursive: true })
 
 const pages = ['', 'demo', 'pricing', 'limits', 'privacy']
 const path = (lang, p) => `/${lang}/${p ? p + '/' : ''}`
@@ -79,10 +131,10 @@ for (const lang of ['en', 'tr']) {
 <p><a class="btn" href="${path(lang, 'demo')}">${esc(t.home.cta)}</a> <a class="btn secondary" href="${path(lang, 'limits')}">${esc(t.home.cta2)}</a></p>`))
 
   const d = t.demo
-  const i18n = JSON.stringify({ summary: d.summary, treated: d.treated, control: d.control, matched: d.matched, smdB: d.smdB, smdA: d.smdA, tbl: d.tbl, cov: d.cov, before: d.before, after: d.after, note: d.note, err: d.err, run: d.run, running: d.running, status: d.status }).replace(/</g, '\\u003c')
+  const i18n = JSON.stringify(d).replace(/</g, '\\u003c')
   w(`${lang}/demo/index.html`, layout(lang, 'demo', d.title, `
 <h1>${esc(d.title)}</h1><p class="banner warnline" role="alert">${esc(d.warn)}</p><p>${esc(d.intro)}</p>
-<p><button id="run" class="btn" type="button">${esc(d.run)}</button></p>
+<p><button id="run" class="btn" type="button">${esc(d.run)}</button> <button id="cancel" class="btn secondary" type="button" style="display:none;margin-left:.5rem">${esc(d.cancel || 'Cancel')}</button></p>
 <p id="status" role="status" aria-live="polite" class="sr"></p>
 <div id="out" aria-live="polite"></div>
 <script type="application/json" id="i18n">${i18n}</script>`, '<script src="/assets/demo.js" defer></script>'))
@@ -135,8 +187,55 @@ ${INDEXABLE ? '' : '  X-Robots-Tag: noindex, nofollow\n'}  Content-Security-Poli
   Referrer-Policy: no-referrer
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
   Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
   Cross-Origin-Resource-Policy: same-origin
-${PROD && HSTS && HSTS !== '0' ? `  Strict-Transport-Security: max-age=${HSTS}\n` : ''}/assets/*
+${PROD && HSTS && HSTS !== '0' ? `  Strict-Transport-Security: max-age=${HSTS}\n` : ''}/assets/webr-worker.js
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'wasm-unsafe-eval' blob:; connect-src 'self' blob:; worker-src 'self' blob:;
+/assets/webr/*
+  Cache-Control: public, max-age=31536000, immutable
+/assets/repo/*
+  Cache-Control: public, max-age=31536000, immutable
+/assets/*
   Cache-Control: public, max-age=3600
 `)
+
+// ---- Build Asset Measurement Audit Gate ----
+function auditAssets(dir) {
+  let fileCount = 0
+  let totalBytes = 0
+  let largestFile = { path: '', bytes: 0 }
+  const MAX_FILE_SIZE = 25 * 1024 * 1024 // 25 MiB Cloudflare Workers limit
+  const MAX_FILE_COUNT = 20000
+
+  function walk(current) {
+    for (const entry of readdirSync(current, { withFileTypes: true })) {
+      const p = join(current, entry.name)
+      if (entry.isDirectory()) walk(p)
+      else if (entry.isFile()) {
+        fileCount++
+        const size = statSync(p).size
+        totalBytes += size
+        if (size > largestFile.bytes) largestFile = { path: p, bytes: size }
+        if (size > MAX_FILE_SIZE) {
+          throw new Error(`ASSET_EXCEEDS_CLOUDFLARE_LIMIT: ${p} (${size} bytes) exceeds 25 MiB limit`)
+        }
+      }
+    }
+  }
+
+  walk(dir)
+  if (fileCount > MAX_FILE_COUNT) {
+    throw new Error(`ASSET_COUNT_EXCEEDS_LIMIT: ${fileCount} files exceeds 20,000 file limit`)
+  }
+
+  const totalMiB = (totalBytes / (1024 * 1024)).toFixed(2)
+  const largestMiB = (largestFile.bytes / (1024 * 1024)).toFixed(2)
+  console.log(`[Asset Audit] Total files: ${fileCount} (limit: 20000)`)
+  console.log(`[Asset Audit] Total size: ${totalMiB} MiB`)
+  console.log(`[Asset Audit] Largest file: ${largestFile.path} (${largestMiB} MiB, limit: 25 MiB)`)
+  return { fileCount, totalBytes, largestFile }
+}
+
+auditAssets(OUT)
+
 console.log(`built public/ (${PROD ? 'production' : 'preview'}${INDEXABLE ? ', indexable' : ''})`)
