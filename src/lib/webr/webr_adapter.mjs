@@ -126,7 +126,7 @@ export class WebRStatisticalAdapter {
 
     // Assemble data frame in child environment with factor transformations
     let factorProcessingCode = '';
-    for (const [covAlias, meta] of Object.entries(factorMetadata)) {
+    for (const covAlias of Object.keys(factorMetadata)) {
       factorProcessingCode += `
         ${covAlias}_fac <- factor(
           ${covAlias}_raw,

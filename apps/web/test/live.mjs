@@ -13,7 +13,7 @@ const sha = b => createHash('sha256').update(b).digest('hex')
 
 // 1. deployed bytes == local build bytes (integrity, nothing extra reachable by name)
 const files = []
-const walk = d => { for (const e of readdirSync(d)) { const p = join(d, e); statSync(p).isDirectory() ? walk(p) : files.push(p) } }
+const walk = d => { for (const e of readdirSync(d)) { const p = join(d, e); if (statSync(p).isDirectory()) { walk(p) } else { files.push(p) } } }
 walk('public')
 let mism = []
 for (const f of files) {
@@ -46,7 +46,7 @@ for (const m of ['POST', 'PUT', 'DELETE']) { const r = await get('/en/', { metho
 // 4. open-redirect and loop probes: no response may point off-host
 const probes = ['//evil.example/', '/\\evil.example', '/en//evil.example', '/%2f%2fevil.example', '/?next=https://evil.example', '/en/?redirect=//evil.example', 'https://evil.example/']
 const offhost = []
-for (const p of probes) { try { const r = await get(p.startsWith('http') ? '/' : p, p.startsWith('http') ? { headers: { Host: 'evil.example' } } : {}); const l = r.headers.get('location'); if (l && new URL(l, base).origin !== new URL(base).origin) offhost.push(`${p}->${l}`) } catch (e) { /* refusing to send is fine */ } }
+for (const p of probes) { try { const r = await get(p.startsWith('http') ? '/' : p, p.startsWith('http') ? { headers: { Host: 'evil.example' } } : {}); const l = r.headers.get('location'); if (l && new URL(l, base).origin !== new URL(base).origin) offhost.push(`${p}->${l}`) } catch { /* refusing to send is fine */ } }
 rec('no probe produces a redirect to another origin (no open redirect)', offhost.length === 0, offhost.join(','))
 let hops = 0, cur = '/en', loop = false; const seen = new Set()
 while (hops < 6) { const r = await get(cur); const l = r.headers.get('location'); if (!l) break; cur = new URL(l, base).pathname; if (seen.has(cur)) { loop = true; break } seen.add(cur); hops++ }

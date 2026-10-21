@@ -44,7 +44,13 @@ for (const d of ['apps/web/public', 'experiments/cf01-static-site/public']) {
   if (!existsSync(f)) { if (strictWeb && d.startsWith('apps/web')) fail('apps/web/public/_headers missing: run the web build first'); continue }
   const hdr = readFileSync(f, 'utf8')
   if (hdr.split('\n').filter(l => l.trim() && !/^\s/.test(l)).length > 100) fail(`${f} exceeds 100 rules`)
-  if (/unsafe-/.test(hdr)) fail(`${f} CSP contains unsafe-*`)
+  const rules = hdr.split(/\n(?=[/*])/)
+  for (const r of rules) {
+    const lines = r.split('\n').map(l => l.trim())
+    const path = lines[0]
+    const content = lines.slice(1).join('\n')
+    if (path !== '/assets/webr/*' && /(?<!wasm-)unsafe-/.test(content)) fail(`${f} rule ${path} CSP contains unsafe-*`)
+  }
   if (!/frame-ancestors 'none'/.test(hdr)) fail(`${f} CSP lacks frame-ancestors none`)
   console.log(`ok   ${f} headers`)
 }

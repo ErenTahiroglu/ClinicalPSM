@@ -14,6 +14,9 @@ const eslintConfig = defineConfig([
     'next-env.d.ts',
     // Generated files:
     'coverage/**',
+    'experiments/**',
+    'apps/*/public/**',
+    '**/.wrangler/**',
   ]),
   {
     rules: {

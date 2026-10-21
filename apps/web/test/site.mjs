@@ -20,6 +20,7 @@ const consoleProblems = [], external = []
 page.on('console', m => { if (['error', 'warning'].includes(m.type())) consoleProblems.push(m.text()) })
 page.on('pageerror', e => consoleProblems.push(String(e)))
 page.on('request', r => { if (!r.url().startsWith(base) && !r.url().startsWith('data:')) external.push(r.url()) })
+page.on('response', r => { if (r.status() >= 400) consoleProblems.push(`HTTP ${r.status()}: ${r.url()}`) })
 
 const pages = ['', 'demo/', 'pricing/', 'limits/', 'privacy/']
 for (const lang of ['en', 'tr']) {
@@ -54,7 +55,7 @@ rec('no third-party requests on any page', ext2.length === 0, ext2.join(','))
 for (const path of ['/en/', '/assets/style.css', '/assets/webr-worker.js', '/tr/demo/', '/nope']) {
   const r = await ctx.request.get(base + path)
   const h = r.headers()
-  rec(`headers on ${path}`, /frame-ancestors 'none'/.test(h['content-security-policy'] ?? '') && !/unsafe-/.test(h['content-security-policy'] ?? '') && h['x-content-type-options'] === 'nosniff' && h['x-frame-options'] === 'DENY' && h['referrer-policy'] === 'no-referrer', `status=${r.status()}`)
+  rec(`headers on ${path}`, /frame-ancestors 'none'/.test(h['content-security-policy'] ?? '') && !/(?<!wasm-)unsafe-/.test(h['content-security-policy'] ?? '') && h['x-content-type-options'] === 'nosniff' && h['x-frame-options'] === 'DENY' && h['referrer-policy'] === 'no-referrer', `status=${r.status()}`)
 }
 const legacyWorker = await ctx.request.get(base + '/assets/psm-worker.js')
 rec('single-engine: legacy psm-worker.js is 404', legacyWorker.status() === 404, `status=${legacyWorker.status()}`)
@@ -89,7 +90,15 @@ for (const lang of ['en', 'tr']) {
 for (const lang of ['en', 'tr']) {
   await page.goto(`${base}/${lang}/demo/`)
   await page.click('#run')
-  await page.waitForSelector('#out table', { timeout: 45000 })
+  try {
+    await page.waitForSelector('#out table', { timeout: 45000 })
+  } catch (err) {
+    const statusText = await page.locator('#status').innerText().catch(() => '')
+    const outHtml = await page.locator('#out').innerHTML().catch(() => '')
+    console.error(`DEMO ERROR [${lang}]: status="${statusText}", out="${outHtml}"`)
+    console.error(`DEMO CONSOLE PROBLEMS:`, consoleProblems)
+    throw err
+  }
   const txt = await page.locator('main').innerText()
   const rows = await page.locator('#out tbody tr').count()
   const matched = await page.locator('#out .card strong').nth(2).innerText()

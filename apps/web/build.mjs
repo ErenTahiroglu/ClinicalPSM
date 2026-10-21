@@ -2,7 +2,11 @@
 import { build } from 'esbuild'
 import { mkdirSync, readFileSync, writeFileSync, rmSync, copyFileSync, cpSync, existsSync, readdirSync, statSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { createHash } from 'node:crypto'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const repoRoot = join(__dirname, '../..')
 
 // ---- release configuration (env). --production fails closed when operator identity is missing ----
 const PROD = process.argv.includes('--production')
@@ -20,15 +24,15 @@ if (PROD) {
   if (bad.length) { console.error('production build refused; missing/invalid: ' + bad.join(', ')); process.exit(1) }
 }
 
-const C = JSON.parse(readFileSync('src/content.json', 'utf8'))
-const OUT = 'public'
+const C = JSON.parse(readFileSync(join(__dirname, 'src/content.json'), 'utf8'))
+const OUT = join(__dirname, 'public')
 rmSync(OUT, { recursive: true, force: true })
 const w = (p, s) => { mkdirSync(dirname(join(OUT, p)), { recursive: true }); writeFileSync(join(OUT, p), s) }
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
 
 // ---- WebR Dedicated Application Worker ----
 await build({
-  entryPoints: ['../../src/worker/webr-worker.ts'],
+  entryPoints: [join(repoRoot, 'src/worker/webr-worker.ts')],
   bundle: true,
   format: 'esm',
   minify: true,
@@ -46,7 +50,7 @@ if (existsSync(join(OUT, 'assets/psm-worker.js'))) {
 
 // Bundle main thread demo UI script
 await build({
-  entryPoints: ['src/demo.js'],
+  entryPoints: [join(__dirname, 'src/demo.js')],
   bundle: true,
   format: 'iife',
   minify: true,
@@ -55,24 +59,25 @@ await build({
   logLevel: 'warning'
 })
 
-copyFileSync('src/style.css', (mkdirSync(join(OUT, 'assets'), { recursive: true }), join(OUT, 'assets/style.css')))
-copyFileSync('src/lang.js', join(OUT, 'assets/lang.js'))
+copyFileSync(join(__dirname, 'src/style.css'), (mkdirSync(join(OUT, 'assets'), { recursive: true }), join(OUT, 'assets/style.css')))
+copyFileSync(join(__dirname, 'src/lang.js'), join(OUT, 'assets/lang.js'))
 
 // Ensure pinned WebR and package cache exists via deterministic setup script
-const cacheDir = '../../experiments/cp-webr-00b/.cache'
+const cacheDir = join(repoRoot, 'experiments/cp-webr-00b/.cache')
 const hasCacheWebr = existsSync(join(cacheDir, 'webr/dist/R.wasm'))
-const hasNodeModulesWebr = existsSync('../../node_modules/webr/dist/R.wasm')
+const hasNodeModulesWebr = existsSync(join(repoRoot, 'node_modules/webr/dist/R.wasm'))
 const hasLocalRepo = existsSync(join(cacheDir, 'local-repo/bin/emscripten/contrib/4.6/PACKAGES'))
 
 if ((!hasCacheWebr && !hasNodeModulesWebr) || !hasLocalRepo) {
   console.log('Ensuring WebR 0.6.0 and Wasm package cache via setup_experiment.mjs...')
   const { execSync } = await import('node:child_process')
-  execSync('node ../../experiments/cp-webr-00b/harness/setup_experiment.mjs', { stdio: 'inherit' })
+  const setupScript = join(repoRoot, 'experiments/cp-webr-00b/harness/setup_experiment.mjs')
+  execSync(`node "${setupScript}"`, { cwd: repoRoot, stdio: 'inherit' })
 }
 
 const resolvedDist = existsSync(join(cacheDir, 'webr/dist/R.wasm'))
   ? join(cacheDir, 'webr/dist')
-  : (hasNodeModulesWebr ? '../../node_modules/webr/dist' : join(cacheDir, 'webr/dist'))
+  : (hasNodeModulesWebr ? join(repoRoot, 'node_modules/webr/dist') : join(cacheDir, 'webr/dist'))
 
 // Copy WebR core runtime binaries & virtual filesystem
 const webrDir = join(OUT, 'assets/webr')
@@ -86,7 +91,7 @@ cpSync(join(resolvedDist, 'vfs'), join(webrDir, 'vfs'), { recursive: true })
 
 // Copy authoritative R computation template and verify SHA-256
 const PINNED_TEMPLATE_SHA256 = '7989403c7d093031b93a9c971a6d4f055101bab83c0ec4417fc52e4dceee24a4'
-const templateSource = readFileSync('../../experiments/cp-webr-02a/adapter/r_template.R', 'utf8')
+const templateSource = readFileSync(join(repoRoot, 'experiments/cp-webr-02a/adapter/r_template.R'), 'utf8')
 const actualTemplateSha256 = createHash('sha256').update(templateSource).digest('hex')
 if (actualTemplateSha256 !== PINNED_TEMPLATE_SHA256) {
   console.error(`CRITICAL BUILD ERROR: r_template.R SHA-256 mismatch! Expected ${PINNED_TEMPLATE_SHA256}, got ${actualTemplateSha256}`)
@@ -103,7 +108,7 @@ const pages = ['', 'demo', 'pricing', 'limits', 'privacy']
 const path = (lang, p) => `/${lang}/${p ? p + '/' : ''}`
 
 function layout(lang, page, title, body, extraScript = '') {
-  const t = C[lang], o = C[t.otherLang]
+  const t = C[lang], _o = C[t.otherLang]
   const nav = pages.map(p => {
     const key = p === '' ? 'home' : p
     const cur = p === page ? ' aria-current="page"' : ''
@@ -150,7 +155,7 @@ for (const lang of ['en', 'tr']) {
   const i18n = JSON.stringify(d).replace(/</g, '\\u003c')
   w(`${lang}/demo/index.html`, layout(lang, 'demo', d.title, `
 <h1>${esc(d.title)}</h1><p class="banner warnline" role="alert">${esc(d.warn)}</p><p>${esc(d.intro)}</p>
-<p><button id="run" class="btn" type="button">${esc(d.run)}</button> <button id="cancel" class="btn secondary" type="button" style="display:none;margin-left:.5rem">${esc(d.cancel || 'Cancel')}</button></p>
+<p><button id="run" class="btn" type="button">${esc(d.run)}</button> <button id="cancel" class="btn secondary ml-2 hidden" type="button">${esc(d.cancel || 'Cancel')}</button></p>
 <p id="status" role="status" aria-live="polite" class="sr"></p>
 <div id="out" aria-live="polite"></div>
 <script type="application/json" id="i18n">${i18n}</script>`, '<script src="/assets/demo.js" defer></script>'))
@@ -180,12 +185,12 @@ for (const lang of ['en', 'tr']) {
 w('index.html', `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>ClinicalPSM</title>${INDEXABLE ? `<link rel="canonical" href="https://${HOST}/">` : '<meta name="robots" content="noindex">'}
 <link rel="stylesheet" href="/assets/style.css"></head>
-<body><main id="main" style="max-width:40rem;margin:3rem auto;padding:0 1rem"><h1>ClinicalPSM</h1>
+<body><main id="main" class="narrow-main"><h1>ClinicalPSM</h1>
 <p>Research preview · Araştırma önizlemesi</p>
 <p><a class="btn" href="/en/" hreflang="en" lang="en">English</a> <a class="btn" href="/tr/" hreflang="tr" lang="tr">Türkçe</a></p></main>
 <script src="/assets/lang.js" defer></script></body></html>
 `)
-w('404.html', `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>404 · ClinicalPSM</title><meta name="robots" content="noindex"><link rel="stylesheet" href="/assets/style.css"></head><body><main style="max-width:40rem;margin:3rem auto;padding:0 1rem"><h1>404</h1><p lang="en">Page not found. <a href="/en/">English home</a></p><p lang="tr">Sayfa bulunamadı. <a href="/tr/">Türkçe ana sayfa</a></p></main></body></html>
+w('404.html', `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>404 · ClinicalPSM</title><meta name="robots" content="noindex"><link rel="stylesheet" href="/assets/style.css"></head><body><main class="narrow-main"><h1>404</h1><p lang="en">Page not found. <a href="/en/">English home</a></p><p lang="tr">Sayfa bulunamadı. <a href="/tr/">Türkçe ana sayfa</a></p></main></body></html>
 `)
 if (INDEXABLE) {
   w('robots.txt', `User-agent: *\nAllow: /\nSitemap: https://${HOST}/sitemap.xml\n`)
@@ -197,7 +202,7 @@ if (PROD) {
   w('.well-known/security.txt', `Contact: mailto:${CONTACT}\nExpires: ${exp}\nPreferred-Languages: en, tr\nCanonical: https://${HOST}/.well-known/security.txt\n`)
 }
 w('_headers', `/*
-${INDEXABLE ? '' : '  X-Robots-Tag: noindex, nofollow\n'}  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'
+${INDEXABLE ? '' : '  X-Robots-Tag: noindex, nofollow\n'}  Content-Security-Policy: frame-ancestors 'none'
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
@@ -205,9 +210,18 @@ ${INDEXABLE ? '' : '  X-Robots-Tag: noindex, nofollow\n'}  Content-Security-Poli
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Embedder-Policy: require-corp
   Cross-Origin-Resource-Policy: same-origin
-${PROD && HSTS && HSTS !== '0' ? `  Strict-Transport-Security: max-age=${HSTS}\n` : ''}/assets/webr-worker.js
+/en/*
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'wasm-unsafe-eval' blob:; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' blob:; worker-src 'self' blob:; manifest-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'
+/tr/*
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'wasm-unsafe-eval' blob:; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' blob:; worker-src 'self' blob:; manifest-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'
+/
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'
+/404.html
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'
+/assets/webr-worker.js
   Content-Security-Policy: default-src 'none'; script-src 'self' 'wasm-unsafe-eval' blob:; connect-src 'self' blob:; worker-src 'self' blob:;
-/assets/webr/*
+${PROD && HSTS && HSTS !== '0' ? `  Strict-Transport-Security: max-age=${HSTS}\n` : ''}/assets/webr/*
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' blob:; connect-src 'self' blob:; worker-src 'self' blob:;
   Cache-Control: public, max-age=31536000, immutable
 /assets/repo/*
   Cache-Control: public, max-age=31536000, immutable

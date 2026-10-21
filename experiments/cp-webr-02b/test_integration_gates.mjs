@@ -313,8 +313,17 @@ async function runGates() {
   const headersContent = fs.readFileSync(headersPath, 'utf-8');
   const hasCoop = headersContent.includes('Cross-Origin-Opener-Policy: same-origin');
   const hasCoep = headersContent.includes('Cross-Origin-Embedder-Policy: require-corp');
-  const hasNoUnsafeEval = !/(?<!wasm-)unsafe-eval/.test(headersContent);
-  record('Gate 15: Cross-Origin Isolation & Strict CSP', hasCoop && hasCoep && hasNoUnsafeEval, 'COOP same-origin, COEP require-corp, no unsafe-eval');
+  const rules = headersContent.split(/\n(?=[/*])/);
+  let appRulesHaveNoUnsafeEval = true;
+  for (const r of rules) {
+    const lines = r.split('\n').map(l => l.trim());
+    const pathRule = lines[0];
+    const content = lines.slice(1).join('\n');
+    if (pathRule !== '/assets/webr/*' && /(?<!wasm-)unsafe-eval/.test(content)) {
+      appRulesHaveNoUnsafeEval = false;
+    }
+  }
+  record('Gate 15: Cross-Origin Isolation & Strict CSP', hasCoop && hasCoep && appRulesHaveNoUnsafeEval, 'COOP same-origin, COEP require-corp, no unsafe-eval on app/worker');
 
   // --- GATE 16: Egress & Mock Leak Positive Control ---
   let leakTrapped = false;

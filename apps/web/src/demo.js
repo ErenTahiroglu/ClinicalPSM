@@ -22,9 +22,9 @@ function getLifecycleManager() {
       } else if (newState === 'RUNNING') {
         status.textContent = T.running || 'Running matching analysis…';
       } else if (newState === 'READY') {
-        if (cancelBtn) cancelBtn.style.display = 'none';
+        if (cancelBtn) cancelBtn.classList.add('hidden');
       } else if (newState === 'RECOVERABLE_ERROR' || newState === 'BLOCKED') {
-        if (cancelBtn) cancelBtn.style.display = 'none';
+        if (cancelBtn) cancelBtn.classList.add('hidden');
       }
     });
   }
@@ -78,7 +78,7 @@ if (btn) {
     btn.disabled = true;
     btn.textContent = T.running || 'Running…';
     status.textContent = T.loading || 'Loading statistical engine…';
-    if (cancelBtn) cancelBtn.style.display = 'inline-block';
+    if (cancelBtn) cancelBtn.classList.remove('hidden');
 
     const manager = getLifecycleManager();
 
@@ -93,7 +93,7 @@ if (btn) {
 
       status.textContent = T.running || 'Running…';
       const envelope = await manager.submitAnalysis(createDatasetInput());
-      const result = envelope.result || envelope;
+      const result = envelope.payload || envelope.result || envelope;
 
       out.innerHTML = renderCanonicalResult(result, T);
       status.textContent = `${T.status}: OK`;
@@ -109,7 +109,7 @@ if (btn) {
     } finally {
       btn.disabled = false;
       btn.textContent = T.run || 'Run synthetic demo';
-      if (cancelBtn) cancelBtn.style.display = 'none';
+      if (cancelBtn) cancelBtn.classList.add('hidden');
     }
   });
 }
@@ -126,7 +126,7 @@ if (cancelBtn) {
     } finally {
       cancelBtn.disabled = false;
       cancelBtn.textContent = T.cancel || 'Cancel';
-      cancelBtn.style.display = 'none';
+      cancelBtn.classList.add('hidden');
     }
   });
 }

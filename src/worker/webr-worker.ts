@@ -41,7 +41,8 @@ self.onmessage = async (event: MessageEvent) => {
           const repoUrl = payload?.repoUrl || '/assets/repo';
 
           if (!WebRClass) {
-            const webrModuleUrl = `${baseUrl.replace(/\/$/, '')}/webr.mjs`;
+            const isNode = typeof process !== 'undefined' && !!process.versions?.node;
+            const webrModuleUrl = `${baseUrl.replace(/\/$/, '')}/${isNode ? 'webr.mjs' : 'webr.js'}`;
             const mod = (await import(/* @vite-ignore */ webrModuleUrl)) as { WebR: WebRConstructor };
             WebRClass = mod.WebR;
           }
