@@ -206,15 +206,15 @@ jobs:
           {
             echo '## CP-WEBR-02B E1 evidence'
             echo
-            echo "- Commit SHA: `${GITHUB_SHA}`"
-            echo "- Workflow run ID: `${GITHUB_RUN_ID}`"
-            echo "- Evidence artifact ID: `${EVIDENCE_ARTIFACT_ID}`"
-            echo "- Evidence artifact size: `${EVIDENCE_SIZE}` bytes"
-            echo "- Evidence artifact SHA-256: `${EVIDENCE_ARTIFACT_DIGEST}`"
+            echo "- Commit SHA: \`${GITHUB_SHA}\`"
+            echo "- Workflow run ID: \`${GITHUB_RUN_ID}\`"
+            echo "- Evidence artifact ID: \`${EVIDENCE_ARTIFACT_ID}\`"
+            echo "- Evidence artifact size: \`${EVIDENCE_SIZE}\` bytes"
+            echo "- Evidence artifact SHA-256: \`${EVIDENCE_ARTIFACT_DIGEST}\`"
             echo "- Evidence artifact URL: ${EVIDENCE_ARTIFACT_URL}"
-            echo "- Final report artifact ID: `${REPORT_ARTIFACT_ID}`"
-            echo "- Final report artifact size: `${REPORT_SIZE}` bytes"
-            echo "- Final report artifact SHA-256: `${REPORT_ARTIFACT_DIGEST}`"
+            echo "- Final report artifact ID: \`${REPORT_ARTIFACT_ID}\`"
+            echo "- Final report artifact size: \`${REPORT_SIZE}\` bytes"
+            echo "- Final report artifact SHA-256: \`${REPORT_ARTIFACT_DIGEST}\`"
             echo "- Final report artifact URL: ${REPORT_ARTIFACT_URL}"
           } >> "$GITHUB_STEP_SUMMARY"
 
