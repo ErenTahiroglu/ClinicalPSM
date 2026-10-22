@@ -4,7 +4,7 @@
   "provenance": "OFFICIAL_R_MATCHIT_COBALT_INDEPENDENT_EVALUATION",
   "method_description": "Direct R-side MatchIt::matchit and cobalt::bal.tab evaluation on 200-row seed-7 synthetic demo cohort without ClinicalPSM adapter or template layers",
   "execution_command": "node experiments/cp-webr-02b/generate_synthetic_demo_reference.mjs",
-  "generator_source_sha256": "4f41ca468e1ff6805cad936df7994ef0e2882aea955162d87538ae9df1ff3265",
+  "generator_source_sha256": "9546a1ae9ba059d6db7b0898668a83fcde8710a8f642a967c92d17e5c9b5dcdb",
   "input_csv_path": "experiments/cp-webr-02b/SYNTHETIC-DEMO-INPUT.csv",
   "input_csv_sha256": "062227c62d5864b4ae9acfe2c4a0aa5066557b2bd9cdf467f199cb743fcadd42",
   "toolchain": {

@@ -60,6 +60,9 @@ export function renderCanonicalResult(result, T) {
 
   return `
     ${restrictionBanner}
+    <div class="banner warnline" role="note" data-certification="not-certified">
+      ${esc(T.nonCertification || 'This synthetic demonstration has substantial residual imbalance after matching. OUTPUT_READY means an output was generated; it does not establish acceptable causal balance, clinical validity, or fitness for use.')}
+    </div>
     <h3>${esc(T.summary)}</h3>
     <div class="grid">
       <div class="card">

@@ -14,6 +14,9 @@
     "test": "vitest run --exclude 'src/lib/supabase/__tests__/**'",
     "test:watch": "vitest --exclude 'src/lib/supabase/__tests__/**'",
     "test:coverage": "vitest run --coverage --exclude 'src/lib/supabase/__tests__/**'",
+    "test:cp-webr-02b:gates": "node experiments/cp-webr-02b/test_integration_gates.mjs",
+    "test:cp-webr-02b:browser": "node experiments/cp-webr-02b/browser/qualify.mjs",
+    "test:cp-webr-02b:worker-regressions": "node experiments/cp-webr-02b/test_worker_manager_regressions.mjs",
     "test:rls": "vitest run src/lib/supabase/__tests__/rls.test.ts"
   },
   "dependencies": {

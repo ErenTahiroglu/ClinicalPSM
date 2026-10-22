@@ -12,6 +12,7 @@ const status = document.getElementById('status');
 const T = JSON.parse(document.getElementById('i18n').textContent);
 
 let lifecycleManager = null;
+let userCancellationRequested = false;
 
 function getLifecycleManager() {
   if (!lifecycleManager) {
@@ -21,8 +22,6 @@ function getLifecycleManager() {
         status.textContent = T.loading || 'Initializing WebR runtime…';
       } else if (newState === 'RUNNING') {
         status.textContent = T.running || 'Running matching analysis…';
-      } else if (newState === 'READY') {
-        if (cancelBtn) cancelBtn.classList.add('hidden');
       } else if (newState === 'RECOVERABLE_ERROR' || newState === 'BLOCKED') {
         if (cancelBtn) cancelBtn.classList.add('hidden');
       }
@@ -75,6 +74,7 @@ export function createDatasetInput() {
 
 if (btn) {
   btn.addEventListener('click', async () => {
+    userCancellationRequested = false;
     btn.disabled = true;
     btn.textContent = T.running || 'Running…';
     status.textContent = T.loading || 'Loading statistical engine…';
@@ -99,7 +99,10 @@ if (btn) {
       status.textContent = `${T.status}: OK`;
     } catch (err) {
       console.error('[ClinicalPSM Demo Error]', err);
-      if (err.code === 'OPERATION_CANCELLED' || err.message?.includes('CANCELLED')) {
+      if (
+        err.code === 'OPERATION_CANCELLED' ||
+        (userCancellationRequested && ['HARD_TERMINATED', 'WORKER_TERMINATED'].includes(err.code))
+      ) {
         out.innerHTML = `<div class="banner" role="status"><p>${T.cancelled || 'Analysis was cancelled.'}</p></div>`;
         status.textContent = T.cancelled || 'Analysis cancelled.';
       } else {
@@ -116,6 +119,7 @@ if (btn) {
 
 if (cancelBtn) {
   cancelBtn.addEventListener('click', async () => {
+    userCancellationRequested = true;
     cancelBtn.disabled = true;
     cancelBtn.textContent = T.cancelling || 'Cancelling…';
     try {

@@ -201,6 +201,7 @@ if (PROD) {
   const exp = new Date(Date.now() + 300 * 864e5).toISOString().replace(/\.\d+Z$/, 'Z')
   w('.well-known/security.txt', `Contact: mailto:${CONTACT}\nExpires: ${exp}\nPreferred-Languages: en, tr\nCanonical: https://${HOST}/.well-known/security.txt\n`)
 }
+// Chromium qualification shows WebR 0.6.0's nested Emscripten Worker fails under strict script-src without unsafe-eval (ASM_CONSTS is not initialized). Keep the exception on that exact worker script only.
 w('_headers', `/*
 ${INDEXABLE ? '' : '  X-Robots-Tag: noindex, nofollow\n'}  Content-Security-Policy: frame-ancestors 'none'
   X-Frame-Options: DENY
@@ -221,8 +222,11 @@ ${INDEXABLE ? '' : '  X-Robots-Tag: noindex, nofollow\n'}  Content-Security-Poli
 /assets/webr-worker.js
   Content-Security-Policy: default-src 'none'; script-src 'self' 'wasm-unsafe-eval' blob:; connect-src 'self' blob:; worker-src 'self' blob:;
 ${PROD && HSTS && HSTS !== '0' ? `  Strict-Transport-Security: max-age=${HSTS}\n` : ''}/assets/webr/*
-  Content-Security-Policy: default-src 'none'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' blob:; connect-src 'self' blob:; worker-src 'self' blob:;
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'wasm-unsafe-eval' blob:; connect-src 'self' blob:; worker-src 'self' blob:;
   Cache-Control: public, max-age=31536000, immutable
+/assets/webr/webr-worker.js
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' blob:; connect-src 'self' blob:; worker-src 'self' blob:;
 /assets/repo/*
   Cache-Control: public, max-age=31536000, immutable
 /assets/*

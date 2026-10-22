@@ -1,0 +1,224 @@
+name: CP-WEBR-02B E1 Browser and CI Qualification
+
+permissions:
+  contents: read
+  actions: read
+
+on:
+  push:
+    branches: [development]
+    paths:
+      - 'apps/web/**'
+      - 'src/lib/webr/**'
+      - 'src/worker/**'
+      - 'experiments/cp-webr-02b/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'apps/web/package.json'
+      - 'apps/web/package-lock.json'
+      - 'experiments/cp-webr-00b/dependency-lock.json'
+      - 'experiments/cp-webr-00b/harness/setup_experiment.mjs'
+      - 'scripts/devtools/cf-free-compat.mjs'
+      - '.github/workflows/experiment-cp-webr-02b-e1.yml'
+  pull_request:
+    branches: [development]
+    paths:
+      - 'apps/web/**'
+      - 'src/lib/webr/**'
+      - 'src/worker/**'
+      - 'experiments/cp-webr-02b/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'apps/web/package.json'
+      - 'apps/web/package-lock.json'
+      - 'experiments/cp-webr-00b/dependency-lock.json'
+      - 'experiments/cp-webr-00b/harness/setup_experiment.mjs'
+      - 'scripts/devtools/cf-free-compat.mjs'
+      - '.github/workflows/experiment-cp-webr-02b-e1.yml'
+  workflow_dispatch:
+
+jobs:
+  qualification:
+    name: Build, compare, and qualify Chromium runtime
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set pinned Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.22.1
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            apps/web/package-lock.json
+
+      - name: Install locked root and static-app dependencies
+        run: |
+          npm ci
+          npm ci --prefix apps/web
+          mkdir -p evidence/cp-webr-02b
+
+      - name: Provision and verify pinned WebR package cache
+        run: node experiments/cp-webr-00b/harness/setup_experiment.mjs
+
+      - name: Build actual static application from checkout
+        id: app_build
+        run: npm run build
+
+      - name: Run static security and Cloudflare compatibility checks
+        id: static_compat
+        run: node scripts/devtools/cf-free-compat.mjs --strict-web
+
+      - name: Run repository lint
+        id: lint
+        run: npm run lint
+
+      - name: Type-check application and Worker modules
+        id: typecheck
+        run: npm run typecheck
+
+      - name: Record first deterministic asset manifest
+        id: asset_first
+        run: node experiments/cp-webr-02b/asset_manifest.mjs --out evidence/cp-webr-02b/asset-manifest-before.json
+
+      - name: Rebuild static application and compare asset count and sizes
+        id: asset_repeat
+        run: |
+          npm run build
+          node experiments/cp-webr-02b/asset_manifest.mjs --out evidence/cp-webr-02b/asset-manifest-after.json
+          node --input-type=module -e "import fs from 'node:fs'; const a=JSON.parse(fs.readFileSync('evidence/cp-webr-02b/asset-manifest-before.json')); const b=JSON.parse(fs.readFileSync('evidence/cp-webr-02b/asset-manifest-after.json')); if(a.fileCount!==b.fileCount || a.totalBytes!==b.totalBytes || a.manifestSha256!==b.manifestSha256) throw new Error('Static asset count/size manifest changed between clean builds'); console.log(JSON.stringify({fileCount:b.fileCount,totalBytes:b.totalBytes,manifestSha256:b.manifestSha256}));"
+
+      - name: Run scientific comparator, reference checks, and negative controls
+        id: comparator
+        run: npm run test:cp-webr-02b:gates
+        env:
+          CP_WEBR_EVIDENCE_FILE: evidence/cp-webr-02b/integration-gates.json
+
+      - name: Replay CP-WEBR-02A lifecycle regressions against application manager
+        id: regressions
+        run: npm run test:cp-webr-02b:worker-regressions
+        env:
+          CP_WEBR_WORKER_REGRESSION_EVIDENCE_FILE: evidence/cp-webr-02b/worker-regressions.json
+
+      - name: Install pinned Playwright Chromium and runner libraries
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Chromium production Worker, privacy, CSP, and recovery qualification
+        id: browser
+        run: npm run test:cp-webr-02b:browser
+        env:
+          CP_WEBR_BROWSER_EVIDENCE_FILE: evidence/cp-webr-02b/browser-evidence.json
+          CP_WEBR_BROWSER_PORT: '8898'
+
+      - name: Generate final E1 gate report
+        if: always()
+        run: node experiments/cp-webr-02b/generate_e1_report.mjs
+        env:
+          CP_WEBR_EVIDENCE_DIR: evidence/cp-webr-02b
+          CP_WEBR_CI_APP_BUILD: ${{ steps.app_build.outcome }}
+          CP_WEBR_CI_STATIC_COMPAT: ${{ steps.static_compat.outcome }}
+          CP_WEBR_CI_LINT: ${{ steps.lint.outcome }}
+          CP_WEBR_CI_TYPECHECK: ${{ steps.typecheck.outcome }}
+          CP_WEBR_CI_ASSET_REPEAT: ${{ steps.asset_repeat.outcome }}
+          CP_WEBR_CI_ASSET_FIRST: ${{ steps.asset_first.outcome }}
+          CP_WEBR_CI_COMPARATOR: ${{ steps.comparator.outcome }}
+          CP_WEBR_CI_REGRESSIONS: ${{ steps.regressions.outcome }}
+          CP_WEBR_CI_BROWSER: ${{ steps.browser.outcome }}
+
+      - name: Upload machine-readable E1 evidence
+        id: evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cp-webr-02b-e1-${{ github.sha }}
+          path: evidence/cp-webr-02b/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 6
+
+      - name: Finalize E1 report with uploaded evidence artifact metadata
+        if: always() && steps.evidence.outputs.artifact-id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_ID: ${{ steps.evidence.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.evidence.outputs.artifact-digest }}
+          CP_WEBR_EVIDENCE_DIR: evidence/cp-webr-02b
+          CP_WEBR_CI_APP_BUILD: ${{ steps.app_build.outcome }}
+          CP_WEBR_CI_STATIC_COMPAT: ${{ steps.static_compat.outcome }}
+          CP_WEBR_CI_LINT: ${{ steps.lint.outcome }}
+          CP_WEBR_CI_TYPECHECK: ${{ steps.typecheck.outcome }}
+          CP_WEBR_CI_ASSET_REPEAT: ${{ steps.asset_repeat.outcome }}
+          CP_WEBR_CI_ASSET_FIRST: ${{ steps.asset_first.outcome }}
+          CP_WEBR_CI_COMPARATOR: ${{ steps.comparator.outcome }}
+          CP_WEBR_CI_REGRESSIONS: ${{ steps.regressions.outcome }}
+          CP_WEBR_CI_BROWSER: ${{ steps.browser.outcome }}
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            ARTIFACT_SIZE=$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}" --jq '.size_in_bytes' 2>/dev/null) && break
+            sleep 2
+          done
+          test -n "$ARTIFACT_SIZE"
+          CP_WEBR_ARTIFACT_ID="${ARTIFACT_ID}" \
+          CP_WEBR_ARTIFACT_SIZE_BYTES="${ARTIFACT_SIZE}" \
+          CP_WEBR_ARTIFACT_SHA256="${ARTIFACT_DIGEST}" \
+            node experiments/cp-webr-02b/generate_e1_report.mjs
+
+      - name: Upload finalized E1 report
+        id: final_report
+        if: always() && steps.evidence.outputs.artifact-id != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cp-webr-02b-e1-report-${{ github.sha }}
+          path: |
+            evidence/cp-webr-02b/e1-report.json
+            evidence/cp-webr-02b/CP-WEBR-02B-1-E1-REPORT.md
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 6
+
+      - name: Record report artifact metadata and gate summary
+        if: always() && steps.final_report.outputs.artifact-id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_ARTIFACT_ID: ${{ steps.evidence.outputs.artifact-id }}
+          EVIDENCE_ARTIFACT_DIGEST: ${{ steps.evidence.outputs.artifact-digest }}
+          EVIDENCE_ARTIFACT_URL: ${{ steps.evidence.outputs.artifact-url }}
+          REPORT_ARTIFACT_ID: ${{ steps.final_report.outputs.artifact-id }}
+          REPORT_ARTIFACT_DIGEST: ${{ steps.final_report.outputs.artifact-digest }}
+          REPORT_ARTIFACT_URL: ${{ steps.final_report.outputs.artifact-url }}
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            EVIDENCE_SIZE=$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${EVIDENCE_ARTIFACT_ID}" --jq '.size_in_bytes' 2>/dev/null) && break
+            sleep 2
+          done
+          for attempt in 1 2 3 4 5 6; do
+            REPORT_SIZE=$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${REPORT_ARTIFACT_ID}" --jq '.size_in_bytes' 2>/dev/null) && break
+            sleep 2
+          done
+          test -n "$EVIDENCE_SIZE"
+          test -n "$REPORT_SIZE"
+          {
+            echo '## CP-WEBR-02B E1 evidence'
+            echo
+            echo "- Commit SHA: `${GITHUB_SHA}`"
+            echo "- Workflow run ID: `${GITHUB_RUN_ID}`"
+            echo "- Evidence artifact ID: `${EVIDENCE_ARTIFACT_ID}`"
+            echo "- Evidence artifact size: `${EVIDENCE_SIZE}` bytes"
+            echo "- Evidence artifact SHA-256: `${EVIDENCE_ARTIFACT_DIGEST}`"
+            echo "- Evidence artifact URL: ${EVIDENCE_ARTIFACT_URL}"
+            echo "- Final report artifact ID: `${REPORT_ARTIFACT_ID}`"
+            echo "- Final report artifact size: `${REPORT_SIZE}` bytes"
+            echo "- Final report artifact SHA-256: `${REPORT_ARTIFACT_DIGEST}`"
+            echo "- Final report artifact URL: ${REPORT_ARTIFACT_URL}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Enforce E1 final verdict
+        if: always()
+        run: |
+          node --input-type=module -e "import fs from 'node:fs'; const p='evidence/cp-webr-02b/e1-report.json'; if(!fs.existsSync(p)) throw new Error('E1 report missing'); const r=JSON.parse(fs.readFileSync(p)); console.log('E1 verdict:',r.finalVerdict); if(r.finalVerdict!=='02B_E1_PASS_FOR_INDEPENDENT_RED_TEAM_REVIEW') process.exit(1);"

@@ -44,13 +44,19 @@ for (const d of ['apps/web/public', 'experiments/cf01-static-site/public']) {
   if (!existsSync(f)) { if (strictWeb && d.startsWith('apps/web')) fail('apps/web/public/_headers missing: run the web build first'); continue }
   const hdr = readFileSync(f, 'utf8')
   if (hdr.split('\n').filter(l => l.trim() && !/^\s/.test(l)).length > 100) fail(`${f} exceeds 100 rules`)
-  const rules = hdr.split(/\n(?=[/*])/)
-  for (const r of rules) {
-    const lines = r.split('\n').map(l => l.trim())
-    const path = lines[0]
-    const content = lines.slice(1).join('\n')
-    if (path !== '/assets/webr/*' && /(?<!wasm-)unsafe-/.test(content)) fail(`${f} rule ${path} CSP contains unsafe-*`)
+  let activePath = ''
+  const unsafeEvalRules = []
+  for (const line of hdr.split(/\r?\n/)) {
+    if (line.trim() && !/^\s/.test(line)) activePath = line.trim()
+    const policy = line.match(/^\s*Content-Security-Policy:\s*(.*)$/i)?.[1]
+    if (policy && /(?<!wasm-)unsafe-eval/.test(policy)) unsafeEvalRules.push({ path: activePath, policy })
   }
+  const unsafeEvalCount = (hdr.match(/(?<!wasm-)unsafe-eval/g) || []).length
+  const narrowWebrEvalException = unsafeEvalRules.length === 1 && unsafeEvalRules[0].path === '/assets/webr/webr-worker.js' &&
+    unsafeEvalCount === 1 &&
+    /(?:^|;)\s*script-src\s+[^;]*'unsafe-eval'[^;]*(?:;|$)/.test(unsafeEvalRules[0].policy)
+  if (/(?<!wasm-)unsafe-(?!eval)/.test(hdr)) fail(`${f} CSP contains unsafe-* other than the verified WebR eval exception`)
+  if (unsafeEvalRules.length > 0 && !narrowWebrEvalException) fail(`${f} CSP unsafe-eval is allowed only on /assets/webr/webr-worker.js`)
   if (!/frame-ancestors 'none'/.test(hdr)) fail(`${f} CSP lacks frame-ancestors none`)
   console.log(`ok   ${f} headers`)
 }

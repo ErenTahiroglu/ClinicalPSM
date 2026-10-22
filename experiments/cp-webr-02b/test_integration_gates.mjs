@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import assert from 'node:assert';
-import { WebR } from 'webr';
+import { WebR } from '../cp-webr-00b/.cache/webr/dist/webr.mjs';
 import { createServer } from '../cp-webr-02a/browser-harness/server.mjs';
 import { WebRStatisticalAdapter } from '../../src/lib/webr/webr_adapter.mjs';
 import { verifyEnvelope } from '../../src/lib/webr/canonical_serializer.mjs';
@@ -17,11 +17,169 @@ import { WorkerLifecycleManager } from '../../src/lib/webr/worker_manager.mjs';
 const PORT = 8896;
 const PINNED_TEMPLATE_SHA256 = '7989403c7d093031b93a9c971a6d4f055101bab83c0ec4417fc52e4dceee24a4';
 const EXPECTED_INPUT_SHA256 = '062227c62d5864b4ae9acfe2c4a0aa5066557b2bd9cdf467f199cb743fcadd42';
+const EXPECTED_GENERATOR_SHA256 = '9546a1ae9ba059d6db7b0898668a83fcde8710a8f642a967c92d17e5c9b5dcdb';
+const EXPECTED_REFERENCE_SHA256 = 'dbd1311c4f348cb60cb2da94d513767537938af6b25bba08574b25c0bf02abcb';
+const GATES_EVIDENCE_FILE = process.env.CP_WEBR_EVIDENCE_FILE || '/tmp/cp-webr-02b-integration-gates.json';
 
 const gates = [];
+const comparisons = [];
 function record(name, pass, detail = '') {
-  gates.push({ name, pass, detail });
-  console.log(`${pass ? 'PASS' : 'FAIL'}  ${name}${detail ? ' :: ' + detail : ''}`);
+  const status = pass === true ? 'PASS' : pass === false ? 'FAIL' : pass;
+  gates.push({ name, status, detail });
+  console.log(`${status.padEnd(9)} ${name}${detail ? ' :: ' + detail : ''}`);
+}
+
+function sha256(data) {
+  return crypto.createHash('sha256').update(data).digest('hex');
+}
+
+function exactArray(left, right) {
+  return Array.isArray(left) && Array.isArray(right) && left.length === right.length &&
+    left.every((value, index) => value === right[index]);
+}
+
+function compareNullableNumber(name, actual, expected, tolerance, rows) {
+  if (expected === null) {
+    const pass = actual === null;
+    rows.push({ name, semantics: 'null', actual, expected: null, absoluteDifference: null, tolerance: null, status: pass ? 'PASS' : 'FAIL' });
+    return pass;
+  }
+  if (actual === null || actual === undefined || typeof actual !== 'number' || !Number.isFinite(actual)) {
+    rows.push({ name, semantics: 'numeric', actual: actual ?? null, expected, absoluteDifference: null, tolerance, status: 'FAIL' });
+    return false;
+  }
+  const absoluteDifference = Math.abs(actual - expected);
+  const pass = absoluteDifference <= tolerance;
+  rows.push({ name, semantics: 'numeric', actual, expected, absoluteDifference, tolerance, status: pass ? 'PASS' : 'FAIL' });
+  return pass;
+}
+
+function referenceKeyForBalanceRow(row, result) {
+  const name = row?.covariateName;
+  for (const factor of Object.values(result.factorConfiguration || {})) {
+    const alias = factor?.internalAlias;
+    if (!alias || typeof name !== 'string') continue;
+    if (name === alias) return factor.originalHeader;
+    if (name.startsWith(`${alias}_`)) {
+      const level = name.slice(alias.length + 1);
+      if (Array.isArray(factor.levels) && factor.levels.includes(level)) return `${factor.originalHeader}_${level}`;
+    }
+  }
+  return name;
+}
+
+function compareResultToReference(result, reference) {
+  const failures = [];
+  const rows = [];
+  const expect = (condition, label) => { if (!condition) failures.push(label); };
+  const sa = result.sampleAccounting || {};
+  const rsa = reference.sample_accounting || {};
+  for (const key of [
+    'treatedTotal', 'controlTotal', 'matchedTreatedCount', 'matchedControlCount',
+    'unmatchedTreatedCount', 'unmatchedControlCount', 'discardedTreatedCount', 'discardedControlCount'
+  ]) expect(sa[key] === rsa[key], `sample_accounting.${key}`);
+
+  const expectedKeys = Object.keys(reference.balance || {}).sort();
+  const balanceRows = result.balanceTable || [];
+  const actualKeys = balanceRows.map(row => referenceKeyForBalanceRow(row, result)).sort();
+  const uniqueActualKeys = new Set(actualKeys);
+  expect(uniqueActualKeys.size === actualKeys.length, 'duplicate balance records');
+  expect(exactArray(actualKeys, expectedKeys), 'balance covariate key set/cardinality');
+
+  const treatedIds = result.matchMatrix?.treatedIds;
+  const controlIds = result.matchMatrix?.matchedControlIds;
+  const expectedTreatedIds = reference.matched_pairs?.treatedIds;
+  const expectedControlIds = reference.matched_pairs?.controlIds;
+  expect(exactArray(treatedIds, expectedTreatedIds), 'ordered treated matched-pair identity');
+  expect(exactArray(controlIds, expectedControlIds), 'ordered control matched-pair identity');
+  expect(Array.isArray(treatedIds) && new Set(treatedIds).size === treatedIds.length, 'duplicate treated pair IDs');
+  expect(Array.isArray(controlIds) && new Set(controlIds).size === controlIds.length, 'duplicate control pair IDs');
+  expect(Array.isArray(treatedIds) && treatedIds.length === rsa.matchedPairs, 'matched pair cardinality');
+
+  const sexFactor = Object.values(result.factorConfiguration || {}).find(f => f?.originalHeader === 'sex');
+  expect(Boolean(sexFactor), 'sex factor configuration present');
+  expect(sexFactor?.inferredType === 'categorical', 'sex factor type');
+  expect(exactArray(sexFactor?.levels, ['F', 'M']), 'sex factor level order');
+  expect(sexFactor?.referenceLevel === 'F', 'sex reference contrast identity');
+  expect(expectedKeys.includes('sex_M'), 'frozen binary contrast key sex_M');
+
+  const actualByKey = new Map(balanceRows.map(row => [referenceKeyForBalanceRow(row, result), row]));
+  let numericPass = compareNullableNumber('rubinB', result.numericalDiagnostics?.rubinB, reference.diagnostics?.rubinB, reference.tolerances?.rubin_diagnostics, rows);
+  numericPass = compareNullableNumber('rubinR', result.numericalDiagnostics?.rubinR, reference.diagnostics?.rubinR, reference.tolerances?.rubin_diagnostics, rows) && numericPass;
+  for (const key of expectedKeys) {
+    const actual = actualByKey.get(key);
+    const ref = reference.balance[key];
+    if (!actual || !ref) {
+      numericPass = false;
+      rows.push({ name: `${key}.record`, semantics: 'record', actual: Boolean(actual), expected: Boolean(ref), absoluteDifference: null, tolerance: null, status: 'FAIL' });
+      continue;
+    }
+    for (const [field, refField, tolerance] of [
+      ['unadjustedSmd', 'unadjusted_smd', reference.tolerances?.numerical_smd],
+      ['matchedSmd', 'matched_smd', reference.tolerances?.numerical_smd],
+      ['rawDifferenceUnadjusted', 'raw_diff_unadjusted', reference.tolerances?.numerical_raw_diff],
+      ['rawDifferenceMatched', 'raw_diff_matched', reference.tolerances?.numerical_raw_diff],
+      ['unadjustedVarianceRatio', 'unadjusted_variance_ratio', reference.tolerances?.numerical_smd],
+      ['matchedVarianceRatio', 'matched_variance_ratio', reference.tolerances?.numerical_smd]
+    ]) {
+      numericPass = compareNullableNumber(`${key}.${field}`, actual[field], ref[refField], tolerance, rows) && numericPass;
+    }
+  }
+
+  // The frozen 02B reference has no matching_weights field; parity cannot be measured from it.
+  const matchingWeightParity = reference.matching_weights
+    ? { status: 'UNMEASURED', reason: 'Reference weights are present but no explicit weight parity comparator is implemented.' }
+    : { status: 'UNMEASURED', reason: 'Frozen reference does not contain matching_weights.' };
+
+  expect(numericPass, 'numeric/null balance and diagnostic parity');
+  return { pass: failures.length === 0, failures, rows, matchingWeightParity, expectedKeys, actualKeys };
+}
+
+function referenceIntegrity({ referenceText, reference, generatorSource, csvText }) {
+  return {
+    referenceSha256: sha256(referenceText),
+    referenceHashPass: sha256(referenceText) === EXPECTED_REFERENCE_SHA256,
+    generatorSha256: sha256(generatorSource),
+    generatorHashPass: reference.generator_source_sha256 === sha256(generatorSource) && sha256(generatorSource) === EXPECTED_GENERATOR_SHA256,
+    inputSha256: sha256(csvText),
+    inputHashPass: reference.input_csv_sha256 === sha256(csvText) && sha256(csvText) === EXPECTED_INPUT_SHA256,
+    provenancePass: reference.provenance === 'OFFICIAL_R_MATCHIT_COBALT_INDEPENDENT_EVALUATION' &&
+      reference.method_description.includes('without ClinicalPSM adapter or template layers') &&
+      reference.execution_command === 'node experiments/cp-webr-02b/generate_synthetic_demo_reference.mjs'
+  };
+}
+
+function runNegativeControls(result, reference, referenceText, generatorSource, csvText) {
+  const controls = [];
+  const check = (name, rejected) => controls.push({ name, status: rejected ? 'PASS' : 'FAIL' });
+  const dropped = structuredClone(result);
+  dropped.balanceTable = dropped.balanceTable.filter(row => referenceKeyForBalanceRow(row, dropped) !== 'age');
+  check('missing covariate rejected', !compareResultToReference(dropped, reference).pass);
+  const unexpected = structuredClone(result);
+  unexpected.balanceTable.push({ covariateName: 'unexpected_covariate', unadjustedSmd: 0, matchedSmd: 0 });
+  check('unexpected covariate rejected', !compareResultToReference(unexpected, reference).pass);
+  const duplicate = structuredClone(result);
+  duplicate.balanceTable.push(structuredClone(duplicate.balanceTable[0]));
+  check('duplicate balance record rejected', !compareResultToReference(duplicate, reference).pass);
+  const mutatedSmd = structuredClone(result);
+  mutatedSmd.balanceTable.find(row => referenceKeyForBalanceRow(row, mutatedSmd) === 'age').matchedSmd += 0.01;
+  check('plausible SMD mutation detected', !compareResultToReference(mutatedSmd, reference).pass);
+  const mutatedReference = structuredClone(reference);
+  mutatedReference.diagnostics.rubinR += 0.05;
+  check('reference value mutation detected', !compareResultToReference(result, mutatedReference).pass);
+  const nullCorruption = structuredClone(result);
+  nullCorruption.numericalDiagnostics.rubinB = null;
+  check('numeric-to-null corruption detected', !compareResultToReference(nullCorruption, reference).pass);
+  const alteredReference = structuredClone(reference);
+  alteredReference.provenance = 'ALTERED_PROVENANCE';
+  const alteredReferenceText = JSON.stringify(alteredReference, null, 2) + '\n';
+  const alteredIntegrity = referenceIntegrity({ referenceText: alteredReferenceText, reference: alteredReference, generatorSource, csvText });
+  check('reference provenance tamper detected', !alteredIntegrity.provenancePass);
+  check('reference hash tamper detected', !alteredIntegrity.referenceHashPass);
+  const wrongSource = `${generatorSource}\n// tamper`;
+  const alteredGeneratorIntegrity = referenceIntegrity({ referenceText, reference, generatorSource: wrongSource, csvText });
+  check('generator provenance hash tamper detected', !alteredGeneratorIntegrity.generatorHashPass);
+  return controls;
 }
 
 async function runGates() {
@@ -33,6 +191,7 @@ async function runGates() {
   const csvPath = path.resolve('experiments/cp-webr-02b/SYNTHETIC-DEMO-INPUT.csv');
   const csvText = fs.readFileSync(csvPath, 'utf-8');
   const csvHash = crypto.createHash('sha256').update(csvText).digest('hex');
+  const generatorSource = fs.readFileSync(path.resolve('experiments/cp-webr-02b/generate_synthetic_demo_reference.mjs'), 'utf-8');
   const lines = csvText.trim().split('\n');
   record('Gate 1: Synthetic Cohort Input Integrity', csvHash === EXPECTED_INPUT_SHA256 && lines.length === 201, `SHA-256=${csvHash.slice(0, 16)}..., rows=${lines.length - 1}`);
 
@@ -129,67 +288,39 @@ async function runGates() {
 
   // Load frozen reference
   const refPath = path.resolve('experiments/cp-webr-02b/SYNTHETIC-DEMO-REFERENCE.json');
-  const reference = JSON.parse(fs.readFileSync(refPath, 'utf-8'));
+  const referenceText = fs.readFileSync(refPath, 'utf-8');
+  const reference = JSON.parse(referenceText);
+  const integrity = referenceIntegrity({ referenceText, reference, generatorSource, csvText });
+  record('Gate 5: Frozen Reference and Provenance Integrity', integrity.referenceHashPass && integrity.generatorHashPass && integrity.inputHashPass && integrity.provenancePass,
+    `reference=${integrity.referenceSha256}; generator=${integrity.generatorSha256}; input=${integrity.inputSha256}`);
 
-  // --- GATE 5: Invariant Check - Sample Accounting ---
-  const sa = result.sampleAccounting;
-  const rsa = reference.sample_accounting;
-  const saPass = sa.treatedTotal === rsa.treatedTotal &&
-                 sa.controlTotal === rsa.controlTotal &&
-                 sa.matchedTreatedCount === rsa.matchedTreatedCount &&
-                 sa.matchedControlCount === rsa.matchedControlCount &&
-                 sa.unmatchedTreatedCount === rsa.unmatchedTreatedCount &&
-                 sa.unmatchedControlCount === rsa.unmatchedControlCount &&
-                 sa.discardedTreatedCount === rsa.discardedTreatedCount &&
-                 sa.discardedControlCount === rsa.discardedControlCount;
-  record('Gate 5: Exact Sample Accounting Invariant', saPass, `Treated: ${sa.treatedTotal}, Control: ${sa.controlTotal}, Matched Pairs: ${sa.matchedTreatedCount}`);
-
-  // --- GATE 6: Invariant Check - Matched Pair Identity ---
-  const trIds = result.matchMatrix?.treatedIds || [];
-  const ctrlIds = result.matchMatrix?.matchedControlIds || [];
-  const rTrIds = reference.matched_pairs.treatedIds;
-  const rCtrlIds = reference.matched_pairs.controlIds;
-  const pairsMatch = trIds.length === rTrIds.length &&
-                     trIds.every((id, idx) => id === rTrIds[idx]) &&
-                     ctrlIds.every((id, idx) => id === rCtrlIds[idx]);
-  record('Gate 6: Matched Pair Identity Invariant', pairsMatch, `${trIds.length} pairs identical to frozen reference`);
-
-  // --- GATE 7: Numeric Check - Rubin's Diagnostics ---
-  const diag = result.numericalDiagnostics;
-  const rDiag = reference.diagnostics;
-  const rubinBTol = Math.abs(diag.rubinB - rDiag.rubinB);
-  const rubinRTol = Math.abs(diag.rubinR - rDiag.rubinR);
-  const rubinPass = rubinBTol <= reference.tolerances.rubin_diagnostics &&
-                    rubinRTol <= reference.tolerances.rubin_diagnostics;
-  record('Gate 7: Rubin\'s Diagnostics Parity', rubinPass, `Rubin's B=${diag.rubinB.toFixed(4)} (diff=${rubinBTol.toExponential(2)}), Rubin's R=${diag.rubinR.toFixed(4)} (diff=${rubinRTol.toExponential(2)})`);
-
-  // --- GATE 8: Numeric Check - Cobalt Balance SMDs ---
-  const balTable = result.balanceTable || [];
-  let balSmdPass = true;
-  const smdDiffs = [];
-  for (const b of balTable) {
-    const refKey = b.covariateName;
-    const refBal = reference.balance[refKey];
-    if (refBal) {
-      const diffUnadj = Math.abs(b.unadjustedSmd - refBal.unadjusted_smd);
-      const diffMatched = Math.abs(b.matchedSmd - refBal.matched_smd);
-      smdDiffs.push(`${refKey}: unadjDiff=${diffUnadj.toExponential(2)}, matchDiff=${diffMatched.toExponential(2)}`);
-      if (diffUnadj > reference.tolerances.numerical_smd || diffMatched > reference.tolerances.numerical_smd) {
-        balSmdPass = false;
-      }
-    }
-  }
-  record('Gate 8: Cobalt Balance SMDs Parity', balSmdPass, smdDiffs.join('; '));
-
-  // --- GATE 9: Null Semantics Check - Variance Ratio ---
-  const vrNullPass = balTable.every(b => b.matchedVarianceRatio === null);
-  record('Gate 9: Cobalt Variance Ratio Null Semantics', vrNullPass, 'All matchedVarianceRatio are null under default cobalt ATT');
-
-  // --- GATE 10: Factor Encoding Check ---
-  console.log('balTable rows:', balTable.map(b => ({ cov: b.covariateName, orig: b.originalHeader, type: b.type, matchedSmd: b.matchedSmd })));
-  const sexRow = balTable.find(b => b.covariateName.toLowerCase().includes('sex') || b.originalHeader?.toLowerCase().includes('sex'));
-  const factorPass = sexRow && sexRow.type === 'binary' && Math.abs(sexRow.matchedSmd) <= 0.0001;
-  record('Gate 10: Factor Encoding Parity', Boolean(factorPass), `covariate=${sexRow?.covariateName}, type=${sexRow?.type}, matchedSmd=${sexRow?.matchedSmd}`);
+  // --- GATES 6-10: Exact records, ordered pairs, numeric parity and null semantics ---
+  const comparison = compareResultToReference(result, reference);
+  comparisons.push(...comparison.rows);
+  const sa = result.sampleAccounting || {};
+  const rsa = reference.sample_accounting || {};
+  record('Gate 6: Exact Sample Accounting and Record Cardinality',
+    !comparison.failures.some(x => x.startsWith('sample_accounting.') || x.includes('cardinality') || x.includes('balance covariate key') || x.includes('duplicate balance')),
+    `Treated=${sa.treatedTotal}/${rsa.treatedTotal}; control=${sa.controlTotal}/${rsa.controlTotal}; pairs=${sa.matchedTreatedCount}/${rsa.matchedPairs}; balance keys=${comparison.actualKeys.join(',')}`);
+  record('Gate 7: Exact Ordered Matched-Pair Identity', !comparison.failures.some(x => x.includes('matched-pair') || x.includes('pair IDs') || x.includes('pair cardinality')),
+    `${result.matchMatrix?.treatedIds?.length || 0} treated/control pairs compared in reference order`);
+  const rubinRows = comparison.rows.filter(row => row.name === 'rubinB' || row.name === 'rubinR');
+  record('Gate 8: Rubin Diagnostics Numeric Parity', rubinRows.every(row => row.status === 'PASS'),
+    `B=${result.numericalDiagnostics?.rubinB}; R=${result.numericalDiagnostics?.rubinR}; frozen Rubin tolerance=${reference.tolerances.rubin_diagnostics}`);
+  const smdAndRawRows = comparison.rows.filter(row => /\.(unadjustedSmd|matchedSmd|rawDifferenceUnadjusted|rawDifferenceMatched)$/.test(row.name));
+  record('Gate 9: Before/After SMD and Binary Raw-Difference Parity', smdAndRawRows.every(row => row.status === 'PASS'),
+    `SMD tolerance=${reference.tolerances.numerical_smd}; raw-difference tolerance=${reference.tolerances.numerical_raw_diff}; rows=${smdAndRawRows.length}`);
+  const nullRows = comparison.rows.filter(row => row.semantics === 'null');
+  record('Gate 10: Numeric and Null Semantics Separation', nullRows.length > 0 && nullRows.every(row => row.status === 'PASS'),
+    `explicit null comparisons=${nullRows.length}; numeric-to-null corruption is a negative control`);
+  record('Gate 19: Factor Contrast Identity and Full Covariate Key Set',
+    !comparison.failures.some(x => x.includes('factor') || x.includes('sex') || x.includes('covariate') || x.includes('balance')),
+    `expected keys=${comparison.expectedKeys.join(',')}; actual keys=${comparison.actualKeys.join(',')}; sex reference=F; contrast=sex_M`);
+  const negativeControls = runNegativeControls(result, reference, referenceText, generatorSource, csvText);
+  record('Gate 20: Comparator Negative Controls', negativeControls.every(control => control.status === 'PASS'),
+    negativeControls.map(control => `${control.name}:${control.status}`).join('; '));
+  record('Gate 21: Matching-Weight Parity Evidence', comparison.matchingWeightParity.status,
+    comparison.matchingWeightParity.reason);
 
   // --- GATE 11: Single Scientific Engine in apps/web ---
   const legacyWorkerExists = fs.existsSync(path.resolve('apps/web/public/assets/psm-worker.js'));
@@ -202,7 +333,9 @@ async function runGates() {
   const rendersRubin = renderedHtml.includes('Rubin&#39;s B') || renderedHtml.includes("Rubin's B");
   const rendersDash = renderedHtml.includes('<td>–</td>');
   const rendersStatus = renderedHtml.includes('badge-imbalanced') && renderedHtml.includes('badge-balanced');
-  record('Gate 12: Canonical Presentation Rendering', rendersRubin && rendersDash && rendersStatus, 'Rubin B/R rendered, null VR as "–", heuristic status badges');
+  const rendersNonCertification = renderedHtml.includes('data-certification="not-certified"') && renderedHtml.includes('OUTPUT_READY means an output was generated');
+  record('Gate 12: Presentation and Non-Certification Explanation', rendersRubin && rendersDash && rendersStatus && rendersNonCertification,
+    'Rubin B/R, null VR, heuristic badges and residual imbalance warning are rendered.');
 
   // --- GATE 13: Worker Lifecycle & State Machine ---
   let mockWorkerPostMessageCount = 0;
@@ -313,42 +446,24 @@ async function runGates() {
   const headersContent = fs.readFileSync(headersPath, 'utf-8');
   const hasCoop = headersContent.includes('Cross-Origin-Opener-Policy: same-origin');
   const hasCoep = headersContent.includes('Cross-Origin-Embedder-Policy: require-corp');
-  const rules = headersContent.split(/\n(?=[/*])/);
-  let appRulesHaveNoUnsafeEval = true;
-  for (const r of rules) {
-    const lines = r.split('\n').map(l => l.trim());
-    const pathRule = lines[0];
-    const content = lines.slice(1).join('\n');
-    if (pathRule !== '/assets/webr/*' && /(?<!wasm-)unsafe-eval/.test(content)) {
-      appRulesHaveNoUnsafeEval = false;
-    }
+  let activePath = '';
+  const unsafeEvalRules = [];
+  for (const line of headersContent.split(/\r?\n/)) {
+    if (line.trim() && !/^\s/.test(line)) activePath = line.trim();
+    const policy = line.match(/^\s*Content-Security-Policy:\s*(.*)$/i)?.[1];
+    if (policy && /(?<!wasm-)unsafe-eval/.test(policy)) unsafeEvalRules.push({ path: activePath, policy });
   }
-  record('Gate 15: Cross-Origin Isolation & Strict CSP', hasCoop && hasCoep && appRulesHaveNoUnsafeEval, 'COOP same-origin, COEP require-corp, no unsafe-eval on app/worker');
+  const unsafeEvalCount = (headersContent.match(/(?<!wasm-)unsafe-eval/g) || []).length;
+  const onlyNarrowWebrException = unsafeEvalRules.length === 1 && unsafeEvalRules[0].path === '/assets/webr/webr-worker.js' &&
+    unsafeEvalCount === 1 &&
+    /(?:^|;)\s*script-src\s+[^;]*'unsafe-eval'[^;]*(?:;|$)/.test(unsafeEvalRules[0].policy);
+  const noOtherUnsafeCspTokens = !/(?<!wasm-)unsafe-(?!eval)/.test(headersContent);
+  record('Gate 15: COOP/COEP and bounded WebR CSP deviation', hasCoop && hasCoep && onlyNarrowWebrException && noOtherUnsafeCspTokens,
+    'COOP same-origin; COEP require-corp; one unsafe-eval in /assets/webr/webr-worker.js after strict runtime failure; other unsafe CSP tokens absent');
 
-  // --- GATE 16: Egress & Mock Leak Positive Control ---
-  let leakTrapped = false;
-  function mockEgressMonitor(url) {
-    if (!url.startsWith('https://clinicalpsm.com') && !url.startsWith('/')) {
-      leakTrapped = true;
-      throw new Error(`LEAK_DETECTED: Unauthorized egress attempt to ${url}`);
-    }
-  }
-  try {
-    mockEgressMonitor('https://analytics.example.com/patient_data');
-  } catch (err) {
-    // Expected leak trap
-  }
-  record('Gate 16: Mock Leak Positive Control', leakTrapped, 'Outbound attempt correctly intercepted by leak trap');
-
-  // --- GATE 17: Local Storage Hygiene ---
-  // In Node mock, verify no code writes to localStorage in demo.js or presentation.js
-  const demoSrc = fs.readFileSync(path.resolve('apps/web/src/demo.js'), 'utf-8');
-  const presSrc = fs.readFileSync(path.resolve('apps/web/src/presentation.js'), 'utf-8');
-  const noStorage = !demoSrc.includes('localStorage') &&
-                    !demoSrc.includes('sessionStorage') &&
-                    !demoSrc.includes('indexedDB') &&
-                    !presSrc.includes('localStorage');
-  record('Gate 17: Storage Hygiene (Zero Data Persistence)', noStorage, 'No localStorage, sessionStorage, or indexedDB calls');
+  // Node cannot qualify browser runtime behavior. Browser tests produce these gates separately.
+  record('Gate 16: Runtime Network Egress Qualification', 'UNMEASURED', 'Requires Chromium request interception; see browser runtime evidence.');
+  record('Gate 17: Runtime Browser Storage Qualification', 'UNMEASURED', 'Requires Chromium storage inspection; see browser runtime evidence.');
 
   // --- GATE 18: Static Asset Deployment Quotas ---
   let fileCount = 0;
@@ -376,10 +491,45 @@ async function runGates() {
   // Close server
   await new Promise(resolve => server.close(resolve));
 
-  const failedGates = gates.filter(g => !g.pass);
+  const failedGates = gates.filter(g => g.status === 'FAIL');
+  const passedGates = gates.filter(g => g.status === 'PASS');
+  const unmeasuredGates = gates.filter(g => g.status === 'UNMEASURED');
+  const actualTreatedIds = result.matchMatrix?.treatedIds || [];
+  const actualControlIds = result.matchMatrix?.matchedControlIds || [];
+  const referenceTreatedIds = reference.matched_pairs?.treatedIds || [];
+  const referenceControlIds = reference.matched_pairs?.controlIds || [];
+  const orderedPairHash = (treatedIds, controlIds) => sha256(JSON.stringify({ treatedIds, controlIds }));
+  const sexFactor = Object.values(result.factorConfiguration || {}).find(factor => factor?.originalHeader === 'sex') || null;
   console.log(`\n=================================================================`);
-  console.log(`SUMMARY: ${gates.length - failedGates.length}/${gates.length} gates passed`);
+  console.log(`SUMMARY: ${passedGates.length} PASS, ${failedGates.length} FAIL, ${unmeasuredGates.length} UNMEASURED`);
   console.log(`=================================================================`);
+
+  fs.mkdirSync(path.dirname(GATES_EVIDENCE_FILE), { recursive: true });
+  fs.writeFileSync(GATES_EVIDENCE_FILE, JSON.stringify({
+    suite: 'CP-WEBR-02B-1 integration comparator',
+    generatedAt: new Date().toISOString(),
+    commitSha: process.env.GITHUB_SHA || 'LOCAL_UNCOMMITTED',
+    gates,
+    referenceIntegrity: integrity,
+    comparisons,
+    scientificIdentity: {
+      sampleAccounting: { actual: result.sampleAccounting, expected: reference.sample_accounting },
+      balanceCovariateKeys: { actual: comparison.actualKeys, expected: comparison.expectedKeys },
+      sexFactor: sexFactor ? { inferredType: sexFactor.inferredType, levels: sexFactor.levels, referenceLevel: sexFactor.referenceLevel } : null,
+      matchedPairs: {
+        actualTreatedIds,
+        expectedTreatedIds: referenceTreatedIds,
+        actualControlIds,
+        expectedControlIds: referenceControlIds,
+        actualOrderedPairSha256: orderedPairHash(actualTreatedIds, actualControlIds),
+        expectedOrderedPairSha256: orderedPairHash(referenceTreatedIds, referenceControlIds),
+        exactOrderedIdentityPass: exactArray(actualTreatedIds, referenceTreatedIds) && exactArray(actualControlIds, referenceControlIds)
+      }
+    },
+    negativeControls,
+    matchingWeightParity: comparison.matchingWeightParity,
+    verdict: failedGates.length === 0 ? 'PASS' : 'FAIL'
+  }, null, 2) + '\n');
 
   if (failedGates.length > 0) {
     console.error(`FAILED GATES: ${failedGates.map(g => g.name).join(', ')}`);

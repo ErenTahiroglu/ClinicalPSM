@@ -13,6 +13,7 @@ export class WorkerLifecycleManager {
     this.currentJob = null;
     this.messageHandlers = new Map();
     this.stateChangeListeners = new Set();
+    this.activeCancellationOutcome = null;
   }
 
   getState() {
@@ -114,9 +115,32 @@ export class WorkerLifecycleManager {
         return;
       }
 
+      // Handle failure of graceful interrupt request
+      if (type === 'INTERRUPT_FAILED') {
+        if (
+          this.currentJob &&
+          this.currentJob.state === 'INTERRUPT_REQUESTED' &&
+          targetJobId === this.currentJob.id
+        ) {
+          const failure = error || `Graceful interrupt failed: ${code || 'INTERRUPT_FAILED'}`;
+          this.activeCancellationOutcome = {
+            status: 'INTERRUPT_UNSUPPORTED',
+            termination: 'HARD_TERMINATED',
+            code: code || 'INTERRUPT_FAILED',
+            error: failure
+          };
+          this.currentJob.state = 'INTERRUPT_UNSUPPORTED';
+          this.currentJob.error = failure;
+          this.terminateAndRecover(`Graceful interrupt unavailable: ${code || failure}`);
+          return;
+        }
+      }
+
       // Discard unexpected or stale messages with an id
       if (id) {
-        console.warn(`[WorkerLifecycle] Discarding stale or unhandled worker message id=${id}, type=${type}`);
+        if (type !== 'INTERRUPT_ACK') {
+          console.warn(`[WorkerLifecycle] Discarding stale or unhandled worker message id=${id}, type=${type}`);
+        }
         return;
       }
 
@@ -246,10 +270,11 @@ export class WorkerLifecycleManager {
             // Computation failed to cease upon interrupt request.
             jobRecord.state = 'HARD_TERMINATED';
             jobRecord.error = 'Late result rejected: computation ignored cancellation request';
-            this.terminateAndRecover('Late result received after cancellation');
             const lateErr = new Error('LATE_RESULT_REJECTED: Computation did not cease upon interrupt');
             lateErr.code = 'LATE_RESULT_REJECTED';
+            this.currentJob = null;
             jobRecord.reject(lateErr);
+            this.terminateAndRecover('Late result received after cancellation');
             return;
           }
           jobRecord.state = 'COMPLETED';
@@ -308,12 +333,25 @@ export class WorkerLifecycleManager {
    * Graceful interruption with observed cessation and hard-termination fallback
    */
   async cancelCurrentJob() {
+    if (this.state === 'INITIALIZING') {
+      this.terminateAndRecover('Initialization cancelled by user request');
+      return {
+        status: 'INITIALIZATION_HARD_TERMINATED',
+        termination: 'HARD_TERMINATED',
+        interruptRequested: true,
+        cancellationCompleted: true,
+        durationMs: 0,
+        error: 'Initialization cancelled by user request'
+      };
+    }
+
     if (this.state !== 'RUNNING' || !this.currentJob) {
       return { status: 'NO_ACTIVE_JOB', interruptRequested: false, cancellationCompleted: false };
     }
 
     const activeJob = this.currentJob;
     activeJob.state = 'INTERRUPT_REQUESTED';
+    this.activeCancellationOutcome = null;
     const interruptRequestedAt = performance.now();
     this.setState('CANCELLING', { jobId: activeJob.id });
 
@@ -350,13 +388,16 @@ export class WorkerLifecycleManager {
         const durationMs = performance.now() - interruptRequestedAt;
 
         resolve({
-          status,
+          status: this.activeCancellationOutcome?.status || status,
+          termination: this.activeCancellationOutcome?.termination || (status === 'HARD_TERMINATED' ? 'HARD_TERMINATED' : undefined),
+          code: this.activeCancellationOutcome?.code || undefined,
           jobId: activeJob.id,
           interruptRequested: true,
-          cancellationCompleted: true,
+          cancellationCompleted: status === 'GRACEFUL_INTERRUPT_CONFIRMED' || status === 'HARD_TERMINATED' || status === 'INTERRUPT_UNSUPPORTED',
           durationMs,
-          error: error ? (error.message || String(error)) : null
+          error: this.activeCancellationOutcome?.error || (error ? (error.message || String(error)) : null)
         });
+        this.activeCancellationOutcome = null;
       };
 
       const timer = setTimeout(() => {
@@ -387,13 +428,16 @@ export class WorkerLifecycleManager {
           resolved = true;
           const status = activeJob.state === 'WORKER_ERROR' ? 'WORKER_ERROR' : 'HARD_TERMINATED';
           resolve({
-            status,
+            status: this.activeCancellationOutcome?.status || status,
+            termination: this.activeCancellationOutcome?.termination || (status === 'HARD_TERMINATED' ? 'HARD_TERMINATED' : undefined),
+            code: this.activeCancellationOutcome?.code || undefined,
             jobId: activeJob.id,
             interruptRequested: true,
-            cancellationCompleted: true,
+            cancellationCompleted: status === 'GRACEFUL_INTERRUPT_CONFIRMED' || status === 'HARD_TERMINATED' || status === 'INTERRUPT_UNSUPPORTED',
             durationMs: performance.now() - interruptRequestedAt,
-            error: activeJob.error || 'Aborted by lifecycle manager error'
+            error: this.activeCancellationOutcome?.error || activeJob.error || 'Aborted by lifecycle manager error'
           });
+          this.activeCancellationOutcome = null;
         }
       };
     });
