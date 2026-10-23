@@ -12,6 +12,11 @@ committed_lock <- args[[4L]]
 bootstrap_lock <- normalizePath(args[[6L]], mustWork = FALSE)
 if (!requireNamespace("renv", quietly = TRUE)) abort("renv must be available from the already restored closure provisioning project")
 dir.create(project, recursive = TRUE, showWarnings = FALSE)
+# `fs` is a transitive dependency of the isolated detectseparation diagnostic
+# environment. Its source supports bundling libuv when Ubuntu headers are not
+# available; this flag is local to this temporary package provisioning path.
+Sys.setenv(USE_BUNDLED_LIBUV = "1")
+cat("USE_BUNDLED_LIBUV=1 (isolated diagnostic package build only)\n")
 
 if (file.exists(committed_lock)) {
   renv::init(project = project, bare = TRUE, force = TRUE)
