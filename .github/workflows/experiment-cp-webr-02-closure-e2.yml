@@ -58,6 +58,9 @@ jobs:
           node-version: "24.22.1"
           cache: npm
 
+      - name: Falsify the WebR result serialization schema
+        run: node experiments/cp-webr-02-closure/forensics/webr_result_schema.test.mjs
+
       - name: Install exact native R 4.6.0
         uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
         with:
@@ -209,6 +212,8 @@ jobs:
           sha256sum \
             experiments/cp-webr-02-closure/forensics/native_covariance.R \
             experiments/cp-webr-02-closure/forensics/webr_covariance_worker.js \
+            experiments/cp-webr-02-closure/forensics/webr_result_schema.mjs \
+            experiments/cp-webr-02-closure/forensics/webr_result_schema.test.mjs \
             experiments/cp-webr-02-closure/forensics/run_webr_covariance.mjs \
             experiments/cp-webr-02-closure/forensics/compare_covariance.mjs \
             experiments/cp-webr-02-closure/forensics/provision.R \

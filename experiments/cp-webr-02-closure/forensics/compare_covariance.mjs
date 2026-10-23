@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { normalizeWebRArtifact, selectWebRReplicate } from './webr_result_schema.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const forensics = path.join(root, 'experiments/cp-webr-02-closure/forensics');
@@ -23,17 +24,27 @@ function parseArgs(args) {
 }
 function readJson(file) { return JSON.parse(fs.readFileSync(file, 'utf8')); }
 function fixtureFromNative(run, id) { return run.fixtures?.[id] || fail(`Missing native fixture ${id}`); }
-function fixtureFromWebR(run, id) { return run.fixtures?.find(item => item.id === id) || fail(`Missing WebR fixture ${id}`); }
-function matrixValues(record) { return (record?.values || []).map(row => row.map(Number)); }
+function fixtureFromWebR(run, id) {
+  if (!Array.isArray(run.fixtures)) fail('WebR fixtures must be an array');
+  const matches = run.fixtures.filter(item => item?.id === id);
+  if (matches.length !== 1) fail(`Expected exactly one WebR fixture with scalar ID ${id}; found ${matches.length}`);
+  return matches[0];
+}
+function matrixValues(record) { return (record?.values || []).map(row => row.map(value => value === null ? null : Number(value))); }
 function mapNamed(record) {
   const names = record?.names || [];
   const values = record?.values || [];
   return Object.fromEntries(names.map((name, index) => [name, values[index] ?? null]));
 }
-function absDiff(a, b) { return Math.abs(Number(a) - Number(b)); }
+function absDiff(a, b) { return a === null || b === null ? null : Math.abs(Number(a) - Number(b)); }
 function relativeDiff(a, b) {
+  if (a === null || b === null) return null;
   const denominator = Math.abs(Number(a));
   return denominator === 0 ? null : absDiff(a, b) / denominator;
+}
+function withinTolerance(a, b, tolerance) {
+  if (a === null || b === null) return a === b;
+  return Math.abs(Number(a) - Number(b)) <= tolerance;
 }
 function summarizeFit(fixture) {
   return {
@@ -126,8 +137,8 @@ function engineComparison(native, webr, id) {
       native_standard_error: nSe, webr_standard_error: wSe,
       native_covariance_diagonal: nativeVariance, webr_covariance_diagonal: webVariance,
       native_se_recomputed_from_vcov: nativeVcovSe, webr_se_recomputed_from_vcov: webVcovSe,
-      native_summary_se_matches_vcov_diagonal: Math.abs(nSe - nativeVcovSe) <= 1e-12,
-      webr_summary_se_matches_vcov_diagonal: Math.abs(wSe - webVcovSe) <= 1e-12,
+        native_summary_se_matches_vcov_diagonal: withinTolerance(nSe, nativeVcovSe, 1e-12),
+        webr_summary_se_matches_vcov_diagonal: withinTolerance(wSe, webVcovSe, 1e-12),
       standard_error_absolute_difference: absDiff(nSe, wSe), standard_error_relative_difference: relativeDiff(nSe, wSe),
       frozen_absolute_tolerance: 0.0001,
       frozen_standard_error_result: absDiff(nSe, wSe) <= 0.0001 ? 'PASS' : 'FAIL' });
@@ -163,7 +174,13 @@ function engineComparison(native, webr, id) {
   };
 }
 function engineFixture(run, id) {
-  return run.fixtures?.[id] || run.fixtures?.find(item => item.id === id) || fail(`Fixture not found: ${id}`);
+  if (Array.isArray(run.fixtures)) {
+    const matches = run.fixtures.filter(item => item?.id === id);
+    if (matches.length !== 1) fail(`Expected exactly one WebR fixture with scalar ID ${id}; found ${matches.length}`);
+    return matches[0];
+  }
+  if (run.fixtures && Object.hasOwn(run.fixtures, id)) return run.fixtures[id];
+  fail(`Fixture not found: ${id}`);
 }
 function productionAnchorComparison(webRuns, anchors) {
   return anchors.fixtures.map(anchor => {
@@ -239,8 +256,11 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const native1 = readJson(args['native-1']);
   const native2 = readJson(args['native-2']);
-  const webr1 = readJson(args['webr-1']);
-  const webr2 = readJson(args['webr-2']);
+  const rawWebr1 = readJson(args['webr-1']);
+  const rawWebr2 = args['webr-1'] === args['webr-2'] ? rawWebr1 : readJson(args['webr-2']);
+  const sourceWebrSchema = rawWebr1.schema;
+  const webr1 = normalizeWebRArtifact(rawWebr1);
+  const webr2 = rawWebr2 === rawWebr1 ? webr1 : normalizeWebRArtifact(rawWebr2);
   const anchors = readJson(path.join(forensics, 'production-worker-observations.json'));
   if (anchors.source?.workflow_run_id !== '39954671878' ||
       anchors.source?.commit_sha !== '1ca14f6ab3c41d1ba366db0adda22102acc90a3c' ||
@@ -248,13 +268,11 @@ async function main() {
       anchors.native_candidate_observations?.candidate_reference_sha256 !== 'ea05ce912fb03dd86f09cb779b60bd795284372d089a05a9e0124f17e766eedb') {
     fail('Preserved production/native candidate evidence provenance does not match the reviewed E1 anchors');
   }
-  if (native1.replicate !== 1 || native2.replicate !== 2 ||
-      !webr1.runs?.some(run => run.replicate === 1) || !webr2.runs?.some(run => run.replicate === 2)) fail('Replicate identity mismatch');
+  if (native1.replicate !== 1 || native2.replicate !== 2) fail('Native replicate identity mismatch');
   for (const run of [native1, native2]) if (run.evidence_classification !== 'RESEARCH_DIAGNOSTIC_NOT_APPROVED_GOLDEN_REFERENCE') fail('Native evidence classification is invalid');
-  for (const run of [webr1, webr2]) if (run.runs?.[0]?.evidence_classification !== 'WEBR_DIAGNOSTIC_SHADOW_EXECUTION') fail('WebR evidence is not labeled as shadow execution');
-  const webRunOne = webr1.runs?.find(run => run.replicate === 1) || webr1.runs?.[0];
-  const webRunTwo = webr2.runs?.find(run => run.replicate === 2) || webr2.runs?.[1];
-  if (!webRunOne || !webRunTwo) fail('Two fresh WebR shadow runs are required');
+  const webRunOne = selectWebRReplicate(webr1, 1);
+  const webRunTwo = selectWebRReplicate(webr2, 2);
+  if (webRunOne.replicate === webRunTwo.replicate) fail('Two distinct WebR replicate records are required');
   const nativeStability = stableRunEquality(native1, native2, 'native');
   const webStability = stableRunEquality(webRunOne, webRunTwo, 'webr');
   const selectedNative = native1;
@@ -282,10 +300,13 @@ async function main() {
     { field: "(Intercept) standard error (also maximum SE)", ...seByTerm.get("(Intercept)") },
     { field: "x_sep standard error", ...seByTerm.get("x_sep") },
     { field: "maximum standard error", ...seByTerm.get("(Intercept)") }
-  ].filter(row => row.standard_error_absolute_difference > 0.0001);
+  ].filter(row => row.standard_error_absolute_difference === null || row.standard_error_absolute_difference > 0.0001);
   const expectedFailureTerms = ['(Intercept)', 'x_sep', '(Intercept)'];
   const expectedThreeFailuresReproduced = seFailures.length === 3 &&
     JSON.stringify(seFailures.map(row => row.term)) === JSON.stringify(expectedFailureTerms);
+  const standardErrorDifferences = fix16.coefficient_and_standard_error_matrix.map(row => row.standard_error_absolute_difference);
+  const maximumStandardErrorAbsoluteDifference = standardErrorDifferences.some(value => value === null)
+    ? null : Math.max(...standardErrorDifferences);
   if (!expectedThreeFailuresReproduced) failures.push('the_three_frozen_fix16_standard_error_failures_were_not_reproduced');
   const fix15CurrentWarnings = [
     fixtureFromNative(native1, 'fix_15_quasi_separation').glm.warnings,
@@ -301,6 +322,15 @@ async function main() {
       fixture_manifest_sha256: native1.fixture_manifest_sha256,
       candidate_native_reference_sha256: 'ea05ce912fb03dd86f09cb779b60bd795284372d089a05a9e0124f17e766eedb',
       candidate_native_reference_status: 'PRESERVED_CANDIDATE_NOT_REGENERATED_OR_FROZEN'
+    },
+    serialization_contract: {
+      source_artifact_schema: sourceWebrSchema,
+      normalized_legacy_singleton_wrappers: sourceWebrSchema === 'CP-WEBR-02-CLOSURE-1-E2-webr-shadow-diagnostic-v1',
+      same_webr_artifact_passed_for_both_inputs: args['webr-1'] === args['webr-2'],
+      selected_run_records: [webRunOne.replicate, webRunTwo.replicate],
+      selected_run_indexes: [webr1.runs.indexOf(webRunOne), webr2.runs.indexOf(webRunTwo)],
+      distinct_replicate_records_selected: webRunOne.replicate === 1 && webRunTwo.replicate === 2 &&
+        (args['webr-1'] !== args['webr-2'] || webr1.runs.indexOf(webRunOne) !== webr1.runs.indexOf(webRunTwo))
     },
     repeatability: { native: nativeStability, webr: webStability },
     fix15_separation_assessment: separation,
@@ -326,7 +356,7 @@ async function main() {
     frozen_tolerance: {
       standard_error_absolute_tolerance: 0.0001,
       fix16_standard_error_failures: seFailures,
-      maximum_standard_error_absolute_difference: Math.max(...fix16.coefficient_and_standard_error_matrix.map(row => row.standard_error_absolute_difference)),
+      maximum_standard_error_absolute_difference: maximumStandardErrorAbsoluteDifference,
       prior_ci_reported_absolute_differences: [
         { term: '(Intercept)', absolute_difference: 0.002009632982662879 },
         { term: 'x_sep', absolute_difference: 0.0002009632958106522 },

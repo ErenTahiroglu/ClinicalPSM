@@ -4,6 +4,7 @@ import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
+import { validateWebRResult } from './webr_result_schema.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const forensics = path.join(root, 'experiments/cp-webr-02-closure/forensics');
@@ -62,6 +63,7 @@ function createServer() {
     observations.push({ method: req.method, pathname, origin: requestUrl.origin, body_present: Number(req.headers['content-length'] || 0) > 0 || Boolean(req.headers['transfer-encoding']) });
     let file;
     if (pathname === '/__e2_diagnostic_worker.js') file = path.join(forensics, 'webr_covariance_worker.js');
+    else if (pathname === '/__e2_diagnostic_schema.mjs') file = path.join(forensics, 'webr_result_schema.mjs');
     else if (pathname === '/en/__e2_diagnostic.html') file = path.join(forensics, 'diagnostic.html');
     else file = staticFile(pathname === '/' ? '/index.html' : pathname);
     if (file && fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
@@ -129,6 +131,7 @@ async function main() {
           worker.postMessage({ type: 'RUN', fixtures, replicate, webrVersion, pageCrossOriginIsolated: crossOriginIsolated });
         });
       }, { fixtures, replicate, webrVersion });
+        validateWebRResult(result);
       result.chromium_user_agent = await page.evaluate(() => navigator.userAgent);
       result.page_cross_origin_isolated = await page.evaluate(() => crossOriginIsolated);
       runs.push(result);
@@ -139,7 +142,7 @@ async function main() {
     await new Promise(resolve => server.server.close(resolve));
   }
   const output = {
-    schema: 'CP-WEBR-02-CLOSURE-1-E2-webr-shadow-diagnostic-v1',
+    schema: 'CP-WEBR-02-CLOSURE-1-E2-webr-shadow-diagnostic-v2',
     evidence_classification: 'WEBR_DIAGNOSTIC_SHADOW_EXECUTION',
     commit_sha: process.env.GITHUB_SHA || null,
     webr_distribution_version: webrVersion,
