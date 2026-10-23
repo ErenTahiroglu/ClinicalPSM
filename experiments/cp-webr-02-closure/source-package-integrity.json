@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "scope": "Gate A feasibility direct source archives only; full dependency integrity manifest is required before the 25-fixture oracle phase",
+  "packages": [
+    {
+      "name": "MatchIt",
+      "version": "4.8.1",
+      "source": "https://cran.r-project.org/src/contrib/MatchIt_4.8.1.tar.gz",
+      "sha256": "0e4c216d3acf51c19ea91863ebe52789bf9431f625d5c8dd96e3d93e4b9a433d"
+    },
+    {
+      "name": "cobalt",
+      "version": "5.0.0",
+      "source": "https://cran.r-project.org/src/contrib/cobalt_5.0.0.tar.gz",
+      "sha256": "b15f4520db40f2dce693028dc06dc4864d2f81746c2a463d52665fe5fdb56a27"
+    }
+  ]
+}
