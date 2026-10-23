@@ -123,6 +123,24 @@ function contrastColumns(meta) {
   const ref = meta?.reference_level;
   return levels.filter(level => level !== ref);
 }
+function balanceBaseCovariate(key, covariates) {
+  if (key === 'distance' || key.startsWith('distance_') || key.startsWith('distance::level_')) return 'distance';
+  for (const covariate of [...covariates].sort((a, b) => b.length - a.length)) {
+    if (key === covariate || key.startsWith(`${covariate}::`) || key.startsWith(`${covariate}_`)) return covariate;
+  }
+  return null;
+}
+function distanceValue(key) {
+  const match = /^distance_([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)$/.exec(key);
+  return match ? Number(match[1]) : null;
+}
+function normalizeDistanceBalanceKeys(map) {
+  const entries = [...map.entries()].filter(([key]) => distanceValue(key) !== null)
+    .sort(([left], [right]) => distanceValue(left) - distanceValue(right));
+  for (const [key] of entries) map.delete(key);
+  entries.forEach(([, row], index) => map.set(`distance::level_${index + 1}`, row));
+  return entries.map(([key]) => distanceValue(key));
+}
 
 function compareFixture(referenceFixture, appFixture, spec, allFailures, numericRows, fixtureMatrix, tolerances) {
   const failures = [];
@@ -245,9 +263,10 @@ function compareFixture(referenceFixture, appFixture, spec, allFailures, numeric
     pushExact(failures, `${id}.factor.${variable}.reference`, appFactor.referenceLevel, nativeFactor.reference_level);
     pushExact(failures, `${id}.factor.${variable}.declared_levels`, appFactor.levels, nativeFactor.declared_levels);
     pushExact(failures, `${id}.factor.${variable}.contrast_columns`, (appFactor.levels || []).filter(level => level !== appFactor.referenceLevel), contrastColumns(nativeFactor));
-    pushExact(failures, `${id}.factor.${variable}.contrast_row_levels`, nativeFactor.contrast_row_levels, nativeFactor.declared_levels);
+    const effectiveLevels = nativeFactor.effective_factor_levels || nativeFactor.contrast_row_levels;
+    pushExact(failures, `${id}.factor.${variable}.contrast_row_levels`, nativeFactor.contrast_row_levels, effectiveLevels);
     const expectedContrastMatrix = Object.fromEntries(contrastColumns(nativeFactor).map(level => [
-      level, nativeFactor.declared_levels.map(rowLevel => rowLevel === level ? 1 : 0)
+      level, effectiveLevels.map(rowLevel => rowLevel === level ? 1 : 0)
     ]));
     pushExact(failures, `${id}.factor.${variable}.native_treatment_contrast_matrix`, nativeFactor.contrast_matrix, expectedContrastMatrix);
     const expectedFactorTerms = contrastColumns(nativeFactor).map(level => `${variable}::${level}`).sort();
@@ -290,15 +309,39 @@ function compareFixture(referenceFixture, appFixture, spec, allFailures, numeric
   const nativeRawMap = semanticMap(Object.values(nativeRaw), covariates, {}, definitions, `${id}.native_raw_balance`, failures);
   const nativeStdMap = semanticMap(Object.values(nativeStd), covariates, {}, definitions, `${id}.native_std_balance`, failures);
   const appBalanceMap = semanticMap(result.balanceTable || [], covariates, aliasesToHeaders, definitions, `${id}.app_balance`, failures);
-  for (const mapName of ['nativeRawMap', 'nativeStdMap']) {
-    const map = mapName === 'nativeRawMap' ? nativeRawMap : nativeStdMap;
-    map.delete('distance');
-  }
+  const appDistanceLevels = normalizeDistanceBalanceKeys(appBalanceMap);
+  const nativeRawDistanceLevels = normalizeDistanceBalanceKeys(nativeRawMap);
+  const nativeStdDistanceLevels = normalizeDistanceBalanceKeys(nativeStdMap);
   appBalanceMap.delete('distance');
+  nativeRawMap.delete('distance');
+  nativeStdMap.delete('distance');
+  pushExact(failures, `${id}.balance_distance_level_count`, appDistanceLevels.length, nativeRawDistanceLevels.length);
+  pushExact(failures, `${id}.native_balance_distance_level_count`, nativeStdDistanceLevels.length, nativeRawDistanceLevels.length);
+  for (let index = 0; index < Math.min(appDistanceLevels.length, nativeRawDistanceLevels.length); index++) {
+    compareNumber(failures, localRows, `${id}.balance.distance_level_${index + 1}.identity`, appDistanceLevels[index],
+      nativeRawDistanceLevels[index], numericTolerance('matching_distances_and_pair_distances'));
+  }
   const expectedCovariateKeys = [...covariates].sort();
-  pushExact(failures, `${id}.expected_covariate_keys`, [...appBalanceMap.keys()].sort(), expectedCovariateKeys);
-  pushExact(failures, `${id}.native_expected_covariate_keys`, [...nativeRawMap.keys()].sort(), expectedCovariateKeys);
-  pushExact(failures, `${id}.native_standardized_expected_covariate_keys`, [...nativeStdMap.keys()].sort(), expectedCovariateKeys);
+  const baseKeySet = (map, label) => {
+    const bases = [];
+    for (const key of map.keys()) {
+      const base = balanceBaseCovariate(key, covariates);
+      if (base === null) failures.push(`${id}.${label}:unexpected_balance_row:${key}`);
+      else if (base !== 'distance') bases.push(base);
+    }
+    return [...new Set(bases)].sort();
+  };
+  pushExact(failures, `${id}.expected_covariate_keys`, baseKeySet(appBalanceMap, 'app_balance'), expectedCovariateKeys);
+  pushExact(failures, `${id}.native_expected_covariate_keys`, baseKeySet(nativeRawMap, 'native_raw_balance'), expectedCovariateKeys);
+  pushExact(failures, `${id}.native_standardized_expected_covariate_keys`, baseKeySet(nativeStdMap, 'native_std_balance'), expectedCovariateKeys);
+  for (const variable of covariates) {
+    if (definitions[variable]?.inferredType !== 'categorical') continue;
+    const expectedLevels = (definitions[variable].levels || []).map(level => `${variable}::${level}`).sort();
+    const keysForVariable = map => [...map.keys()].filter(key => key.startsWith(`${variable}::`)).sort();
+    pushExact(failures, `${id}.expected_factor_balance_rows.${variable}`, keysForVariable(appBalanceMap), expectedLevels);
+    pushExact(failures, `${id}.native_factor_balance_rows.${variable}`, keysForVariable(nativeRawMap), expectedLevels);
+    pushExact(failures, `${id}.native_standardized_factor_balance_rows.${variable}`, keysForVariable(nativeStdMap), expectedLevels);
+  }
   pushExact(failures, `${id}.balance_covariate_keys`, [...appBalanceMap.keys()].sort(), [...nativeRawMap.keys()].sort());
   pushExact(failures, `${id}.balance_std_covariate_keys`, [...nativeStdMap.keys()].sort(), [...nativeRawMap.keys()].sort());
   for (const [key, rawRow] of nativeRawMap) {
@@ -443,7 +486,13 @@ function compareAll(reference, browser, manifest, fixtureMatrix, options = {}) {
       browser.network_privacy?.unauthorized_egress_positive_control?.pageRequestPermitted !== true ||
       browser.network_privacy?.unauthorized_egress_positive_control?.bodyPresenceObserved !== true ||
       browser.network_privacy?.unauthorized_egress_positive_control?.pageMonitorGatePassesWhenPermitted !== false) failures.push('page_network_positive_control_not_falsifiable');
-  if (browser.network_privacy?.unauthorized_egress_positive_control?.workerRequestMonitoring !== 'MEASURED') failures.push('worker_network_positive_control_unmeasured');
+  if (browser.network_privacy?.unauthorized_egress_positive_control?.workerRequestMonitoring !== 'MEASURED' ||
+      browser.network_privacy?.unauthorized_egress_positive_control?.workerRequestDetected !== true ||
+      browser.network_privacy?.unauthorized_egress_positive_control?.workerRequestPermitted !== true ||
+      browser.network_privacy?.unauthorized_egress_positive_control?.workerBodyPresenceObserved !== true ||
+      browser.network_privacy?.unauthorized_egress_positive_control?.workerMonitorGatePassesWhenPermitted !== false) {
+    failures.push('worker_network_positive_control_unmeasured_or_non_falsifiable');
+  }
   if (browser.network_privacy?.websocket !== 'UNMEASURED' || browser.network_privacy?.webtransport !== 'UNMEASURED') failures.push('unmeasured_channels_must_remain_unmeasured');
   return { failures, numericRows, fixtures: rows };
 }
@@ -471,8 +520,14 @@ function expectNegative(name, mutate, baseline, inputs, failures) {
 function runNegativeControls(baseline, inputs) {
   const controls = [];
   const controlFailures = [];
-  controls.push(expectNegative('fixture_omitted', (_ref, browser) => { browser.fixtures.pop(); return { reference: _ref, browser }; }, baseline, inputs, controlFailures));
-  controls.push(expectNegative('fixture_duplicated', (_ref, browser) => { browser.fixtures.push(clone(browser.fixtures[0])); return { reference: _ref, browser }; }, baseline, inputs, controlFailures));
+  controls.push(expectNegative('fixture_omitted', (_ref, browser, referenceBytes) => {
+    browser.fixtures.pop();
+    return { reference: _ref, browser, referenceBytes };
+  }, baseline, inputs, controlFailures));
+  controls.push(expectNegative('fixture_duplicated', (_ref, browser, referenceBytes) => {
+    browser.fixtures.push(clone(browser.fixtures[0]));
+    return { reference: _ref, browser, referenceBytes };
+  }, baseline, inputs, controlFailures));
   controls.push(expectNegative('covariate_omitted', (reference, browser) => {
     const target = browser.fixtures.find(item => item.id === 'fix_01_well_conditioned').envelope.payload;
     const index = target.balanceTable.findIndex(row => row.term !== 'distance');

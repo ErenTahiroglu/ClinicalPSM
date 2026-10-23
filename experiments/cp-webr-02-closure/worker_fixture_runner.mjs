@@ -64,7 +64,7 @@ function staticPath(pathname) {
 function routeMatches(pattern, pathname) {
   return pattern.endsWith('*') ? pathname.startsWith(pattern.slice(0, -1)) : pathname === pattern;
 }
-function makeServer(positivePath) {
+function makeServer(positivePath, workerProbePath) {
   const rules = parseHeaders();
   const cspObservations = [];
   const requestObservations = [];
@@ -79,6 +79,13 @@ function makeServer(positivePath) {
       req.resume();
       res.writeHead(204, { 'x-closure-body-present': String(bodyPresent) });
       res.end();
+      return;
+    }
+    if (pathname === workerProbePath) {
+      const source = "self.onmessage=async event=>{try{const response=await fetch(event.data,{method:'POST',body:'SYNTHETIC_WORKER_EGRESS_CANARY'});self.postMessage({status:response.status,bodyPresent:response.headers.get('x-closure-body-present')==='true'});}catch(error){self.postMessage({error:String(error)});}};";
+      res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'content-length': Buffer.byteLength(source), 'cache-control': 'no-store',
+        'cross-origin-embedder-policy': 'require-corp', 'cross-origin-resource-policy': 'same-origin' });
+      res.end(source);
       return;
     }
     let file = staticPath(pathname);
@@ -189,7 +196,8 @@ function buildDataset(spec) {
 
 async function startServer() {
   const positivePath = `/__closure__/positive-egress/${crypto.randomUUID()}`;
-  const wrapped = makeServer(positivePath);
+  const workerProbePath = `/__closure__/worker-egress-probe/${crypto.randomUUID()}.js`;
+  const wrapped = makeServer(positivePath, workerProbePath);
   await new Promise((resolve, reject) => {
     wrapped.server.once('error', reject);
     wrapped.server.listen(0, '127.0.0.1', resolve);
@@ -197,7 +205,7 @@ async function startServer() {
   const address = wrapped.server.address();
   const origin = `http://127.0.0.1:${address.port}`;
   wrapped.setOrigin(origin);
-  return { ...wrapped, origin, positivePath, close: () => new Promise(resolve => wrapped.server.close(resolve)) };
+  return { ...wrapped, origin, positivePath, workerProbePath, close: () => new Promise(resolve => wrapped.server.close(resolve)) };
 }
 
 async function main() {
@@ -426,29 +434,59 @@ async function main() {
       const method = request.method();
       const isPositiveEgress = url.origin === server.origin && url.pathname === server.positivePath && method === 'POST';
       const staticSetup = url.origin === server.origin && ['GET', 'HEAD'].includes(method) &&
-        (url.pathname === '/' || url.pathname.startsWith('/assets/'));
+        (url.pathname === '/' || url.pathname.startsWith('/assets/') || url.pathname === server.workerProbePath);
       const bodyPresent = (request.postDataBuffer()?.byteLength || 0) > 0;
       networkEvents.push({ context: 'unauthorized-egress-positive-control', method, url: request.url(), origin: url.origin,
-        path: url.pathname, bodyPresent, allowedByStaticPolicy: staticSetup,
+        path: url.pathname, requestSource: url.searchParams.get('source') || 'page', bodyPresent, allowedByStaticPolicy: staticSetup,
         action: isPositiveEgress ? 'positive-control-permitted' : staticSetup ? 'static-asset-permitted' : 'unauthorized-blocked' });
       if (isPositiveEgress || staticSetup) return route.continue();
       return route.abort('blockedbyclient');
     });
     const positivePage = await positiveContext.newPage();
+    const positiveDiagnostics = { console: [], failedRequests: [], policyViolations: [] };
+    positivePage.on('console', message => positiveDiagnostics.console.push({ type: message.type(), text: message.text() }));
+    positivePage.on('requestfailed', request => positiveDiagnostics.failedRequests.push({ url: request.url(), failure: request.failure()?.errorText || null }));
+    await positivePage.addInitScript(() => addEventListener('securitypolicyviolation', event => {
+      (window.__cpWebrPolicyViolations ||= []).push({ directive: event.violatedDirective, blockedURI: event.blockedURI });
+    }));
     await positivePage.goto(`${server.origin}/`, { waitUntil: 'domcontentloaded' });
     const probeResponse = await positivePage.evaluate(async positivePath => {
       const response = await fetch(positivePath, { method: 'POST', body: 'SYNTHETIC_EGRESS_CANARY' });
       return { status: response.status, bodyPresent: response.headers.get('x-closure-body-present') === 'true' };
     }, server.positivePath);
+    const workerProbeResponse = await positivePage.evaluate(async ({ positivePath, workerProbePath }) => new Promise((resolve, reject) => {
+      const worker = new Worker(workerProbePath, { name: 'cp-webr-02-closure-egress-positive-control' });
+      const timer = setTimeout(() => { worker.terminate(); reject(new Error('Dedicated Worker egress positive control timed out')); }, 10000);
+      worker.onmessage = event => {
+        clearTimeout(timer);
+        worker.terminate();
+        if (event.data?.error) reject(new Error(event.data.error));
+        else resolve(event.data);
+      };
+      worker.onerror = event => {
+        clearTimeout(timer);
+        worker.terminate();
+        reject(new Error(`${event.message || 'Dedicated Worker egress positive control failed'} (${event.filename || 'unknown worker'}:${event.lineno || 0}); ${JSON.stringify({ positiveDiagnostics, events: networkEvents.filter(item => item.context === 'unauthorized-egress-positive-control'), requests: server.requestObservations.slice(-8) })}`));
+      };
+      worker.postMessage(`${positivePath}?source=worker`);
+    }), { positivePath: server.positivePath, workerProbePath: `${server.origin}${server.workerProbePath}` });
+    positiveDiagnostics.policyViolations = await positivePage.evaluate(() => window.__cpWebrPolicyViolations || []);
     await positivePage.waitForTimeout(100);
     const positivePageRequest = networkEvents.find(event => event.context === 'unauthorized-egress-positive-control' &&
-      event.method === 'POST' && event.path === server.positivePath);
+      event.method === 'POST' && event.path === server.positivePath && event.requestSource === 'page');
+    const positiveWorkerRequest = networkEvents.find(event => event.context === 'unauthorized-egress-positive-control' &&
+      event.method === 'POST' && event.path === server.positivePath && event.requestSource === 'worker');
     positiveControl = {
-      requestDetected: Boolean(positivePageRequest),
+      requestDetected: Boolean(positivePageRequest) && Boolean(positiveWorkerRequest),
       pageRequestPermitted: probeResponse.status === 204,
       bodyPresenceObserved: probeResponse.bodyPresent,
       pageMonitorGatePassesWhenPermitted: !positivePageRequest,
-      workerRequestMonitoring: 'UNMEASURED'
+      workerRequestDetected: Boolean(positiveWorkerRequest),
+      workerRequestPermitted: workerProbeResponse.status === 204,
+      workerBodyPresenceObserved: workerProbeResponse.bodyPresent === true && positiveWorkerRequest?.bodyPresent === true,
+      workerMonitorGatePassesWhenPermitted: !positiveWorkerRequest,
+      workerRequestMonitoring: positiveWorkerRequest && workerProbeResponse.status === 204 &&
+        workerProbeResponse.bodyPresent === true && positiveWorkerRequest.bodyPresent === true ? 'MEASURED' : 'UNMEASURED'
     };
     await positiveContext.close();
   } finally {
