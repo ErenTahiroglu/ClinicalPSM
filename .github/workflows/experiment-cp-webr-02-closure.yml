@@ -1,4 +1,4 @@
-name: CP-WEBR-02 Closure Native R Feasibility Gate
+name: CP-WEBR-02 Closure Native Oracle and Production Worker Qualification
 
 on:
   push:
@@ -7,9 +7,12 @@ on:
       - "apps/web/**"
       - "src/lib/webr/**"
       - "src/worker/**"
+      - "experiments/cp-webr-02a/adapter/**"
       - "experiments/cp-webr-02a/fixtures/**"
-      - "experiments/cp-webr-02-closure/**"
       - "experiments/cp-webr-02b/**"
+      - "experiments/cp-webr-02-closure/**"
+      - "package.json"
+      - "package-lock.json"
       - ".github/workflows/experiment-cp-webr-02-closure.yml"
   pull_request:
     branches: [development]
@@ -17,9 +20,12 @@ on:
       - "apps/web/**"
       - "src/lib/webr/**"
       - "src/worker/**"
+      - "experiments/cp-webr-02a/adapter/**"
       - "experiments/cp-webr-02a/fixtures/**"
-      - "experiments/cp-webr-02-closure/**"
       - "experiments/cp-webr-02b/**"
+      - "experiments/cp-webr-02-closure/**"
+      - "package.json"
+      - "package-lock.json"
       - ".github/workflows/experiment-cp-webr-02-closure.yml"
   workflow_dispatch:
 
@@ -28,13 +34,27 @@ permissions:
 
 jobs:
   native-feasibility:
-    name: Exact native R, package integrity and two-fixture execution
+    name: Gate A exact native R and package provisioning
     runs-on: ubuntu-24.04
+    timeout-minutes: 120
     steps:
-      - name: Check out source
+      - name: Check out full history
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
 
-      - name: Install pinned Node for source integrity verification
+      - name: Verify baseline ancestry, main pin, clean checkout and package pins
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain=v1)"
+          git merge-base --is-ancestor d1a898e37d48aac568340975e57c074809baae4d HEAD
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "53fb05e7c8d9b77b46c4a5d8b7c9cc041345f6a6"
+          node -e 'const f=require("fs");const p=JSON.parse(f.readFileSync("package.json"));const l=JSON.parse(f.readFileSync("package-lock.json"));if(p.dependencies.next!=="16.4.1"||p.devDependencies["eslint-config-next"]!=="16.4.1"||l.packages[""].dependencies.next!=="16.4.1"||l.packages[""].devDependencies["eslint-config-next"]!=="16.4.1")process.exit(1);console.log("Next.js pins: 16.4.1")'
+          printf 'commit=%s\nmain=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse origin/main)"
+
+      - name: Install pinned Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24.22.1"
@@ -49,34 +69,333 @@ jobs:
       - name: Verify all locked CRAN source archive hashes
         run: node experiments/cp-webr-02-closure/package_sources.mjs verify
 
-      - name: Restore committed lock with documented setup-renv
+      - name: Restore committed renv lock
         uses: r-lib/actions/setup-renv@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
         with:
           working-directory: experiments/cp-webr-02-closure
           profile: "NULL"
           bypass-cache: "true"
 
-      - name: Execute direct native R feasibility probes
+      - name: Execute Gate A direct official R probes
         env:
           CP_WEBR_CLOSURE_MODE: verify
           CP_WEBR_RENV_PROJECT: ${{ github.workspace }}/experiments/cp-webr-02-closure
-          CP_WEBR_FEASIBILITY_REPORT: ${{ github.workspace }}/experiments/cp-webr-02-closure/native-feasibility-evidence.json
+          CP_WEBR_FEASIBILITY_REPORT: ${{ runner.temp }}/native-feasibility-evidence.json
+        shell: bash
         run: |
           set -euo pipefail
           Rscript --version
+          Rscript -e 'parse(file="native_oracle.R"); parse(file="native_feasibility.R"); cat("R source parse PASS\n")'
           Rscript native_feasibility.R
-          cat "$CP_WEBR_FEASIBILITY_REPORT"
           Rscript -e 'print(sessionInfo())'
         working-directory: experiments/cp-webr-02-closure
+
+      - name: Stage Gate A evidence
+        if: always()
+        env:
+          EVIDENCE_STAGE: ${{ runner.temp }}/cp-webr-02-closure-gate-a
         shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$EVIDENCE_STAGE"
+          if [[ -f "$RUNNER_TEMP/native-feasibility-evidence.json" ]]; then cp "$RUNNER_TEMP/native-feasibility-evidence.json" "$EVIDENCE_STAGE/"; fi
+          cp experiments/cp-webr-02-closure/renv.lock "$EVIDENCE_STAGE/"
+          cp experiments/cp-webr-02-closure/source-package-integrity.json "$EVIDENCE_STAGE/"
+          cp experiments/cp-webr-02-closure/fixture-integrity.json "$EVIDENCE_STAGE/"
 
       - name: Upload Gate A evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: cp-webr-02-closure-native-feasibility-${{ github.run_id }}
+          name: cp-webr-02-closure-gate-a-${{ github.run_id }}
           if-no-files-found: warn
+          path: ${{ runner.temp }}/cp-webr-02-closure-gate-a/*
+
+  native-oracle:
+    name: Generate and validate native candidate across 25 fixtures
+    needs: native-feasibility
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - name: Check out full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Install pinned Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.22.1"
+
+      - name: Install exact native R and verify CRAN archives
+        uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
+        with:
+          r-version: "4.6.0"
+          use-public-rspm: false
+          cran: https://cran.r-project.org
+
+      - name: Verify all locked source archive hashes
+        run: node experiments/cp-webr-02-closure/package_sources.mjs verify
+
+      - name: Restore exact native R packages from committed lock
+        uses: r-lib/actions/setup-renv@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
+        with:
+          working-directory: experiments/cp-webr-02-closure
+          profile: "NULL"
+          bypass-cache: "true"
+
+      - name: Generate candidate through official native R functions
+        env:
+          NATIVE_CANDIDATE: ${{ runner.temp }}/native-reference-candidate.json
+        run: Rscript native_oracle.R --output "$NATIVE_CANDIDATE"
+        working-directory: experiments/cp-webr-02-closure
+
+      - name: Validate candidate completeness and provenance without freezing it
+        env:
+          NATIVE_CANDIDATE: ${{ runner.temp }}/native-reference-candidate.json
+          NATIVE_INTEGRITY: ${{ runner.temp }}/native-reference-integrity.json
+        run: node experiments/cp-webr-02-closure/validate_reference.mjs --candidate "$NATIVE_CANDIDATE" --sidecar "$NATIVE_INTEGRITY"
+
+      - name: Stage native candidate and provenance
+        if: always()
+        env:
+          EVIDENCE_STAGE: ${{ runner.temp }}/cp-webr-02-closure-native
+          NATIVE_CANDIDATE: ${{ runner.temp }}/native-reference-candidate.json
+          NATIVE_INTEGRITY: ${{ runner.temp }}/native-reference-integrity.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$EVIDENCE_STAGE"
+          for file in "$NATIVE_CANDIDATE" "$NATIVE_INTEGRITY"; do
+            if [[ -f "$file" ]]; then cp "$file" "$EVIDENCE_STAGE/"; fi
+          done
+          cp experiments/cp-webr-02-closure/renv.lock "$EVIDENCE_STAGE/"
+          cp experiments/cp-webr-02-closure/source-package-integrity.json "$EVIDENCE_STAGE/"
+          cp experiments/cp-webr-02-closure/fixture-integrity.json "$EVIDENCE_STAGE/"
+
+      - name: Upload native candidate and provenance
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cp-webr-02-closure-native-${{ github.run_id }}
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/cp-webr-02-closure-native/*
+
+  chromium-production-worker:
+    name: Static build, Chromium Worker, privacy and regressions
+    needs: native-feasibility
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - name: Check out full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Install pinned Node and reproducible root dependencies
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.22.1"
+
+      - name: Clean npm install
+        run: npm ci
+
+      - name: Install pinned Playwright Chromium system dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Build actual static application and production Dedicated Worker
+        run: npm run build
+
+      - name: Run CP-WEBR-02B integration and worker lifecycle regressions
+        env:
+          CP_WEBR_EVIDENCE_FILE: ${{ runner.temp }}/cp-webr-02b-integration-gates.json
+          CP_WEBR_WORKER_REGRESSION_EVIDENCE_FILE: ${{ runner.temp }}/cp-webr-02b-worker-regressions.json
+        run: |
+          npm run test:cp-webr-02b:gates
+          npm run test:cp-webr-02b:worker-regressions
+
+      - name: Run CP-WEBR-02A adapter regression in an isolated temporary tree
+        env:
+          ADAPTER_REPORT_DIR: ${{ runner.temp }}/cp-webr-02a-adapter-regressions
+        run: node experiments/cp-webr-02-closure/run_02a_adapter_regression.mjs "$ADAPTER_REPORT_DIR"
+
+      - name: Run accepted E1 Chromium CSP, network and storage regression
+        env:
+          CP_WEBR_BROWSER_EVIDENCE_FILE: ${{ runner.temp }}/e1-browser-evidence.json
+        run: npm run test:cp-webr-02b:browser
+
+      - name: Execute 25 fixtures through the built production Worker in Chromium
+        env:
+          PRODUCTION_WORKER_EVIDENCE: ${{ runner.temp }}/production-worker-results.json
+        run: node experiments/cp-webr-02-closure/worker_fixture_runner.mjs --output "$PRODUCTION_WORKER_EVIDENCE"
+
+      - name: Stage Chromium and regression evidence
+        if: always()
+        env:
+          EVIDENCE_STAGE: ${{ runner.temp }}/cp-webr-02-closure-chromium
+          PRODUCTION_WORKER_EVIDENCE: ${{ runner.temp }}/production-worker-results.json
+          E1_BROWSER_EVIDENCE: ${{ runner.temp }}/e1-browser-evidence.json
+          ADAPTER_REPORT_DIR: ${{ runner.temp }}/cp-webr-02a-adapter-regressions
+          CP_WEBR_GATES_EVIDENCE: ${{ runner.temp }}/cp-webr-02b-integration-gates.json
+          CP_WEBR_WORKER_REGRESSION_EVIDENCE: ${{ runner.temp }}/cp-webr-02b-worker-regressions.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$EVIDENCE_STAGE"
+          for file in "$PRODUCTION_WORKER_EVIDENCE" "$E1_BROWSER_EVIDENCE" \
+            "$ADAPTER_REPORT_DIR/adapter-unit-tests.json" "$ADAPTER_REPORT_DIR/worker-fatal-settlement-audit.json" \
+            "$CP_WEBR_GATES_EVIDENCE" "$CP_WEBR_WORKER_REGRESSION_EVIDENCE"; do
+            if [[ -f "$file" ]]; then cp "$file" "$EVIDENCE_STAGE/"; fi
+          done
+          cp apps/web/public/_headers "$EVIDENCE_STAGE/static-headers.txt"
+          cp apps/web/public/assets/webr-worker.js "$EVIDENCE_STAGE/production-worker.js"
+
+      - name: Upload Chromium and regression evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cp-webr-02-closure-chromium-${{ github.run_id }}
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/cp-webr-02-closure-chromium/*
+
+  compare-and-package:
+    name: Native versus Chromium parity, falsification and evidence package
+    needs: [native-feasibility, native-oracle, chromium-production-worker]
+    if: ${{ needs.native-feasibility.result == 'success' && needs.native-oracle.result == 'success' && needs.chromium-production-worker.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Install pinned Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.22.1"
+
+      - name: Download Gate A native feasibility artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: cp-webr-02-closure-gate-a-${{ github.run_id }}
+          path: ${{ runner.temp }}/gate-a
+
+      - name: Download native candidate artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: cp-webr-02-closure-native-${{ github.run_id }}
+          path: ${{ runner.temp }}/native
+
+      - name: Download Chromium production Worker artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: cp-webr-02-closure-chromium-${{ github.run_id }}
+          path: ${{ runner.temp }}/chromium
+
+      - name: Revalidate downloaded native candidate hashes
+        id: revalidate
+        env:
+          NATIVE_CANDIDATE: ${{ runner.temp }}/native/native-reference-candidate.json
+          NATIVE_INTEGRITY: ${{ runner.temp }}/revalidated-native-reference-integrity.json
+        run: node experiments/cp-webr-02-closure/validate_reference.mjs --candidate "$NATIVE_CANDIDATE" --sidecar "$NATIVE_INTEGRITY"
+
+      - name: Compare all fixtures and execute negative controls
+        id: comparison
+        env:
+          NATIVE_CANDIDATE: ${{ runner.temp }}/native/native-reference-candidate.json
+          NATIVE_INTEGRITY: ${{ runner.temp }}/revalidated-native-reference-integrity.json
+          CHROMIUM_EVIDENCE: ${{ runner.temp }}/chromium/production-worker-results.json
+          COMPARISON_REPORT: ${{ runner.temp }}/comparison-report.json
+        run: node experiments/cp-webr-02-closure/compare_closure.mjs --reference "$NATIVE_CANDIDATE" --sidecar "$NATIVE_INTEGRITY" --browser "$CHROMIUM_EVIDENCE" --output "$COMPARISON_REPORT"
+
+      - name: Upload comparison report including detected parity failures
+        if: ${{ always() && steps.revalidate.outcome == 'success' && steps.comparison.outcome != 'skipped' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cp-webr-02-closure-comparison-${{ github.run_id }}
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/comparison-report.json
+
+      - name: Assemble non-self-referential machine-readable evidence package
+        id: package
+        if: ${{ always() && steps.revalidate.outcome == 'success' && steps.comparison.outcome != 'skipped' }}
+        env:
+          EVIDENCE_STAGE: ${{ runner.temp }}/closure-evidence
+          EVIDENCE_ARCHIVE: ${{ runner.temp }}/cp-webr-02-closure-evidence.tar.gz
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$EVIDENCE_STAGE"
+          cp "$RUNNER_TEMP/gate-a/native-feasibility-evidence.json" "$EVIDENCE_STAGE/native-feasibility-evidence.json"
+          cp "$RUNNER_TEMP/native/native-reference-candidate.json" "$EVIDENCE_STAGE/native-reference-candidate.json"
+          cp "$RUNNER_TEMP/revalidated-native-reference-integrity.json" "$EVIDENCE_STAGE/native-reference-integrity.json"
+          cp "$RUNNER_TEMP/chromium/production-worker-results.json" "$EVIDENCE_STAGE/production-worker-results.json"
+          cp "$RUNNER_TEMP/chromium/e1-browser-evidence.json" "$EVIDENCE_STAGE/e1-browser-evidence.json"
+          cp "$RUNNER_TEMP/chromium/adapter-unit-tests.json" "$EVIDENCE_STAGE/02a-adapter-unit-tests.json"
+          cp "$RUNNER_TEMP/chromium/worker-fatal-settlement-audit.json" "$EVIDENCE_STAGE/02a-worker-fatal-settlement-audit.json"
+          cp "$RUNNER_TEMP/chromium/cp-webr-02b-integration-gates.json" "$EVIDENCE_STAGE/02b-integration-gates.json"
+          cp "$RUNNER_TEMP/chromium/cp-webr-02b-worker-regressions.json" "$EVIDENCE_STAGE/02b-worker-regressions.json"
+          cp "$RUNNER_TEMP/chromium/production-worker.js" "$EVIDENCE_STAGE/production-worker.js"
+          cp "$RUNNER_TEMP/chromium/static-headers.txt" "$EVIDENCE_STAGE/static-headers.txt"
+          cp "$RUNNER_TEMP/comparison-report.json" "$EVIDENCE_STAGE/comparison-report.json"
+          cp experiments/cp-webr-02-closure/renv.lock "$EVIDENCE_STAGE/renv.lock"
+          cp experiments/cp-webr-02-closure/source-package-integrity.json "$EVIDENCE_STAGE/source-package-integrity.json"
+          cp experiments/cp-webr-02-closure/fixture-integrity.json "$EVIDENCE_STAGE/fixture-integrity.json"
+          node experiments/cp-webr-02-closure/package_evidence.mjs --stage "$EVIDENCE_STAGE" --archive "$EVIDENCE_ARCHIVE" --run-id "$GITHUB_RUN_ID" --commit "$GITHUB_SHA"
+
+      - name: Upload final closure evidence artifact
+        id: evidence_upload
+        if: ${{ always() && steps.package.outcome == 'success' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cp-webr-02-closure-evidence-${{ github.run_id }}
+          if-no-files-found: error
           path: |
-            experiments/cp-webr-02-closure/native-feasibility-evidence.json
-            experiments/cp-webr-02-closure/renv.lock
-            experiments/cp-webr-02-closure/source-package-integrity.json
+            ${{ runner.temp }}/cp-webr-02-closure-evidence.tar.gz
+            ${{ runner.temp }}/cp-webr-02-closure-evidence.tar.gz.sha256
+            ${{ runner.temp }}/cp-webr-02-closure-evidence.tar.gz.metadata.json
+
+      - name: Record artifact ID, size and digest in job summary
+        if: ${{ always() && steps.evidence_upload.outcome == 'success' }}
+        env:
+          ARTIFACT_ID: ${{ steps.evidence_upload.outputs.artifact-id }}
+          EVIDENCE_ARCHIVE: ${{ runner.temp }}/cp-webr-02-closure-evidence.tar.gz
+          EVIDENCE_METADATA: ${{ runner.temp }}/cp-webr-02-closure-evidence.tar.gz.metadata.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "## CP-WEBR-02 Closure Candidate Evidence" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Workflow run: $GITHUB_RUN_ID" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Artifact ID: $ARTIFACT_ID" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Archive size: $(stat -c '%s' "$EVIDENCE_ARCHIVE") bytes" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Archive SHA-256: $(node -p 'JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).archive_sha256' "$EVIDENCE_METADATA")" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Verdict: $(node -p 'JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).verdict' "$RUNNER_TEMP/closure-evidence/evidence-index.json")" >> "$GITHUB_STEP_SUMMARY"
+
+  qualification-status:
+    name: Aggregate required gate states
+    if: always()
+    needs: [native-feasibility, native-oracle, chromium-production-worker, compare-and-package]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Write machine-readable PASS FAIL BLOCKED and UNMEASURED statuses
+        env:
+          GATE_A: ${{ needs.native-feasibility.result }}
+          NATIVE_ORACLE: ${{ needs.native-oracle.result }}
+          CHROMIUM: ${{ needs.chromium-production-worker.result }}
+          COMPARISON: ${{ needs.compare-and-package.result }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          STATUS_PATH: ${{ runner.temp }}/cp-webr-02-closure-status.json
+        run: |
+          node -e 'const fs=require("fs");const status=x=>x==="success"?"PASS":x==="failure"||x==="cancelled"?"FAIL":"BLOCKED";const report={schema_version:1,commit_sha:process.env.GITHUB_SHA,github_actions_run_id:process.env.GITHUB_RUN_ID,gates:{native_feasibility:status(process.env.GATE_A),native_oracle_candidate:status(process.env.NATIVE_ORACLE),chromium_production_worker:status(process.env.CHROMIUM),parity_and_evidence_package:status(process.env.COMPARISON),nested_webr_worker_http_interception:"UNMEASURED",nominal_network_privacy:"UNMEASURED",websocket_monitoring:"UNMEASURED",webtransport_monitoring:"UNMEASURED",non_chromium_release_qualification:"UNMEASURED",automated_separation_safety:"BLOCKED",production_licensing_clearance:"BLOCKED",candidate_native_reference_acceptance:"PENDING_INDEPENDENT_RED_TEAM"}};fs.writeFileSync(process.env.STATUS_PATH,JSON.stringify(report,null,2)+"\n")'
+      - name: Upload aggregate gate status
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cp-webr-02-closure-status-${{ github.run_id }}
+          if-no-files-found: error
+          path: ${{ runner.temp }}/cp-webr-02-closure-status.json
