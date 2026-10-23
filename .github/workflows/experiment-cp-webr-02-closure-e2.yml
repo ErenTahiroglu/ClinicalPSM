@@ -1,6 +1,19 @@
 name: CP-WEBR-02 Closure E2 Covariance and Separation Forensics
 
 on:
+  push:
+    branches: [development]
+    paths:
+      - '.github/workflows/experiment-cp-webr-02-closure-e2.yml'
+      - 'experiments/cp-webr-02-closure/forensics/**'
+      - 'experiments/cp-webr-02-closure/fixture-integrity.json'
+      - 'experiments/cp-webr-02-closure/renv.lock'
+      - 'experiments/cp-webr-02-closure/source-package-integrity.json'
+      - 'experiments/cp-webr-02a/fixtures/**'
+      - 'experiments/cp-webr-00b/dependency-lock.json'
+      - 'apps/web/**'
+      - 'package.json'
+      - 'package-lock.json'
   workflow_dispatch:
 
 permissions:
