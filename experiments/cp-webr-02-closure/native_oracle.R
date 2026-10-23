@@ -120,7 +120,11 @@ read_fixture <- function(spec) {
     } else text
   })
   if (!"id" %in% names(data)) abort("Fixture %s has no explicit id column", id)
-  rownames(data) <- as.character(data$id)
+  # Preserve the actual id column exactly. Duplicate IDs are an expected
+  # product-policy rejection fixture, so give only that invalid input unique
+  # temporary R row names; it returns before any model is fitted.
+  source_ids <- as.character(data$id)
+  rownames(data) <- if (anyDuplicated(source_ids)) paste0("input_row_", seq_along(source_ids)) else source_ids
   list(data = data, config = config, csv = csv, config_path = cfg)
 }
 
