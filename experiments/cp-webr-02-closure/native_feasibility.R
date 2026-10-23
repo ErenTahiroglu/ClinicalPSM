@@ -163,8 +163,10 @@ if (identical(mode, "prepare")) {
 }
 
 session_output <- capture.output(utils::sessionInfo())
-blas_output <- tryCatch(as.character(extSoftVersion()["BLAS"]), error = function(e) NA_character_)
-lapack_output <- tryCatch(as.character(extSoftVersion()["LAPACK"]), error = function(e) NA_character_)
+blas_line <- grep("^BLAS:", session_output, value = TRUE)
+lapack_line <- grep("^LAPACK:", session_output, value = TRUE)
+blas_output <- if (length(blas_line)) trimws(sub("^BLAS:", "", blas_line[[1L]])) else NA_character_
+lapack_output <- if (length(lapack_line)) trimws(sub("^LAPACK:", "", lapack_line[[1L]])) else NA_character_
 report <- list(
   schema_version = 1L,
   gate = "A_NATIVE_R_FEASIBILITY",
