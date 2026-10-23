@@ -378,7 +378,8 @@ export function buildQualificationReport({ pins, e3Report, strictComparison, str
       warning_capture_control: e3Report.fix15.warning_capture_control
     },
     fix16: {
-      proposed_classification: 'NON_IDENTIFIABLE_INFERENCE_RESTRICTED',
+      proposed_classification: 'INFERENCE_NON_IDENTIFIABLE_OUTPUT_RESTRICTED',
+      source_e3_proposed_classification: e3Report.fix16.proposed_classification,
       mathematical_classification: e3Report.fix16.mathematical_classification,
       publication_restriction: e3Report.fix16.publication_restriction,
       covariance_causal_explanation: e3Report.fix16.covariance.causal_explanation,
