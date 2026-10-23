@@ -335,7 +335,7 @@ native_fixture <- function(spec) {
                           omitted_row_ids = setdiff(row_ids, rownames(stats::model.frame(glm_fit)))),
     factor_reference_and_contrasts = factorized$factor_metadata,
     glm = list(converged = isTRUE(glm_fit$converged), iterations = glm_fit$iter,
-      rank = glm_fit$rank, model_matrix_columns = colnames(stats::model.matrix(glm_fit)), aliased_terms = names(which(is.na(coefficients))),
+      rank = glm_fit$rank, model_matrix_columns = colnames(stats::model.matrix(glm_fit)), aliased_terms = as.list(names(which(is.na(coefficients)))),
       coefficients = glm_coefficients, maximum_standard_error = scalar_or_null(max_standard_error),
       maximum_absolute_coefficient = scalar_or_null(max_absolute_coefficient),
       linear_logits = vector_map(prediction_capture$value$linear_logits, row_ids),

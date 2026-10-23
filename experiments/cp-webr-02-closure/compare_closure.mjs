@@ -20,6 +20,7 @@ function shaFile(file) { return sha(fs.readFileSync(file)); }
 function readJson(file) { return JSON.parse(fs.readFileSync(file, 'utf8')); }
 function fail(message) { throw new Error(message); }
 function eq(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+function asArray(value) { return value == null ? [] : Array.isArray(value) ? value : [value]; }
 function mapById(items, label, failures) {
   if (!Array.isArray(items)) { failures.push(`${label}:not-array`); return new Map(); }
   const map = new Map();
@@ -207,7 +208,7 @@ function compareFixture(referenceFixture, appFixture, spec, allFailures, numeric
   }
   pushExact(failures, `${id}.glm.converged`, Boolean(result.numericalDiagnostics?.glmConvergence), Boolean(native.glm?.converged));
   pushExact(failures, `${id}.glm.iterations`, result.numericalDiagnostics?.glmIterations, native.glm?.iterations);
-  pushExact(failures, `${id}.glm.aliases`, (result.numericalDiagnostics?.coefficientTable || []).filter(x => x.aliased).map(x => semanticTerm(x.term, covariates, aliases, definitions)).sort(), (native.glm?.aliased_terms || []).map(term => semanticTerm(term, covariates, {}, definitions)).sort());
+  pushExact(failures, `${id}.glm.aliases`, (result.numericalDiagnostics?.coefficientTable || []).filter(x => x.aliased).map(x => semanticTerm(x.term, covariates, aliases, definitions)).sort(), asArray(native.glm?.aliased_terms).map(term => semanticTerm(term, covariates, {}, definitions)).sort());
   compareNumber(failures, localRows, `${id}.glm.null_deviance`, result.numericalDiagnostics?.glmNullDeviance, native.glm?.null_deviance, numericTolerance('glm_diagnostic_values'));
   compareNumber(failures, localRows, `${id}.glm.residual_deviance`, result.numericalDiagnostics?.glmResidualDeviance, native.glm?.residual_deviance, numericTolerance('glm_diagnostic_values'));
   compareNumber(failures, localRows, `${id}.glm.maximum_standard_error`, result.numericalDiagnostics?.maxCoefficientStandardError, native.glm?.maximum_standard_error, numericTolerance('glm_diagnostic_values'));
