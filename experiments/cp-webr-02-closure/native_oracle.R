@@ -259,6 +259,8 @@ native_fixture <- function(spec) {
   if (is.numeric(read$config$caliper) && length(read$config$caliper)) {
     match_args$caliper <- read$config$caliper
   }
+  match_evidence_args <- match_args
+  match_evidence_args$formula <- read$config$formula
   match_capture <- capture(do.call(MatchIt::matchit, match_args))
   match_fit <- match_capture$value
   if (inherits(match_fit, "oracle_error")) {
@@ -339,7 +341,7 @@ native_fixture <- function(spec) {
       linear_logits = vector_map(prediction_capture$value$linear_logits, row_ids),
       propensity_scores = vector_map(prediction_capture$value$propensity_scores, row_ids),
       null_deviance = scalar_or_null(glm_fit$null.deviance), residual_deviance = scalar_or_null(glm_fit$deviance)),
-    matchit = list(configuration = match_args, distances = vector_map(distance, names(distance) %||% row_ids),
+    matchit = list(configuration = match_evidence_args, distances = vector_map(distance, names(distance) %||% row_ids),
       ordered_matched_pairs = pairs, pair_distances = pair_distance,
       effective_caliper_width_raw = scalar_or_null(match_fit$caliper),
       weights = vector_map(weights, row_ids), subclasses = vector_map(subclasses, row_ids),
