@@ -119,7 +119,7 @@ jobs:
           FORENSICS_MANIFEST: ${{ runner.temp }}/cp-webr-closure-e2/source-package-integrity.json
         run: |
           set -euo pipefail
-          if [[ -f experiments/cp-webr-02-closure/forensics/source-package-integrity.json ]]; then
+          if [[ -f experiments/cp-webr-02-closure/forensics/renv.lock && -f experiments/cp-webr-02-closure/forensics/source-package-integrity.json ]]; then
             node experiments/cp-webr-02-closure/forensics/package_sources.mjs verify --lockfile "$FORENSICS_LOCK"
             cp experiments/cp-webr-02-closure/forensics/source-package-integrity.json "$FORENSICS_MANIFEST"
           else

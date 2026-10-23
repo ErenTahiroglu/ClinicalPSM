@@ -27,9 +27,20 @@ if (file.exists(committed_lock)) {
 } else {
   renv::init(project = project, bare = TRUE, force = TRUE)
   renv::install(c("detectseparation@0.4.0", "jsonlite@2.0.0"), project = project)
-  renv::snapshot(project = project, lockfile = bootstrap_lock, prompt = FALSE, force = TRUE)
+  renv::snapshot(project = project, lockfile = bootstrap_lock, type = "all", prompt = FALSE, force = TRUE)
   source <- "first-run-bootstrap-lock-candidate"
   lock_output <- bootstrap_lock
+}
+
+lock_contents <- jsonlite::fromJSON(lock_output, simplifyVector = FALSE)
+locked_packages <- lock_contents$Packages
+locked_version <- function(name) {
+  entry <- locked_packages[[name]]
+  if (is.null(entry)) return(NA_character_)
+  as.character(entry$Version)
+}
+if (!identical(locked_version("detectseparation"), "0.4.0") || !identical(locked_version("jsonlite"), "2.0.0")) {
+  abort("Forensic renv lock must record detectseparation 0.4.0 and jsonlite 2.0.0; snapshot was incomplete")
 }
 
 lib <- renv::paths$library(project = project)
