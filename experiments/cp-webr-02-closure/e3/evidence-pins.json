@@ -1,0 +1,95 @@
+{
+  "schema": "CP-WEBR-02-CLOSURE-1-E3-EVIDENCE-PINS-v1",
+  "review_status": "CANDIDATE_ERRATUM_PENDING_INDEPENDENT_APPROVAL",
+  "required_baseline_sha": "f3bf77f1d730cedf4d728ddc58d32b885c63b3bb",
+  "main_sha": "53fb05e7c8d9b77b46c4a5d8b7c9cc041345f6a6",
+  "frozen": {
+    "fixture_manifest_sha256": "e799ff01a9606c91cb3d494e277e081cabdc1349a37c993a08e7057d7411e4b1",
+    "template_sha256": "7989403c7d093031b93a9c971a6d4f055101bab83c0ec4417fc52e4dceee24a4",
+    "assertion_matrix_sha256": "c53ed65845adfa0bdd61011ab7ba6667b5662f4144a438a0443898adc0cabeea",
+    "native_oracle_source_sha256": "fe524d3330b59ef8b2b60b1b93cd1d21ed4b02ab9e62642b432078bf4d706f87",
+    "original_02a_contract_sha256": "8e032108c05f963a56c165ee375376704dd140472e45ac914965569b9260e7a6",
+    "original_02a_test_contract_sha256": "d52d7dab68c6150bddcb1e471aa8ecfc9904964b51042b5a9ce2222900f86850",
+    "original_roadmap_sha256": "005f1300fde92d1509958d9058526ab8ae98c992ccfc09f3e9d13995eae44bca",
+    "candidate_native_reference_sha256": "ea05ce912fb03dd86f09cb779b60bd795284372d089a05a9e0124f17e766eedb",
+    "historical_report_sha256": "e996359d5b05774448f1f7be2bf9ae7dbbc350166399d5227c90b9560ab3b17c",
+    "production_worker_results_sha256": "5521d2b73b223dc9939f97f1547439685f6d0b9052d4113ac0049e2aba3dbeb7",
+    "production_worker_source_sha256": "48955596f7d6f53b5814990b5cc255f8fc12010dcc22653c336a4420ceecb629",
+    "production_worker_bundle_sha256": "83c6594c664e75156f01933e2c789bf8bab8aac968aaf3ed5d7db245a8cf2eb9",
+    "native_oracle_source_sha256": "fe524d3330b59ef8b2b60b1b93cd1d21ed4b02ab9e62642b432078bf4d706f87"
+  },
+  "toolchain": {
+    "next": "16.4.1",
+    "eslint_config_next": "16.4.1",
+    "webr": "0.6.0",
+    "r": "4.6.0",
+    "MatchIt": "4.8.1",
+    "cobalt": "5.0.0"
+  },
+  "original_25_fixture_evidence": {
+    "workflow_run_id": "39954671878",
+    "artifact_id": "12501434045",
+    "artifact_digest": "sha256:e41eafc0bf236997063b9c3a868371f974275fd3a5c3a81d8ef3a0f29aaef230",
+    "source_commit_sha": "1ca14f6ab3c41d1ba366db0adda22102acc90a3c",
+    "evidence_archive_sha256": "031b71cda811612f683a2f113057c638bc8373775eac469a343ee02d2be405cb",
+    "evidence_index_sha256": "40259eea585e6db61ae751d9cd9b42bad40a9188faac9d61153f499e686c3461",
+    "evidence_files": {
+      "native-reference-candidate.json": "ea05ce912fb03dd86f09cb779b60bd795284372d089a05a9e0124f17e766eedb",
+      "comparison-report.json": "e996359d5b05774448f1f7be2bf9ae7dbbc350166399d5227c90b9560ab3b17c",
+      "production-worker-results.json": "5521d2b73b223dc9939f97f1547439685f6d0b9052d4113ac0049e2aba3dbeb7",
+      "fixture-integrity.json": "06e3bed64ba2504f82020b66fe30eead2bb3be82fa7bac2a9591e6aeb33f7af5",
+      "production-worker.js": "83c6594c664e75156f01933e2c789bf8bab8aac968aaf3ed5d7db245a8cf2eb9"
+    }
+  },
+  "e2_scientific_evidence": {
+    "workflow_run_id": "40021019295",
+    "artifact_id": "12532397023",
+    "artifact_digest": "sha256:bb0d2cb66a9b983d40f04703fcd318fa1c76b6a02ca0d58be6bb7d858f902df3",
+    "commit_sha": "f3bf77f1d730cedf4d728ddc58d32b885c63b3bb",
+    "main_sha": "53fb05e7c8d9b77b46c4a5d8b7c9cc041345f6a6",
+    "evidence_archive_sha256": "2f8f6487239189745ac3e735916ea1e16d70b7f6e1ee071acd4223b0ded60a85",
+    "evidence_index_sha256": "4dab0d37f1110ea5c4e4e6486faa657daeab7ab98ce485e79fef44b7f6c025c6",
+    "files": {
+      "CP-WEBR-02-CLOSURE-1-E2-report.md": "e582afe745c9833249a85611feb7dece45725e6480b35ba379928c37e2aa31f0",
+      "commit-sha.txt": "659eb2bcefd2004d8c3ac0b8cb118766b6173c4f4104ec6a541465c8a70ab073",
+      "covariance-comparison.json": "87548666f9ee8ecc23b00c9ea419e651f46952eb5a60670c3598fe2b4d819ddc",
+      "fixture-integrity.json": "06e3bed64ba2504f82020b66fe30eead2bb3be82fa7bac2a9591e6aeb33f7af5",
+      "forensics-renv.lock": "f062f3631c7e124791e9d329d1b1084304925fdf7fafa2776f8c399176c3fc73",
+      "forensics-source-hashes.sha256": "86cd3f2380aa19973e351576bf06d4eee56110e27dfcdc402614468b811c1419",
+      "main-sha.txt": "cf41acef92d8759fdbed6254b967c879ec8519902684e0cee8f89c1ebbdb8316",
+      "native-diagnostic-1.json": "0790d6b5d487854f6aa254f664bca7dc0b53fb443fa4250bbd8e5a85fa004da2",
+      "native-diagnostic-2.json": "0dd19411cd65a7928989535c54509a6533b63a443840d8a52c43c7931c2c56ab",
+      "native-oracle-renv.lock": "7a0f36a2d4683df4a9e75ae6b144aae802a2587827809b2be5a096a55086b2f0",
+      "native-oracle-source-package-integrity.json": "9eada9e482693ca8e43ff2bd7e50f678b2a6937d0948c40368a902d9489e7169",
+      "production-worker-observations.json": "831c199d8b3a2cd642e25c6a784c1f2b219cccf8e2732fc530bb1f9a10187146",
+      "provision.log": "6b4d2639f30b247d829b0db0f862dcc273dd8540f9fbc89ca05063db0ae8766d",
+      "source-package-integrity.json": "81762b9a558dc02416c211094798ca04a79ccb83c05e54a293887951c4d08eda",
+      "template.sha256": "b120cb0e9f52d908219d9ab44b95fb501dcdbaf2846c5cf85230707ba952e031",
+      "webr-dependency-lock.json": "7638502e8a1f3afa7b5a4f97b3a7b05ae476e74d67b577dcce63387d8cc5803d",
+      "webr-shadow-diagnostics.json": "ff0c76c9ff45b0435eb358051889244376d29c30f51561fa51f85e7243ee3979"
+    }
+  },
+  "original_comparison": {
+    "numeric_count": 16047,
+    "numeric_pass_count": 16044,
+    "numeric_fail_count": 3,
+    "baseline_failure_count": 4,
+    "original_failure_names": [
+      "fix_15_quasi_separation:warning/diagnostic distinction is absent",
+      "fix_16_complete_separation.coefficient.(Intercept).standard_error",
+      "fix_16_complete_separation.coefficient.x_sep.standard_error",
+      "fix_16_complete_separation.glm.maximum_standard_error"
+    ]
+  },
+  "scientific_canonical_sha256": {
+    "candidate": "c149ade28edb1b9eb4298c7f4b678c9888d94b210c36fff79d989e5fcb8f7274",
+    "comparison": "65753ced445b09bd5f651db21ee57dda8e4860bd905adfb5264e08a2005e19fe",
+    "worker": "f91e137cb82c56dd9dba742242fff054e58b036bccb3b82edd5f41258c488218",
+    "e2Comparison": "d25329fb3f0be3763e4935bf4d56b6339f5e7e2e645d47ee8f3b15ffe13330b5",
+    "e2Observations": "e7e7e766abfdfd07e5924a0c1484a38404ef12539c87f0f044fce0a349e3448f",
+      "nativeDiagnostic1": "f654dea16954edca76033beab75d7dfdccaca17d48d72e74b7b3c96ea8a2bea7",
+      "nativeDiagnostic2": "39cc71e8a618148421069e29d91a3099cdee8f0c50433f0775ba4de303564916",
+    "webr": "c524e0b22dbd8a7cc4b8f4445de55f3d456d79e7c1794b9a893226893cbaf746"
+  },
+  "erratum_sha256": "a030d1214adc7ff38f55638a77625a8c6655d6442f6d12b37faa29a39e4dec40"
+}
