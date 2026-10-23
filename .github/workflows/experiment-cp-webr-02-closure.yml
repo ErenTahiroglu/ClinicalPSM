@@ -27,12 +27,17 @@ permissions:
   contents: read
 
 jobs:
-  native-bootstrap:
-    name: Exact native R and source package feasibility
+  native-feasibility:
+    name: Exact native R, package integrity and two-fixture execution
     runs-on: ubuntu-24.04
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install pinned Node for source integrity verification
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.22.1"
 
       - name: Install exact native R
         uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
@@ -41,86 +46,37 @@ jobs:
           use-public-rspm: false
           cran: https://cran.r-project.org
 
-      - name: Verify R runtime, source archives and environment
-        env:
-          CP_WEBR_CLOSURE_MODE: prepare
-          CP_WEBR_RENV_PROJECT: ${{ github.workspace }}/experiments/cp-webr-02-closure
-          CP_WEBR_SOURCE_ARCHIVE_DIR: ${{ runner.temp }}/cp-webr-native-source
-          CP_WEBR_FEASIBILITY_REPORT: ${{ github.workspace }}/experiments/cp-webr-02-closure/native-feasibility-bootstrap.json
-        run: |
-          set -euo pipefail
-          mkdir -p "$CP_WEBR_SOURCE_ARCHIVE_DIR"
-          Rscript --version
-          curl --fail --location --silent --show-error https://cran.r-project.org/src/contrib/MatchIt_4.8.1.tar.gz --output "$CP_WEBR_SOURCE_ARCHIVE_DIR/MatchIt_4.8.1.tar.gz"
-          curl --fail --location --silent --show-error https://cran.r-project.org/src/contrib/cobalt_5.0.0.tar.gz --output "$CP_WEBR_SOURCE_ARCHIVE_DIR/cobalt_5.0.0.tar.gz"
-          printf '%s  %s\n' \
-            0e4c216d3acf51c19ea91863ebe52789bf9431f625d5c8dd96e3d93e4b9a433d "$CP_WEBR_SOURCE_ARCHIVE_DIR/MatchIt_4.8.1.tar.gz" \
-            b15f4520db40f2dce693028dc06dc4864d2f81746c2a463d52665fe5fdb56a27 "$CP_WEBR_SOURCE_ARCHIVE_DIR/cobalt_5.0.0.tar.gz" | sha256sum --check
-          Rscript experiments/cp-webr-02-closure/native_feasibility.R
-          cat "$CP_WEBR_FEASIBILITY_REPORT"
-          Rscript -e 'print(sessionInfo())'
-        shell: bash
+      - name: Verify all locked CRAN source archive hashes
+        run: node experiments/cp-webr-02-closure/package_sources.mjs verify
 
-      - name: Upload native bootstrap evidence and temporary lock
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: cp-webr-02-closure-gate-a-bootstrap-${{ github.run_id }}
-          if-no-files-found: warn
-          path: |
-            experiments/cp-webr-02-closure/renv.lock
-            experiments/cp-webr-02-closure/native-feasibility-bootstrap.json
-            experiments/cp-webr-02-closure/source-package-integrity.json
-
-  setup-renv-restore:
-    name: Exact lockfile restore and independent native re-execution
-    needs: native-bootstrap
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Check out source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Install exact native R
-        uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
-        with:
-          r-version: "4.6.0"
-          use-public-rspm: false
-          cran: https://cran.r-project.org
-
-      - name: Download bootstrap lock and metadata
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: cp-webr-02-closure-gate-a-bootstrap-${{ github.run_id }}
-          path: experiments/cp-webr-02-closure
-
-      - name: Restore exact package set with documented setup-renv
+      - name: Restore committed lock with documented setup-renv
         uses: r-lib/actions/setup-renv@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
         with:
           working-directory: experiments/cp-webr-02-closure
           profile: "NULL"
           bypass-cache: "true"
 
-      - name: Verify restored versions and execute both native probes
+      - name: Execute direct native R feasibility probes
         env:
           CP_WEBR_CLOSURE_MODE: verify
           CP_WEBR_RENV_PROJECT: ${{ github.workspace }}/experiments/cp-webr-02-closure
-          CP_WEBR_FEASIBILITY_REPORT: ${{ github.workspace }}/experiments/cp-webr-02-closure/native-feasibility-renv-restore.json
+          CP_WEBR_FEASIBILITY_REPORT: ${{ github.workspace }}/experiments/cp-webr-02-closure/native-feasibility-evidence.json
         run: |
           set -euo pipefail
           Rscript --version
-          Rscript "$GITHUB_WORKSPACE/experiments/cp-webr-02-closure/native_feasibility.R"
+          Rscript native_feasibility.R
           cat "$CP_WEBR_FEASIBILITY_REPORT"
           Rscript -e 'print(sessionInfo())'
         working-directory: experiments/cp-webr-02-closure
         shell: bash
 
-      - name: Upload lock restore evidence
+      - name: Upload Gate A evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: cp-webr-02-closure-gate-a-renv-${{ github.run_id }}
+          name: cp-webr-02-closure-native-feasibility-${{ github.run_id }}
           if-no-files-found: warn
           path: |
-            experiments/cp-webr-02-closure/native-feasibility-renv-restore.json
+            experiments/cp-webr-02-closure/native-feasibility-evidence.json
             experiments/cp-webr-02-closure/renv.lock
             experiments/cp-webr-02-closure/source-package-integrity.json

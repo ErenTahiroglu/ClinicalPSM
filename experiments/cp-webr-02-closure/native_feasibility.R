@@ -9,7 +9,6 @@ closure_dir <- file.path(repo_root, "experiments", "cp-webr-02-closure")
 fixture_dir <- file.path(repo_root, "experiments", "cp-webr-02a", "fixtures")
 mode <- Sys.getenv("CP_WEBR_CLOSURE_MODE", "verify")
 project_dir <- normalizePath(Sys.getenv("CP_WEBR_RENV_PROJECT", closure_dir), mustWork = TRUE)
-archive_dir <- Sys.getenv("CP_WEBR_SOURCE_ARCHIVE_DIR", "")
 report_path <- Sys.getenv("CP_WEBR_FEASIBILITY_REPORT", file.path(project_dir, paste0("native-feasibility-", mode, ".json")))
 
 abort <- function(...) stop(sprintf(...), call. = FALSE)
@@ -122,27 +121,23 @@ run_native_probe <- function(id) {
   )
 }
 
-if (identical(mode, "prepare")) {
-  if (!nzchar(archive_dir)) abort("CP_WEBR_SOURCE_ARCHIVE_DIR is required in prepare mode")
-  if (!requireNamespace("renv", quietly = TRUE)) utils::install.packages("renv", repos = c(CRAN = cran), type = "source")
-  if (!requireNamespace("jsonlite", quietly = TRUE)) utils::install.packages("jsonlite", repos = c(CRAN = cran), type = "source")
-  manifest_path <- file.path(closure_dir, "source-package-integrity.json")
-  manifest <- jsonlite::fromJSON(manifest_path, simplifyVector = FALSE)
-  if (length(manifest$packages) != 2L) abort("Gate A manifest must contain exactly the two pinned direct source archives")
-  renv::init(project = project_dir, bare = TRUE, restart = FALSE)
-  renv::load(project = project_dir)
+if (!identical(mode, "verify")) abort("Only read-only verify mode is permitted; lock and references are never generated here")
+if (!requireNamespace("jsonlite", quietly = TRUE)) abort("jsonlite is required to read the preserved fixture metadata")
 
-  for (package in manifest$packages) {
-    archive_path <- file.path(archive_dir, basename(package$source))
-    if (!file.exists(archive_path)) abort("Missing package source archive: %s", archive_path)
-    actual_hash <- sha256_file(archive_path)
-    if (!identical(tolower(actual_hash), tolower(package$sha256))) abort("Source archive SHA-256 mismatch for %s", package$name)
-  }
-
-  options(repos = c(CRAN = cran))
-  archives <- vapply(manifest$packages, function(package) file.path(archive_dir, basename(package$source)), character(1L))
-  renv::install(c("MatchIt@4.8.1", "cobalt@5.0.0", "jsonlite"))
-  utils::install.packages(archives, repos = NULL, type = "source", dependencies = FALSE)
+manifest_path <- file.path(closure_dir, "source-package-integrity.json")
+manifest <- jsonlite::fromJSON(manifest_path, simplifyVector = FALSE)
+lock_path <- file.path(closure_dir, "renv.lock")
+lock_sha256 <- sha256_file(lock_path)
+if (!identical(lock_sha256, manifest$renv_lock_sha256)) abort("renv.lock SHA-256 differs from the source integrity manifest")
+if (length(manifest$packages) != manifest$package_count) abort("Source package manifest count is inconsistent")
+if (manifest$package_count != length(jsonlite::fromJSON(lock_path, simplifyVector = FALSE)$Packages)) {
+  abort("Source package manifest does not cover every renv.lock entry")
+}
+manifest_packages <- setNames(vapply(manifest$packages, `[[`, character(1L), "version"), vapply(manifest$packages, `[[`, character(1L), "name"))
+if (!all(c("MatchIt", "cobalt") %in% names(manifest_packages)) ||
+    !identical(unname(manifest_packages[["MatchIt"]]), required_versions[["MatchIt"]]) ||
+    !identical(unname(manifest_packages[["cobalt"]]), required_versions[["cobalt"]])) {
+  abort("Source package manifest has unexpected MatchIt or cobalt versions")
 }
 
 if (!identical(as.character(getRversion()), required_versions[["R"]])) {
@@ -157,10 +152,6 @@ if (!requireNamespace("jsonlite", quietly = TRUE)) abort("jsonlite is required t
 
 fixture_ids <- c("fix_01_well_conditioned", "fix_02_mixed_types")
 probe_results <- lapply(fixture_ids, run_native_probe)
-
-if (identical(mode, "prepare")) {
-  renv::snapshot(project = project_dir, type = "all", prompt = FALSE)
-}
 
 session_output <- capture.output(utils::sessionInfo())
 blas_line <- grep("^BLAS:", session_output, value = TRUE)
@@ -185,7 +176,11 @@ report <- list(
     locale = Sys.getlocale(),
     l10n_info = l10n_info()
   ),
-  source_manifest_sha256 = sha256_file(file.path(closure_dir, "source-package-integrity.json")),
+  source_archive_manifest = list(
+    package_count = manifest$package_count,
+    renv_lock_sha256 = lock_sha256,
+    manifest_sha256 = sha256_file(manifest_path)
+  ),
   fixtures = probe_results,
   emitted_numeric_golden_values = FALSE,
   reference_generation_attempted = FALSE
