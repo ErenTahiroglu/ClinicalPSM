@@ -1,0 +1,289 @@
+name: CP-WEBR-02 E4 Candidate Phase Closure Qualification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [development]
+    paths:
+      - ".github/workflows/experiment-cp-webr-02-closure-e4.yml"
+      - "experiments/cp-webr-02-closure/e3/**"
+      - "experiments/cp-webr-02-closure/e4/**"
+      - "experiments/cp-webr-02-closure/fixture-integrity.json"
+      - "experiments/cp-webr-02a/adapter/r_template.R"
+      - "experiments/cp-webr-02a/fixtures/**"
+      - "experiments/cp-webr-02a/r1.2a/FIXTURE-ASSERTION-MATRIX.json"
+      - "experiments/cp-webr-02-closure/native_oracle.R"
+      - "experiments/cp-webr-02-closure/compare_closure.mjs"
+      - "experiments/cp-webr-00b/dependency-lock.json"
+      - "experiments/cp-webr-02-closure/renv.lock"
+      - "docs/architecture/CP-WEBR-01-PRODUCTION-ARCHITECTURE.md"
+      - "package.json"
+      - "package-lock.json"
+      - "apps/web/**"
+      - "src/lib/webr/**"
+      - "src/worker/**"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  e4-qualification:
+    name: Verify immutable evidence, corrected phase contract and fail-closed adjudication
+    if: github.ref == 'refs/heads/development'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Verify E3 baseline ancestry, main pin, frozen assets and production source identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/development"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -z "$(git status --porcelain=v1)"
+          git merge-base --is-ancestor ad7de4547b3b131d5d81c046eea035f80aff4ec0 HEAD
+          git fetch --no-tags origin main
+          test "$(git rev-parse origin/main)" = "53fb05e7c8d9b77b46c4a5d8b7c9cc041345f6a6"
+          git diff --exit-code 1ca14f6ab3c41d1ba366db0adda22102acc90a3c HEAD -- \
+            apps/web \
+            src/lib/webr \
+            src/worker \
+            experiments/cp-webr-02a/adapter \
+            experiments/cp-webr-02a/fixtures \
+            experiments/cp-webr-02a/CP-WEBR-02A-EXPERIMENT-CONTRACT.md \
+            experiments/cp-webr-02a/CP-WEBR-02A-R1.2a-TEST-CONTRACT.md \
+            experiments/cp-webr-02a/r1.2a/FIXTURE-ASSERTION-MATRIX.json \
+            experiments/cp-webr-02-closure/native_oracle.R \
+            experiments/cp-webr-02-closure/compare_closure.mjs \
+            experiments/cp-webr-02-closure/fixture-integrity.json \
+            docs/architecture/CP-WEBR-01-PRODUCTION-ARCHITECTURE.md
+          test "$(shasum -a 256 experiments/cp-webr-02-closure/e4/evidence-pins.json | awk '{print $1}')" = "3f9272da9d7a56ccc1b700d48b84c3b05a01e0fa711b8a4d613a5d92feaebe1c"
+          test "$(shasum -a 256 experiments/cp-webr-02-closure/e4/CP-WEBR-02-SCIENTIFIC-EQUIVALENCE-AMENDMENT-v1.md | awk '{print $1}')" = "9d0471d573033b96ff4341459eb6f39e03089140d7d4c6196d222a9c1c128d21"
+          test "$(shasum -a 256 docs/architecture/CP-WEBR-01-PRODUCTION-ARCHITECTURE.md | awk '{print $1}')" = "005f1300fde92d1509958d9058526ab8ae98c992ccfc09f3e9d13995eae44bca"
+          test "$(shasum -a 256 experiments/cp-webr-02a/fixtures/fixtures_manifest.json | awk '{print $1}')" = "e799ff01a9606c91cb3d494e277e081cabdc1349a37c993a08e7057d7411e4b1"
+          test "$(shasum -a 256 experiments/cp-webr-02a/adapter/r_template.R | awk '{print $1}')" = "7989403c7d093031b93a9c971a6d4f055101bab83c0ec4417fc52e4dceee24a4"
+          test "$(shasum -a 256 experiments/cp-webr-02a/r1.2a/FIXTURE-ASSERTION-MATRIX.json | awk '{print $1}')" = "c53ed65845adfa0bdd61011ab7ba6667b5662f4144a438a0443898adc0cabeea"
+          test "$(shasum -a 256 experiments/cp-webr-02-closure/native_oracle.R | awk '{print $1}')" = "fe524d3330b59ef8b2b60b1b93cd1d21ed4b02ab9e62642b432078bf4d706f87"
+          node -e 'const f=require("node:fs");const p=JSON.parse(f.readFileSync("package.json"));const l=JSON.parse(f.readFileSync("package-lock.json"));const d=JSON.parse(f.readFileSync("experiments/cp-webr-00b/dependency-lock.json"));const r=JSON.parse(f.readFileSync("experiments/cp-webr-02-closure/renv.lock"));if(p.dependencies.next!=="16.4.1"||p.devDependencies["eslint-config-next"]!=="16.4.1"||l.packages["node_modules/next"].version!=="16.4.1"||l.packages["node_modules/eslint-config-next"].version!=="16.4.1"||d.runtime.webr_npm!=="0.6.0"||d.runtime.r_version!=="4.6.0"||r.R.Version!=="4.6.0"||r.Packages.MatchIt.Version!=="4.8.1"||r.Packages.cobalt.Version!=="5.0.0")process.exit(1);console.log("Immutable hashes, production source identity, Next.js, eslint-config-next, WebR, R, MatchIt and cobalt pins verified")'
+
+      - name: Install pinned Node.js 24.22.1
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.22.1"
+
+      - name: Prepare evidence workspace
+        shell: bash
+        run: mkdir -p "${{ runner.temp }}/cp-webr-e4"/{legacy-download,e2-download,e3-download,strict-comparison-download,strict-evidence-download,legacy,e2,output}
+
+      - name: Download pinned original production Worker evidence
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          repository: ${{ github.repository }}
+          run-id: "39954671878"
+          artifact-ids: "12501434045"
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/cp-webr-e4/legacy-download
+
+      - name: Download pinned E2 scientific evidence
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          repository: ${{ github.repository }}
+          run-id: "40021019295"
+          artifact-ids: "12532397023"
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/cp-webr-e4/e2-download
+
+      - name: Download accepted E3 candidate evidence
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          repository: ${{ github.repository }}
+          run-id: "40030723272"
+          artifact-ids: "12533809065"
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/cp-webr-e4/e3-download
+
+      - name: Download final original strict comparison report
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          repository: ${{ github.repository }}
+          run-id: "40030723201"
+          artifact-ids: "12535595517"
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/cp-webr-e4/strict-comparison-download
+
+      - name: Download final original strict evidence artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          repository: ${{ github.repository }}
+          run-id: "40030723201"
+          artifact-ids: "12534797742"
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/cp-webr-e4/strict-evidence-download
+
+      - name: Verify GitHub artifact metadata and exact original closure conclusion
+        id: evidence-metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+          E4_TEMP: ${{ runner.temp }}/cp-webr-e4
+        shell: bash
+        run: |
+          set -euo pipefail
+          verify_artifact() {
+            local id="$1"
+            local expected="$2"
+            local actual
+            actual="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${id}" --jq '[.id, .name, .size_in_bytes, .digest, .workflow_run.id, .workflow_run.head_sha] | @tsv')"
+            test "$actual" = "$expected"
+          }
+          verify_artifact "12501434045" $'12501434045\tcp-webr-02-closure-evidence-39954671878\t869911\tsha256:e41eafc0bf236997063b9c3a868371f974275fd3a5c3a81d8ef3a0f29aaef230\t39954671878\t1ca14f6ab3c41d1ba366db0adda22102acc90a3c'
+          verify_artifact "12532397023" $'12532397023\tcp-webr-02-closure-e2-40021019295\t278143\tsha256:bb0d2cb66a9b983d40f04703fcd318fa1c76b6a02ca0d58be6bb7d858f902df3\t40021019295\tf3bf77f1d730cedf4d728ddc58d32b885c63b3bb'
+          verify_artifact "12533809065" $'12533809065\tcp-webr-02-closure-e3-40030723272\t53704\tsha256:9326cc163fddd03129a5777f49b23983b74ffb490b58038c2a265c2ae0b60b7f\t40030723272\tad7de4547b3b131d5d81c046eea035f80aff4ec0'
+          verify_artifact "12535595517" $'12535595517\tcp-webr-02-closure-comparison-40030723201\t291391\tsha256:ec570e3263b0c463efbec05f2c79ddfed27796736008b45bf4d72b013f6acc34\t40030723201\tad7de4547b3b131d5d81c046eea035f80aff4ec0'
+          verify_artifact "12534797742" $'12534797742\tcp-webr-02-closure-evidence-40030723201\t870205\tsha256:73da9920a9e6dcf175229db9310e4b02c2b2499a2d0e5cdbd8b08bcff62e0604\t40030723201\tad7de4547b3b131d5d81c046eea035f80aff4ec0'
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/40030723201" --jq '{id, head_sha, head_branch, status, conclusion, html_url}' > "$E4_TEMP/strict-run.json"
+          node -e 'const x=require(process.argv[1]);const e={id:40030723201,head_sha:"ad7de4547b3b131d5d81c046eea035f80aff4ec0",head_branch:"development",status:"completed",conclusion:"failure"};for(const k of Object.keys(e))if(x[k]!==e[k])throw new Error("original strict run mismatch: "+k);' "$E4_TEMP/strict-run.json"
+          strict_report="$(find "$E4_TEMP/strict-comparison-download" -type f -name comparison-report.json -print -quit)"
+          test -n "$strict_report"
+          test "$(shasum -a 256 "$strict_report" | awk '{print $1}')" = "67498f5c09185e1a003a500c1b72be281e8740ca4b02d32d1676921764049002"
+          e3_index="$(find "$E4_TEMP/e3-download" -type f -name e3-evidence-index.json -print -quit)"
+          test -n "$e3_index"
+          e3_dir="$(dirname "$e3_index")"
+          (cd "$e3_dir" && shasum -a 256 -c SHA256SUMS)
+          test "$(shasum -a 256 "$e3_index" | awk '{print $1}')" = "e0031b4e297af192601668087e67d7ebdc06a64433535cc2bb4a70f62ca13aa5"
+          test "$(shasum -a 256 "$e3_dir/SHA256SUMS" | awk '{print $1}')" = "4a81b2fbb95a40fd4f7c7965e625f9882d1e48a81df180848ef5b9807060626b"
+          node -e 'const x=require(process.argv[1]);if(x.commit_sha!=="ad7de4547b3b131d5d81c046eea035f80aff4ec0"||String(x.workflow_run_id)!=="40030723272"||x.final_verdict!=="CLOSURE_E3_ERRATUM_CANDIDATE_READY_FOR_RED_TEAM")throw new Error("E3 artifact provenance mismatch")' "$e3_index"
+          echo "Original strict workflow conclusion is failure at the E3 SHA; its exact comparison artifact and accepted E3 artifact are hash-verified."
+
+      - name: Prepare archived E1 and E2 evidence for exact-source offline replay
+        env:
+          E4_TEMP: ${{ runner.temp }}/cp-webr-e4
+        shell: bash
+        run: |
+          set -euo pipefail
+          legacy_archive="$(find "$E4_TEMP/legacy-download" -type f -name cp-webr-02-closure-evidence.tar.gz -print -quit)"
+          e2_archive="$(find "$E4_TEMP/e2-download" -type f -name evidence.tar.gz -print -quit)"
+          e2_archive_sidecar="$(find "$E4_TEMP/e2-download" -type f -name evidence-archive.sha256 -print -quit)"
+          test -n "$legacy_archive"
+          test -n "$e2_archive"
+          test -n "$e2_archive_sidecar"
+          mkdir -p "$E4_TEMP/legacy" "$E4_TEMP/e2"
+          tar -xzf "$legacy_archive" -C "$E4_TEMP/legacy"
+          tar -xzf "$e2_archive" -C "$E4_TEMP/e2"
+          cp "$e2_archive_sidecar" "$E4_TEMP/e2/evidence-archive.sha256"
+          test "$(shasum -a 256 "$legacy_archive" | awk '{print $1}')" = "031b71cda811612f683a2f113057c638bc8373775eac469a343ee02d2be405cb"
+          test "$(shasum -a 256 "$e2_archive" | awk '{print $1}')" = "2f8f6487239189745ac3e735916ea1e16d70b7f6e1ee071acd4223b0ded60a85"
+
+      - name: Run direct scientific and structural falsification tests
+        env:
+          E4_TEMP: ${{ runner.temp }}/cp-webr-e4
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test --test-reporter=tap \
+            experiments/cp-webr-02-closure/e3/adjudicate.test.mjs \
+            experiments/cp-webr-02-closure/e4/qualify.test.mjs \
+            > "$E4_TEMP/adjudicator-tests.tap"
+          cat "$E4_TEMP/adjudicator-tests.tap"
+
+      - name: Replay fail-closed E3 adjudication against archived E1 and E2 evidence
+        env:
+          E4_TEMP: ${{ runner.temp }}/cp-webr-e4
+        shell: bash
+        run: |
+          set -euo pipefail
+          legacy_archive="$(find "$E4_TEMP/legacy-download" -type f -name cp-webr-02-closure-evidence.tar.gz -print -quit)"
+          e2_archive="$(find "$E4_TEMP/e2-download" -type f -name evidence.tar.gz -print -quit)"
+          node experiments/cp-webr-02-closure/e3/adjudicate.mjs \
+            --legacy-dir "$E4_TEMP/legacy" \
+            --legacy-archive "$legacy_archive" \
+            --e2-dir "$E4_TEMP/e2" \
+            --e2-archive "$e2_archive" \
+            --output-dir "$E4_TEMP/e3-replay"
+
+      - name: Build E4 evidence verification inputs and render adjudication report
+        env:
+          E4_TEMP: ${{ runner.temp }}/cp-webr-e4
+        shell: bash
+        run: |
+          set -euo pipefail
+          strict_report="$(find "$E4_TEMP/strict-comparison-download" -type f -name comparison-report.json -print -quit)"
+          e3_index="$(find "$E4_TEMP/e3-download" -type f -name e3-evidence-index.json -print -quit)"
+          e3_dir="$(dirname "$e3_index")"
+          node -e 'const f=require("node:fs");const p=JSON.parse(f.readFileSync(process.argv[1]));const sha=require("node:crypto").createHash("sha256").update(f.readFileSync(process.argv[2])).digest("hex");const pick=x=>({workflow_run_id:x.workflow_run_id,artifact_id:x.artifact_id,artifact_name:x.artifact_name,artifact_size_bytes:x.artifact_size_bytes,artifact_digest:x.artifact_digest});const s=p.original_strict_closure;const out={status:"PASS",e3_internal_manifest_verified:true,native_and_e2_archives_verified:true,strict_comparison_report_sha256:sha,artifacts:{original_worker_evidence:pick(p.original_worker_evidence),e2_evidence:pick(p.e2_evidence),e3_evidence:pick(p.e3_evidence),original_strict_comparison:{workflow_run_id:s.workflow_run_id,artifact_id:s.comparison_artifact_id,artifact_name:s.comparison_artifact_name,artifact_size_bytes:s.comparison_artifact_size_bytes,artifact_digest:s.comparison_artifact_digest},original_strict_evidence:{workflow_run_id:s.workflow_run_id,artifact_id:s.evidence_artifact_id,artifact_name:s.evidence_artifact_name,artifact_size_bytes:s.evidence_artifact_size_bytes,artifact_digest:s.evidence_artifact_digest}}};f.writeFileSync(process.argv[3],JSON.stringify(out,null,2)+"\n");' \
+            experiments/cp-webr-02-closure/e4/evidence-pins.json \
+            "$strict_report" \
+            "$E4_TEMP/artifact-verification.json"
+          node -e 'const f=require("node:fs");const p=JSON.parse(f.readFileSync(process.argv[1]));const out={status:"PASS",production_paths_unchanged:true,compared_source_commit:p.original_worker_evidence.source_commit_sha,current_commit_sha:process.env.GITHUB_SHA,main_sha:p.main_sha};f.writeFileSync(process.argv[2],JSON.stringify(out,null,2)+"\n");' \
+            experiments/cp-webr-02-closure/e4/evidence-pins.json \
+            "$E4_TEMP/production-source-identity.json"
+          node experiments/cp-webr-02-closure/e4/qualify.mjs \
+            --e3-report "$E4_TEMP/e3-replay/e3-adjudication-report.json" \
+            --strict-comparison "$strict_report" \
+            --strict-run "$E4_TEMP/strict-run.json" \
+            --test-log "$E4_TEMP/adjudicator-tests.tap" \
+            --artifact-verification "$E4_TEMP/artifact-verification.json" \
+            --source-identity "$E4_TEMP/production-source-identity.json" \
+            --output-dir "$E4_TEMP/output"
+          cp -R "$E4_TEMP/legacy" "$E4_TEMP/output/source-e1-unpacked"
+          cp -R "$E4_TEMP/e2" "$E4_TEMP/output/source-e2-unpacked"
+          cp -R "$e3_dir" "$E4_TEMP/output/source-e3-artifact"
+          cp -R "$E4_TEMP/strict-evidence-download" "$E4_TEMP/output/source-strict-evidence-artifact"
+          cp "$strict_report" "$E4_TEMP/output/strict-comparison-report-run-40030723201.json"
+          cp "$E4_TEMP/strict-run.json" "$E4_TEMP/output/original-strict-run-metadata.json"
+          cp "$E4_TEMP/adjudicator-tests.tap" "$E4_TEMP/output/adjudicator-tests.tap"
+          cp "$E4_TEMP/artifact-verification.json" "$E4_TEMP/output/artifact-verification.json"
+          cp "$E4_TEMP/production-source-identity.json" "$E4_TEMP/output/production-source-identity.json"
+          cp experiments/cp-webr-02-closure/e4/CP-WEBR-02-SCIENTIFIC-EQUIVALENCE-AMENDMENT-v1.md "$E4_TEMP/output/"
+          cp experiments/cp-webr-02-closure/e4/evidence-pins.json "$E4_TEMP/output/e4-evidence-pins.json"
+          cp experiments/cp-webr-02-closure/e4/qualify.mjs "$E4_TEMP/output/"
+          cp experiments/cp-webr-02-closure/e4/qualify.test.mjs "$E4_TEMP/output/"
+          cp experiments/cp-webr-02-closure/e4/write_evidence_index.mjs "$E4_TEMP/output/"
+          cp experiments/cp-webr-02-closure/e3/adjudicate.mjs "$E4_TEMP/output/e3-adjudicate.mjs"
+          cp experiments/cp-webr-02-closure/e3/adjudicate.test.mjs "$E4_TEMP/output/e3-adjudicate.test.mjs"
+          cp experiments/cp-webr-02-closure/e3/evidence-pins.json "$E4_TEMP/output/e3-evidence-pins.json"
+          cp experiments/cp-webr-02-closure/e3/CP-WEBR-02-NATIVE-PARITY-ERRATUM-v1.md "$E4_TEMP/output/"
+          cp .github/workflows/experiment-cp-webr-02-closure-e4.yml "$E4_TEMP/output/"
+          cp "$E4_TEMP/e3-replay/e3-adjudication-report.json" "$E4_TEMP/output/"
+          cp "$E4_TEMP/e3-replay/e3-adjudication-report.md" "$E4_TEMP/output/"
+          cp "$(find "$E4_TEMP/legacy-download" -type f -name cp-webr-02-closure-evidence.tar.gz -print -quit)" "$E4_TEMP/output/source-e1-evidence.tar.gz"
+          cp "$(find "$E4_TEMP/e2-download" -type f -name evidence.tar.gz -print -quit)" "$E4_TEMP/output/source-e2-evidence.tar.gz"
+          node experiments/cp-webr-02-closure/e4/write_evidence_index.mjs "$E4_TEMP/output"
+          (cd "$E4_TEMP/output" && shasum -a 256 -c SHA256SUMS)
+
+      - name: Upload E4 machine-readable matrix, report, and hash-verified source evidence
+        id: upload-e4
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cp-webr-02-closure-e4-${{ github.run_id }}
+          path: ${{ runner.temp }}/cp-webr-e4/output/
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Re-download and verify uploaded E4 evidence
+        if: always() && steps.upload-e4.outputs.artifact-id != ''
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: cp-webr-02-closure-e4-${{ github.run_id }}
+          path: ${{ runner.temp }}/cp-webr-e4/upload-check
+
+      - name: Verify uploaded E4 checksums and record immutable artifact metadata
+        if: always() && steps.upload-e4.outputs.artifact-id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_ID: ${{ steps.upload-e4.outputs.artifact-id }}
+          E4_TEMP: ${{ runner.temp }}/cp-webr-e4
+        shell: bash
+        run: |
+          set -euo pipefail
+          (cd "$E4_TEMP/upload-check" && shasum -a 256 -c SHA256SUMS)
+          metadata="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}" --jq '{id, name, size_in_bytes, digest, expired, workflow_run_id: .workflow_run.id, head_sha: .workflow_run.head_sha}')"
+          printf '%s\n' "$metadata" >> "$GITHUB_STEP_SUMMARY"
+          printf '\nE4 qualification commit: `%s`\n' "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          printf '\nOriginal strict comparator: **FAIL**, preserving 4 known rows (3 numeric FAIL).\n' >> "$GITHUB_STEP_SUMMARY"
+          printf '\nE4 proposed classification: `CLOSURE_E4_READY_FOR_INDEPENDENT_PHASE_CLOSURE`; phase closure remains pending independent review.\n' >> "$GITHUB_STEP_SUMMARY"

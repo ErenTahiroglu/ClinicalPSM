@@ -1,7 +1,18 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { validateAtomicVector, validateMatrix, validateSerializedFixture, validateWebrDiagnosticSchema } from './adjudicate.mjs';
+import {
+  compareNumericObservation,
+  validateAtomicVector,
+  validateExceptionScope,
+  validateFixtureIdentityCoverage,
+  validateFixtureMatchingStructure,
+  validateMatrix,
+  validateNumericComparisonRow,
+  validateRequiredWarningLedger,
+  validateSerializedFixture,
+  validateWebrDiagnosticSchema
+} from './adjudicate.mjs';
 
 const schema = { id: 'schema_fixture', dimensions: [1, 1], columns: ['x'] };
 
@@ -223,6 +234,67 @@ function webrDiagnostics() {
   };
 }
 
+function matchingStructureFixture() {
+  const nativeAccounting = {
+    imported_total: 4,
+    complete_cases: 4,
+    treated_total: 2,
+    control_total: 2,
+    matched_pair_count: 2,
+    matched_control_count: 2,
+    unmatched_treated_count: 0,
+    unmatched_control_count: 0,
+    discarded_treated_count: 0,
+    discarded_control_count: 0
+  };
+  const factor = {
+    declared_levels: ['base', 'middle', 'high'],
+    effective_factor_levels: ['base', 'middle', 'high'],
+    reference_level: 'base',
+    contrasts: [0, 1, 0, 0, 0, 1],
+    contrast_row_levels: ['base', 'middle', 'high'],
+    contrast_matrix: { middle: [0, 1, 0], high: [0, 0, 1] },
+    contrast_columns: ['middle', 'high']
+  };
+  const nativeFixture = {
+    native_execution: {
+      status: 'SUCCESS',
+      matchit: {
+        ordered_matched_pairs: { t1: 'c1', t2: 'c2' },
+        weights: { t1: 1, c1: 1, t2: 1, c2: 1 },
+        subclasses: { t1: 1, c1: 1, t2: 2, c2: 2 },
+        sample_accounting: nativeAccounting
+      },
+      factor_reference_and_contrasts: { group: factor }
+    }
+  };
+  const workerFixture = {
+    worker_message_type: 'ANALYSIS_COMPLETE',
+    envelope: {
+      payload: {
+        matchMatrix: { treatedIds: ['t1', 't2'], matchedControlIds: ['c1', 'c2'], pairDistances: [0.1, 0.2] },
+        matchingWeights: { unitIds: ['t1', 'c1', 't2', 'c2'], weights: [1, 1, 1, 1], subclass: [1, 1, 2, 2] },
+        sampleAccounting: {
+          importedTotal: 4,
+          completeCases: 4,
+          treatedTotal: 2,
+          controlTotal: 2,
+          matchedTreatedCount: 2,
+          matchedControlCount: 2,
+          unmatchedTreatedCount: 0,
+          unmatchedControlCount: 0,
+          discardedTreatedCount: 0,
+          discardedControlCount: 0
+        },
+        factorConfiguration: {
+          group: { originalHeader: 'group', inferredType: 'categorical', levels: ['base', 'middle', 'high'], referenceLevel: 'base' }
+        }
+      }
+    }
+  };
+  return { nativeFixture, workerFixture };
+}
+
 test('one-element numeric vectors keep array cardinality', () => {
   const value = vector(['only-term'], [7]);
   validateAtomicVector(value, 'test.vector', { named: true });
@@ -314,4 +386,118 @@ test('required WebR scientific sections cannot be omitted', () => {
   const value = webrDiagnostics();
   delete value.runs[0].fixtures[0].factorization;
   assert.throws(() => validateWebrDiagnosticSchema(value), /e2\.webr\.runs\[0\]\.fix_15_quasi_separation\.keys: expected/);
+});
+
+test('successful matching structure requires native and application records and records a pass', () => {
+  const pair = matchingStructureFixture();
+  const result = validateFixtureMatchingStructure({ fixtureId: 'fix_01_well_conditioned', ...pair });
+  assert.equal(result.outcome, 'MATCHING_STRUCTURE_PASS');
+  assert.equal(result.pair_count, 2);
+  assert.equal(result.keyed_unit_count, 4);
+  assert.equal(result.factor_count, 1);
+});
+
+test('fixture identity coverage directly rejects missing and duplicated records', () => {
+  const expected = ['fix_a', 'fix_b'];
+  assert.deepEqual(validateFixtureIdentityCoverage([{ id: 'fix_a' }, { id: 'fix_b' }], expected, 'test.fixtures'), ['fix_a', 'fix_b']);
+  assert.throws(() => validateFixtureIdentityCoverage([{ id: 'fix_a' }], expected, 'test.fixtures'), /test\.fixtures: expected \["fix_a","fix_b"\], received \["fix_a"\]/);
+  assert.throws(() => validateFixtureIdentityCoverage([{ id: 'fix_a' }, { id: 'fix_a' }], expected, 'test.fixtures'), /duplicate fixture ID/);
+});
+
+test('expected error/product-policy structure is explicit and justified', () => {
+  const result = validateFixtureMatchingStructure({
+    fixtureId: 'fix_19_missing_values',
+    expectedError: true,
+    expectedErrorJustification: 'EXPECTED_MISSING_COVARIATE_REJECTION'
+  });
+  assert.deepEqual(result, {
+    fixture_id: 'fix_19_missing_values',
+    outcome: 'NOT_APPLICABLE_EXPECTED_ERROR',
+    justification: 'EXPECTED_MISSING_COVARIATE_REJECTION'
+  });
+  assert.throws(() => validateFixtureMatchingStructure({ fixtureId: 'fix_01_well_conditioned', expectedError: true, expectedErrorJustification: 'not applicable' }), /only valid for frozen expected error/);
+});
+
+test('deleted native matching structure fails closed', () => {
+  const pair = matchingStructureFixture();
+  delete pair.nativeFixture.native_execution.matchit;
+  assert.throws(() => validateFixtureMatchingStructure({ fixtureId: 'fix_01_well_conditioned', ...pair }), /structure\.fix_01_well_conditioned\.native\.matchit: native MatchIt structure missing/);
+});
+
+test('deleted application payload fails closed', () => {
+  const pair = matchingStructureFixture();
+  delete pair.workerFixture.envelope.payload;
+  assert.throws(() => validateFixtureMatchingStructure({ fixtureId: 'fix_01_well_conditioned', ...pair }), /structure\.fix_01_well_conditioned\.application_payload: successful application payload missing/);
+});
+
+test('missing application matching subclasses fail closed', () => {
+  const pair = matchingStructureFixture();
+  delete pair.workerFixture.envelope.payload.matchingWeights.subclass;
+  assert.throws(() => validateFixtureMatchingStructure({ fixtureId: 'fix_01_well_conditioned', ...pair }), /structure\.fix_01_well_conditioned\.application\.subclasses: application matching subclasses missing/);
+});
+
+test('missing factor contrast metadata fails closed', () => {
+  const pair = matchingStructureFixture();
+  delete pair.nativeFixture.native_execution.factor_reference_and_contrasts.group.contrast_matrix;
+  assert.throws(() => validateFixtureMatchingStructure({ fixtureId: 'fix_01_well_conditioned', ...pair }), /structure\.fix_01_well_conditioned\.factor\.group\.keys: expected/);
+});
+
+test('pair order, keyed weight and factor reference mutations fail direct structural assertions', () => {
+  const pairMutation = matchingStructureFixture();
+  pairMutation.workerFixture.envelope.payload.matchMatrix.treatedIds.reverse();
+  assert.throws(() => validateFixtureMatchingStructure({ fixtureId: 'fix_01_well_conditioned', ...pairMutation }), /treated_pair_identity_and_order/);
+
+  const weightMutation = matchingStructureFixture();
+  weightMutation.workerFixture.envelope.payload.matchingWeights.weights[0] = 2;
+  assert.throws(() => validateFixtureMatchingStructure({ fixtureId: 'fix_01_well_conditioned', ...weightMutation }), /keyed_weights/);
+
+  const factorMutation = matchingStructureFixture();
+  factorMutation.workerFixture.envelope.payload.factorConfiguration.group.referenceLevel = 'middle';
+  assert.throws(() => validateFixtureMatchingStructure({ fixtureId: 'fix_01_well_conditioned', ...factorMutation }), /application\.referenceLevel/);
+});
+
+test('exception scope rejects unrelated fixtures and changed frozen inputs directly', () => {
+  const f15 = { csv: 'd81473a891c29084fe15578925df0416106a4b0badd4f1d35a65f3bc12d46a59', config: '95f621feba15025d657e7e78b6be3d637d800acde633f94a40eb1fe1e5b83423' };
+  assert.equal(validateExceptionScope('fix_15_quasi_separation', f15), true);
+  assert.throws(() => validateExceptionScope('fix_01_well_conditioned', f15), /outside the exact exception allowlist/);
+  assert.throws(() => validateExceptionScope('fix_15_quasi_separation', { ...f15, csv: '0'.repeat(64) }), /candidate\.csv_sha256/);
+});
+
+test('ordinary coefficient mutation is detected by direct numeric tolerance arithmetic', () => {
+  const base = 0.9877878917689553;
+  const reference = 0.987787891768965;
+  const tolerance = 0.0001;
+  assert.equal(compareNumericObservation(base, reference, tolerance).status, 'PASS');
+  assert.equal(compareNumericObservation(base + 0.05, reference, tolerance).status, 'FAIL');
+});
+
+test('cobalt mutation is detected by direct numeric tolerance arithmetic', () => {
+  const base = -0.007499609443220876;
+  const reference = -0.00749960944322088;
+  const tolerance = 0.0001;
+  assert.equal(compareNumericObservation(base, reference, tolerance).status, 'PASS');
+  assert.equal(compareNumericObservation(base + 0.05, reference, tolerance).status, 'FAIL');
+});
+
+test('numeric row validation recomputes the three original fix16 FAIL semantics', () => {
+  const row = {
+    name: 'fix_16_complete_separation.coefficient.(Intercept).standard_error',
+    semantics: 'numeric',
+    actual: 39815.87849877388,
+    reference: 39815.8764891409,
+    tolerance: 0.0001,
+    absolute_difference: 0.002009632982662879,
+    status: 'FAIL'
+  };
+  assert.equal(validateNumericComparisonRow(row).status, 'FAIL');
+  assert.throws(() => validateNumericComparisonRow({ ...row, status: 'PASS' }), /comparison\.numeric_comparisons\[\]\.status: expected "FAIL"/);
+  assert.throws(() => validateNumericComparisonRow({ ...row, actual: row.actual + 1 }), /absolute_difference: expected/);
+});
+
+test('removing a genuine warning from a warning-required runtime ledger is detected directly', () => {
+  assert.equal(validateRequiredWarningLedger(['glm.fit: algorithm did not converge'], 'test.warning_ledger'), 1);
+  assert.throws(() => validateRequiredWarningLedger([], 'test.warning_ledger'), /genuine runtime warning missing/);
+  const applicationWarning = { code: 'WARN', message: 'restricted', severity: 'fatal', impactDescription: 'outputs restricted' };
+  assert.equal(validateRequiredWarningLedger([applicationWarning], 'test.application_warning', { allowStructured: true }), 1);
+  assert.throws(() => validateRequiredWarningLedger([{ ...applicationWarning, severity: 1 }], 'test.application_warning', { allowStructured: true }), /expected string/);
 });

@@ -70,6 +70,37 @@ const FAILURE_ROWS = [
     absolute_difference: 0.002009632982662879, tolerance: 0.0001
   }
 ];
+const FIXTURE_EXCEPTION_IDENTITIES = new Map([
+  ['fix_15_quasi_separation', {
+    csv: 'd81473a891c29084fe15578925df0416106a4b0badd4f1d35a65f3bc12d46a59',
+    config: '95f621feba15025d657e7e78b6be3d637d800acde633f94a40eb1fe1e5b83423'
+  }],
+  ['fix_16_complete_separation', {
+    csv: '790e28259d5b7e5967d399848e79a59a61001a38cabbdacacf6e2560808ec26b',
+    config: 'dc1b024f27a22ba88393bd8b4004821cac224ea18f6fc95bfa5d97ed36259c62'
+  }]
+]);
+const NEGATIVE_CONTROL_CATEGORIES = {
+  fixture_input_hash_changed: 'EVIDENCE_INTEGRITY_FALSIFICATION',
+  fixture_missing: 'STRUCTURAL_IDENTITY_FALSIFICATION',
+  fixture_duplicated: 'STRUCTURAL_IDENTITY_FALSIFICATION',
+  exception_requested_for_unrelated_fixture: 'EXCEPTION_SCOPE_FALSIFICATION',
+  nonseparated_fixture_labelled_separated: 'SCIENTIFIC_COMPARATOR_FALSIFICATION',
+  lp_provenance_removed: 'EVIDENCE_INTEGRITY_FALSIFICATION',
+  unsupported_separation_claim: 'SCIENTIFIC_COMPARATOR_FALSIFICATION',
+  fix16_publication_restriction_removed: 'PUBLICATION_SAFETY_FALSIFICATION',
+  matched_pair_identity_altered: 'STRUCTURAL_IDENTITY_FALSIFICATION',
+  keyed_weight_changed: 'STRUCTURAL_IDENTITY_FALSIFICATION',
+  factor_reference_changed: 'STRUCTURAL_IDENTITY_FALSIFICATION',
+  ordinary_coefficient_value_changed: 'SCIENTIFIC_COMPARATOR_FALSIFICATION',
+  ordinary_cobalt_value_changed: 'SCIENTIFIC_COMPARATOR_FALSIFICATION',
+  genuine_runtime_warning_removed_from_fix21_native_ledger: 'SCIENTIFIC_COMPARATOR_FALSIFICATION',
+  application_policy_warning_removed_from_fix21: 'PUBLICATION_SAFETY_FALSIFICATION',
+  three_fix16_tolerance_failures_concealed: 'SCIENTIFIC_COMPARATOR_FALSIFICATION',
+  scientific_evidence_altered_without_reviewed_hash: 'EVIDENCE_INTEGRITY_FALSIFICATION',
+  erratum_text_or_evidence_altered_without_reviewed_hash: 'EVIDENCE_INTEGRITY_FALSIFICATION',
+  old_fail_renamed_pass_without_justification: 'SCIENTIFIC_COMPARATOR_FALSIFICATION'
+};
 const FIX21_NATIVE_WARNING_LEDGER = {
   glm: ['glm.fit: algorithm did not converge', 'glm.fit: fitted probabilities numerically 0 or 1 occurred'],
   matchit: [
@@ -128,6 +159,65 @@ function expectKeys(value, expected, pathName) {
   expectEqual(Object.keys(value).sort(), [...expected].sort(), `${pathName}.keys`);
 }
 
+export function compareNumericObservation(actual, reference, tolerance, pathName = 'numeric') {
+  requireValue(typeof tolerance === 'number' && Number.isFinite(tolerance) && tolerance >= 0, `${pathName}.tolerance`, 'expected finite non-negative tolerance');
+  const actualNull = actual === null || actual === undefined;
+  const referenceNull = reference === null || reference === undefined;
+  if (actualNull || referenceNull) {
+    const matched = actualNull && referenceNull;
+    return { semantics: 'null', absolute_difference: null, status: matched ? 'PASS' : 'FAIL' };
+  }
+  requireValue(typeof actual === 'number' && Number.isFinite(actual), `${pathName}.actual`, 'expected finite number or typed null');
+  requireValue(typeof reference === 'number' && Number.isFinite(reference), `${pathName}.reference`, 'expected finite number or typed null');
+  const absoluteDifference = Math.abs(actual - reference);
+  return { semantics: 'numeric', absolute_difference: absoluteDifference, status: absoluteDifference <= tolerance ? 'PASS' : 'FAIL' };
+}
+
+export function validateNumericComparisonRow(row, pathName = 'comparison.numeric_comparisons[]') {
+  expectKeys(row, ['name', 'semantics', 'actual', 'reference', 'tolerance', 'absolute_difference', 'status'], pathName);
+  expectType(row.name, 'string', `${pathName}.name`);
+  const evaluated = compareNumericObservation(row.actual, row.reference, row.tolerance, pathName);
+  expectEqual(row.semantics, evaluated.semantics, `${pathName}.semantics`);
+  expectEqual(row.absolute_difference, evaluated.absolute_difference, `${pathName}.absolute_difference`);
+  expectEqual(row.status, evaluated.status, `${pathName}.status`);
+  return evaluated;
+}
+
+export function validateNumericComparisonRows(rows, pathName = 'comparison.numeric_comparisons') {
+  expectArray(rows, pathName);
+  rows.forEach((row, index) => validateNumericComparisonRow(row, `${pathName}[${index}]`));
+  return {
+    count: rows.length,
+    pass_count: rows.filter(row => row.status === 'PASS').length,
+    fail_count: rows.filter(row => row.status === 'FAIL').length
+  };
+}
+
+export function validateRequiredWarningLedger(warnings, pathName = 'warning_ledger', { allowStructured = false } = {}) {
+  expectArray(warnings, pathName);
+  requireValue(warnings.length > 0, pathName, 'genuine runtime warning missing');
+  warnings.forEach((warning, index) => {
+    if (typeof warning === 'string') return;
+    requireValue(allowStructured, `${pathName}[${index}]`, 'expected warning string');
+    expectKeys(warning, ['code', 'message', 'severity', 'impactDescription'], `${pathName}[${index}]`);
+    for (const field of ['code', 'message', 'severity', 'impactDescription']) expectType(warning[field], 'string', `${pathName}[${index}].${field}`);
+  });
+  return warnings.length;
+}
+
+export function validateExceptionScope(fixtureId, candidateIdentity, workerIdentity = null, pathName = 'exception_scope') {
+  const expected = FIXTURE_EXCEPTION_IDENTITIES.get(fixtureId);
+  requireValue(expected, `${pathName}.${fixtureId}`, 'fixture is outside the exact exception allowlist');
+  expectEqual(candidateIdentity?.csv, expected.csv, `${pathName}.${fixtureId}.candidate.csv_sha256`);
+  expectEqual(candidateIdentity?.config, expected.config, `${pathName}.${fixtureId}.candidate.config_sha256`);
+  if (workerIdentity) {
+    expectEqual(workerIdentity.id, fixtureId, `${pathName}.${fixtureId}.worker.id`);
+    expectEqual(workerIdentity.csv_sha256, expected.csv, `${pathName}.${fixtureId}.worker.csv_sha256`);
+    expectEqual(workerIdentity.config_sha256, expected.config, `${pathName}.${fixtureId}.worker.config_sha256`);
+  }
+  return true;
+}
+
 function uniqueIds(items, pathName) {
   expectArray(items, pathName);
   const ids = items.map((item, index) => {
@@ -139,8 +229,15 @@ function uniqueIds(items, pathName) {
   return ids;
 }
 
-function byId(items, pathName) {
-  return new Map(uniqueIds(items, pathName).map((id, index) => [id, items[index]]));
+export function validateFixtureIdentityCoverage(items, expected, pathName = 'fixtures') {
+  const ids = uniqueIds(items, pathName);
+  expectEqual([...ids].sort(), [...expected].sort(), pathName);
+  return ids;
+}
+
+function byId(items, pathName, expectedIds = null) {
+  const ids = expectedIds ? validateFixtureIdentityCoverage(items, expectedIds, pathName) : uniqueIds(items, pathName);
+  return new Map(ids.map((id, index) => [id, items[index]]));
 }
 
 function assertSet(actual, expected, pathName) {
@@ -437,14 +534,12 @@ export function validateSemanticContracts({ manifest, candidate, comparison, wor
   expectArray(manifest.fixtures, 'manifest.fixtures');
   expectEqual(manifest.fixture_count, 25, 'manifest.fixture_count');
   expectEqual(manifest.fixtures.length, 25, 'manifest.fixtures.length');
-  const manifestMap = byId(manifest.fixtures, 'manifest.fixtures');
-  assertSet(manifestMap.keys(), EXPECTED_FIXTURE_IDS, 'manifest.fixtures.ids');
+  const manifestMap = byId(manifest.fixtures, 'manifest.fixtures', EXPECTED_FIXTURE_IDS);
   for (const id of EXPECTED_FIXTURE_IDS) expectEqual(manifestMap.get(id).expected_status, EXPECTED_MANIFEST_STATUS.get(id), `manifest.${id}.expected_status`);
 
   expectArray(candidate.fixtures, 'candidate.fixtures');
   expectEqual(candidate.fixture_count, 25, 'candidate.fixture_count');
-  const candidateMap = byId(candidate.fixtures, 'candidate.fixtures');
-  assertSet(candidateMap.keys(), EXPECTED_FIXTURE_IDS, 'candidate.fixtures.ids');
+  const candidateMap = byId(candidate.fixtures, 'candidate.fixtures', EXPECTED_FIXTURE_IDS);
   for (const id of EXPECTED_FIXTURE_IDS) {
     const native = candidateMap.get(id);
     expectEqual(native.manifest_expected_status, manifestMap.get(id).expected_status, `candidate.${id}.manifest_expected_status`);
@@ -460,12 +555,10 @@ export function validateSemanticContracts({ manifest, candidate, comparison, wor
 
   expectArray(worker.fixtures, 'production_worker.fixtures');
   expectEqual(worker.fixtures.length, 25, 'production_worker.fixtures.length');
-  const workerMap = byId(worker.fixtures, 'production_worker.fixtures');
-  assertSet(workerMap.keys(), EXPECTED_FIXTURE_IDS, 'production_worker.fixtures.ids');
+  const workerMap = byId(worker.fixtures, 'production_worker.fixtures', EXPECTED_FIXTURE_IDS);
   expectArray(comparison.fixtures, 'comparison.fixtures');
   expectEqual(comparison.fixtures.length, 25, 'comparison.fixtures.length');
-  const comparisonMap = byId(comparison.fixtures, 'comparison.fixtures');
-  assertSet(comparisonMap.keys(), EXPECTED_FIXTURE_IDS, 'comparison.fixtures.ids');
+  const comparisonMap = byId(comparison.fixtures, 'comparison.fixtures', EXPECTED_FIXTURE_IDS);
 
   for (const id of EXPECTED_FIXTURE_IDS) {
     const spec = manifestMap.get(id);
@@ -476,6 +569,9 @@ export function validateSemanticContracts({ manifest, candidate, comparison, wor
     expectEqual(actual.input_evidence?.id, id, `production_worker.${id}.input_evidence.id`);
     expectEqual(actual.input_evidence?.csv_sha256, reference.fixture_sha256?.csv, `production_worker.${id}.input_evidence.csv_sha256`);
     expectEqual(actual.input_evidence?.config_sha256, reference.fixture_sha256?.config, `production_worker.${id}.input_evidence.config_sha256`);
+    if (FIXTURE_EXCEPTION_IDENTITIES.has(id)) {
+      validateExceptionScope(id, reference.fixture_sha256, actual.input_evidence, `exception_scope.${id}`);
+    }
     expectEqual(row.classification, EXPECTED_COMPARATOR_CLASSIFICATION.get(id), `comparison.${id}.classification`);
     expectEqual(row.status, id === 'fix_15_quasi_separation' || id === 'fix_16_complete_separation' ? 'FAIL' : 'PASS', `comparison.${id}.status`);
     expectEqual(actual.execution_path, 'chromium-built-static-app-production-dedicated-worker', `production_worker.${id}.execution_path`);
@@ -496,6 +592,11 @@ export function validateSemanticContracts({ manifest, candidate, comparison, wor
   expectEqual(summary.numerical_pass_count, 16044, 'comparison.summary.numerical_pass_count');
   expectEqual(summary.numerical_fail_count, 3, 'comparison.summary.numerical_fail_count');
   expectEqual(summary.baseline_failure_count, 4, 'comparison.summary.baseline_failure_count');
+  expectArray(comparison.numeric_comparisons, 'comparison.numeric_comparisons');
+  const checkedNumericRows = validateNumericComparisonRows(comparison.numeric_comparisons);
+  expectEqual(checkedNumericRows.count, summary.numerical_comparison_count, 'comparison.recomputed_numeric_count');
+  expectEqual(checkedNumericRows.pass_count, summary.numerical_pass_count, 'comparison.recomputed_numeric_pass_count');
+  expectEqual(checkedNumericRows.fail_count, summary.numerical_fail_count, 'comparison.recomputed_numeric_fail_count');
   const failures = comparison.numeric_comparisons.filter(item => item.status === 'FAIL');
   expectEqual(comparison.numeric_comparisons.length, 16047, 'comparison.numeric_comparisons.length');
   expectEqual(failures.length, FAILURE_ROWS.length, 'comparison.numeric_comparisons.failures.length');
@@ -510,10 +611,11 @@ export function validateSemanticContracts({ manifest, candidate, comparison, wor
   }
   const failedNames = comparison.failures;
   expectEqual(failedNames.length, 4, 'comparison.failures.length');
-  for (const required of [
+  const expectedFailureMessages = [
     'fix_15_quasi_separation:warning/diagnostic distinction is absent',
-    ...FAILURE_ROWS.map(item => item.name)
-  ]) requireValue(failedNames.some(item => item === required || item.startsWith(`${required}:`)), `comparison.failures.${required}`, 'original failure absent or renamed');
+    ...FAILURE_ROWS.map(item => `${item.name}:difference=${item.absolute_difference}:tolerance=${item.tolerance}`)
+  ];
+  expectEqual([...failedNames].sort(), [...expectedFailureMessages].sort(), 'comparison.failures.exact_original_matrix');
 
   const fixtureWarnings = referenceWarning(candidateMap.get('fix_15_quasi_separation'));
   expectEqual(fixtureWarnings.length, 0, 'candidate.fix_15.warning_ledger');
@@ -533,14 +635,16 @@ export function validateSemanticContracts({ manifest, candidate, comparison, wor
   const warningFixture = workerMap.get('fix_21_extreme_propensities');
   expectEqual(candidateMap.get('fix_21_extreme_propensities').native_execution.warnings, FIX21_NATIVE_WARNING_LEDGER, 'candidate.fix_21.warning_ledger');
   const warningNative = referenceWarning(candidateMap.get('fix_21_extreme_propensities'));
-  requireValue(warningNative.length > 0, 'candidate.fix_21.warning_ledger', 'genuine native runtime warning missing');
+  validateRequiredWarningLedger(warningNative, 'candidate.fix_21.warning_ledger');
   const warningPayload = warningFixture.envelope?.payload;
-  requireValue(Array.isArray(warningPayload?.warnings) && warningPayload.warnings.length > 0 || warningPayload?.numericalInstabilitySafeguard?.triggered === true,
+  const workerHasWarnings = Array.isArray(warningPayload?.warnings) && warningPayload.warnings.length > 0;
+  requireValue(workerHasWarnings || warningPayload?.numericalInstabilitySafeguard?.triggered === true,
     'production_worker.fix_21.warning_ledger', 'genuine runtime warning/safeguard missing');
+  if (workerHasWarnings) validateRequiredWarningLedger(warningPayload.warnings, 'production_worker.fix_21.warning_ledger.warnings', { allowStructured: true });
 
-  validateMatchingStructure(candidateMap, workerMap, manifestMap);
+  const structuralOutcomes = validateMatchingStructure(candidateMap, workerMap, manifestMap);
   validateE2ScientificEvidence(e2Comparison, e2Observations, nativeDiagnostics);
-  return { manifestMap, candidateMap, comparisonMap, workerMap };
+  return { manifestMap, candidateMap, comparisonMap, workerMap, structuralOutcomes };
 }
 
 function referenceWarning(fixture) {
@@ -549,51 +653,159 @@ function referenceWarning(fixture) {
   return Object.values(warningGroups).flatMap(value => Array.isArray(value) ? value : []);
 }
 
-function validateMatchingStructure(candidateMap, workerMap, manifestMap) {
-  for (const id of EXPECTED_FIXTURE_IDS) {
-    const spec = manifestMap.get(id);
-    const native = candidateMap.get(id).native_execution;
-    const app = workerMap.get(id).envelope?.payload;
-    if (!app || !native?.matchit || !native.matchit.ordered_matched_pairs) continue;
-    const expectedPairs = native.matchit.ordered_matched_pairs;
-    const pairs = app.matchMatrix;
-    requireValue(pairs && Array.isArray(pairs.treatedIds) && Array.isArray(pairs.matchedControlIds), `structure.${id}.pairs`, 'pair arrays missing');
-    expectEqual(pairs.treatedIds.length, pairs.matchedControlIds.length, `structure.${id}.pair_count`);
-    expectEqual(pairs.treatedIds, Object.keys(expectedPairs), `structure.${id}.treated_pair_identity`);
-    expectEqual(pairs.matchedControlIds, pairs.treatedIds.map(treated => expectedPairs[treated]), `structure.${id}.control_pair_identity`);
+function expectRecord(value, pathName, message = 'expected object') {
+  requireValue(value && typeof value === 'object' && !Array.isArray(value), pathName, message);
+}
 
-    const nativeWeights = native.matchit.weights;
-    const keyed = app.matchingWeights;
-    requireValue(keyed && Array.isArray(keyed.unitIds) && Array.isArray(keyed.weights), `structure.${id}.weights`, 'keyed weights missing');
-    expectEqual(keyed.unitIds, Object.keys(nativeWeights), `structure.${id}.weight_unit_ids`);
-    expectEqual(keyed.weights, keyed.unitIds.map(unitId => nativeWeights[unitId]), `structure.${id}.keyed_weights`);
-    const nativeSubclasses = native.matchit.subclasses || {};
-    if (Array.isArray(keyed.subclass)) {
-      expectEqual(keyed.subclass, keyed.unitIds.map(unitId => nativeSubclasses[unitId] ?? null), `structure.${id}.keyed_subclasses`);
-    }
-    const nativeAccounting = native.matchit.sample_accounting;
-    const appAccounting = app.sampleAccounting;
-    requireValue(nativeAccounting && appAccounting, `structure.${id}.sample_accounting`, 'sample accounting missing');
-    const accountingFields = [
-      ['imported_total', 'importedTotal'], ['complete_cases', 'completeCases'],
-      ['treated_total', 'treatedTotal'], ['control_total', 'controlTotal'],
-      ['matched_pair_count', 'matchedTreatedCount'], ['matched_control_count', 'matchedControlCount'],
-      ['unmatched_treated_count', 'unmatchedTreatedCount'], ['unmatched_control_count', 'unmatchedControlCount'],
-      ['discarded_treated_count', 'discardedTreatedCount'], ['discarded_control_count', 'discardedControlCount']
-    ];
-    for (const [nativeField, appField] of accountingFields) {
-      expectEqual(appAccounting[appField], nativeAccounting[nativeField], `structure.${id}.sample_accounting.${nativeField}`);
-    }
-
-    const nativeFactors = native.factor_reference_and_contrasts || {};
-    const appFactors = Object.values(app.factorConfiguration || {});
-    for (const [name, factor] of Object.entries(nativeFactors)) {
-      const actual = appFactors.find(item => item.originalHeader === name);
-      requireValue(actual, `structure.${id}.factor.${name}`, 'factor metadata missing');
-      expectEqual(actual.referenceLevel, factor.reference_level, `structure.${id}.factor.${name}.reference_level`);
-    }
-    if (spec.expected_status.startsWith('EXPECTED_')) continue;
+function validateFactorContrast(name, factor, appFactor, pathName) {
+  expectRecord(factor, pathName, 'native factor contrast metadata missing or malformed');
+  expectKeys(factor, ['declared_levels', 'effective_factor_levels', 'reference_level', 'contrasts', 'contrast_row_levels', 'contrast_matrix', 'contrast_columns'], pathName);
+  for (const field of ['declared_levels', 'effective_factor_levels', 'contrast_row_levels', 'contrast_columns']) {
+    expectArray(factor[field], `${pathName}.${field}`);
+    factor[field].forEach((level, index) => expectType(level, 'string', `${pathName}.${field}[${index}]`));
   }
+  expectType(factor.reference_level, 'string', `${pathName}.reference_level`);
+  expectArray(factor.contrasts, `${pathName}.contrasts`);
+  factor.contrasts.forEach((value, index) => requireValue(typeof value === 'number' && Number.isFinite(value), `${pathName}.contrasts[${index}]`, 'expected finite contrast value'));
+  expectEqual(factor.effective_factor_levels, factor.contrast_row_levels, `${pathName}.contrast_row_levels`);
+  requireValue(factor.effective_factor_levels.includes(factor.reference_level), `${pathName}.reference_level`, 'reference level is absent from effective levels');
+  expectEqual(appFactor.originalHeader, name, `${pathName}.application.originalHeader`);
+  expectEqual(appFactor.inferredType, 'categorical', `${pathName}.application.inferredType`);
+  expectArray(appFactor.levels, `${pathName}.application.levels`);
+  expectEqual(appFactor.levels, factor.declared_levels, `${pathName}.application.levels`);
+  expectEqual(appFactor.referenceLevel, factor.reference_level, `${pathName}.application.referenceLevel`);
+  const expectedEffectiveLevels = [factor.reference_level, ...appFactor.levels.filter(level => level !== factor.reference_level)];
+  expectEqual(factor.effective_factor_levels, expectedEffectiveLevels, `${pathName}.application_releveled_level_order`);
+
+  const expectedColumns = factor.effective_factor_levels.filter(level => level !== factor.reference_level);
+  expectEqual(factor.contrast_columns, expectedColumns, `${pathName}.contrast_columns`);
+  expectRecord(factor.contrast_matrix, `${pathName}.contrast_matrix`, 'native contrast matrix missing or malformed');
+  expectKeys(factor.contrast_matrix, expectedColumns, `${pathName}.contrast_matrix`);
+  expectEqual(Object.keys(factor.contrast_matrix), expectedColumns, `${pathName}.contrast_matrix.column_order`);
+  for (const column of expectedColumns) {
+    const expectedColumn = factor.effective_factor_levels.map(level => level === column ? 1 : 0);
+    expectEqual(factor.contrast_matrix[column], expectedColumn, `${pathName}.contrast_matrix.${column}`);
+  }
+  const expectedColumnMajor = expectedColumns.flatMap(column => factor.effective_factor_levels.map(level => level === column ? 1 : 0));
+  expectEqual(factor.contrasts, expectedColumnMajor, `${pathName}.contrasts.column_major_identity`);
+}
+
+export function validateFixtureMatchingStructure({ fixtureId, expectedError = false, nativeFixture, workerFixture, expectedErrorJustification = null }) {
+  const base = `structure.${fixtureId}`;
+  if (expectedError) {
+    requireValue(ERROR_POLICY_IDS.has(fixtureId), `${base}.expected_error`, 'NOT_APPLICABLE is only valid for frozen expected error/product-policy fixtures');
+    requireValue(typeof expectedErrorJustification === 'string' && expectedErrorJustification.length > 0, `${base}.justification`, 'expected error/product-policy justification is required');
+    return { fixture_id: fixtureId, outcome: 'NOT_APPLICABLE_EXPECTED_ERROR', justification: expectedErrorJustification };
+  }
+
+  expectRecord(nativeFixture, `${base}.native_fixture`, 'native matching fixture missing');
+  const native = nativeFixture.native_execution;
+  expectRecord(native, `${base}.native_execution`, 'native execution record missing');
+  expectEqual(native.status, 'SUCCESS', `${base}.native_execution.status`);
+  expectRecord(native.matchit, `${base}.native.matchit`, 'native MatchIt structure missing');
+  const expectedPairs = native.matchit.ordered_matched_pairs;
+  expectRecord(expectedPairs, `${base}.native.ordered_matched_pairs`, 'native ordered matched pairs missing');
+  requireValue(Object.keys(expectedPairs).length > 0, `${base}.native.ordered_matched_pairs`, 'successful matching fixture has no matched pairs');
+
+  expectRecord(workerFixture, `${base}.worker_fixture`, 'production Worker fixture missing');
+  expectEqual(workerFixture.worker_message_type, 'ANALYSIS_COMPLETE', `${base}.worker_message_type`);
+  const app = workerFixture.envelope?.payload;
+  expectRecord(app, `${base}.application_payload`, 'successful application payload missing');
+  const pairs = app.matchMatrix;
+  expectRecord(pairs, `${base}.pairs`, 'application matched-pair structure missing');
+  expectKeys(pairs, ['treatedIds', 'matchedControlIds', 'pairDistances'], `${base}.pairs`);
+  for (const field of ['treatedIds', 'matchedControlIds', 'pairDistances']) expectArray(pairs[field], `${base}.pairs.${field}`);
+  pairs.treatedIds.forEach((value, index) => expectType(value, 'string', `${base}.pairs.treatedIds[${index}]`));
+  pairs.matchedControlIds.forEach((value, index) => expectType(value, 'string', `${base}.pairs.matchedControlIds[${index}]`));
+  expectEqual(pairs.treatedIds.length, pairs.matchedControlIds.length, `${base}.pair_count`);
+  expectEqual(pairs.pairDistances.length, pairs.treatedIds.length, `${base}.pair_distances.length`);
+  expectEqual(pairs.treatedIds, Object.keys(expectedPairs), `${base}.treated_pair_identity_and_order`);
+  expectEqual(pairs.matchedControlIds, pairs.treatedIds.map(treated => expectedPairs[treated]), `${base}.control_pair_identity_and_order`);
+
+  const nativeWeights = native.matchit.weights;
+  expectRecord(nativeWeights, `${base}.native.weights`, 'native keyed MatchIt weights missing or malformed');
+  const keyed = app.matchingWeights;
+  expectRecord(keyed, `${base}.application.weights`, 'application keyed weights missing or malformed');
+  requireValue(Object.hasOwn(keyed, 'subclass'), `${base}.application.subclasses`, 'application matching subclasses missing');
+  expectKeys(keyed, ['unitIds', 'weights', 'subclass'], `${base}.application.weights`);
+  expectArray(keyed.unitIds, `${base}.application.weights.unitIds`);
+  expectArray(keyed.weights, `${base}.application.weights.weights`);
+  keyed.unitIds.forEach((unitId, index) => expectType(unitId, 'string', `${base}.application.weights.unitIds[${index}]`));
+  requireValue(new Set(keyed.unitIds).size === keyed.unitIds.length, `${base}.application.weights.unitIds`, 'duplicate matching unit identity');
+  keyed.weights.forEach((weight, index) => requireValue(typeof weight === 'number' && Number.isFinite(weight), `${base}.application.weights.weights[${index}]`, 'expected finite keyed weight'));
+  expectEqual(keyed.unitIds.length, keyed.weights.length, `${base}.application.weights.cardinality`);
+  expectEqual(keyed.unitIds, Object.keys(nativeWeights), `${base}.weight_unit_identity_and_order`);
+  expectEqual(keyed.weights, keyed.unitIds.map(unitId => nativeWeights[unitId]), `${base}.keyed_weights`);
+
+  const nativeSubclasses = native.matchit.subclasses;
+  expectRecord(nativeSubclasses, `${base}.native.subclasses`, 'native subclasses missing or malformed');
+  expectEqual(Object.keys(nativeSubclasses), Object.keys(nativeWeights), `${base}.native.subclasses.unit_identity_and_order`);
+  expectArray(keyed.subclass, `${base}.application.subclasses`);
+  expectEqual(keyed.subclass.length, keyed.unitIds.length, `${base}.application.subclasses.cardinality`);
+  expectEqual(keyed.subclass, keyed.unitIds.map(unitId => nativeSubclasses[unitId]), `${base}.keyed_subclasses`);
+
+  const nativeAccounting = native.matchit.sample_accounting;
+  const appAccounting = app.sampleAccounting;
+  expectRecord(nativeAccounting, `${base}.native.sample_accounting`, 'native sample accounting missing or malformed');
+  expectRecord(appAccounting, `${base}.application.sample_accounting`, 'application sample accounting missing or malformed');
+  const accountingFields = [
+    ['imported_total', 'importedTotal'], ['complete_cases', 'completeCases'],
+    ['treated_total', 'treatedTotal'], ['control_total', 'controlTotal'],
+    ['matched_pair_count', 'matchedTreatedCount'], ['matched_control_count', 'matchedControlCount'],
+    ['unmatched_treated_count', 'unmatchedTreatedCount'], ['unmatched_control_count', 'unmatchedControlCount'],
+    ['discarded_treated_count', 'discardedTreatedCount'], ['discarded_control_count', 'discardedControlCount']
+  ];
+  for (const [nativeField, appField] of accountingFields) {
+    requireValue(Object.hasOwn(nativeAccounting, nativeField), `${base}.native.sample_accounting.${nativeField}`, 'required native accounting field missing');
+    requireValue(Object.hasOwn(appAccounting, appField), `${base}.application.sample_accounting.${appField}`, 'required application accounting field missing');
+    requireValue(Number.isInteger(nativeAccounting[nativeField]) && Number.isInteger(appAccounting[appField]), `${base}.sample_accounting.${nativeField}`, 'expected integer sample-accounting value');
+    expectEqual(appAccounting[appField], nativeAccounting[nativeField], `${base}.sample_accounting.${nativeField}`);
+  }
+
+  const nativeFactorMetadata = native.factor_reference_and_contrasts;
+  const appFactorConfiguration = app.factorConfiguration;
+  expectRecord(appFactorConfiguration, `${base}.application.factor_configuration`, 'application factor metadata missing or malformed');
+  const appFactors = Object.values(appFactorConfiguration);
+  const originalHeaders = appFactors.map((factor, index) => {
+    expectRecord(factor, `${base}.application.factor_configuration[${index}]`, 'application factor metadata entry malformed');
+    expectType(factor.originalHeader, 'string', `${base}.application.factor_configuration[${index}].originalHeader`);
+    return factor.originalHeader;
+  });
+  requireValue(new Set(originalHeaders).size === originalHeaders.length, `${base}.application.factor_configuration`, 'duplicate factor header');
+  const appCategoricalHeaders = appFactors.filter(item => item.inferredType === 'categorical').map(item => item.originalHeader);
+  const nativeFactors = nativeFactorMetadata === undefined || nativeFactorMetadata === null
+    || (Array.isArray(nativeFactorMetadata) && nativeFactorMetadata.length === 0)
+    ? {}
+    : nativeFactorMetadata;
+  if (Object.keys(nativeFactors).length === 0) requireValue(appCategoricalHeaders.length === 0, `${base}.native.factor_reference_and_contrasts`, 'native factor metadata missing for application categorical factors');
+  expectRecord(nativeFactors, `${base}.native.factor_reference_and_contrasts`, 'native factor metadata missing or malformed');
+  expectEqual(Object.keys(nativeFactors), appCategoricalHeaders, `${base}.categorical_factor_identity_and_order`);
+  for (const [name, factor] of Object.entries(nativeFactors)) {
+    const appFactor = appFactors.find(item => item.originalHeader === name);
+    requireValue(appFactor, `${base}.factor.${name}`, 'application factor metadata missing');
+    validateFactorContrast(name, factor, appFactor, `${base}.factor.${name}`);
+  }
+  return { fixture_id: fixtureId, outcome: 'MATCHING_STRUCTURE_PASS', pair_count: pairs.treatedIds.length, keyed_unit_count: keyed.unitIds.length, factor_count: Object.keys(nativeFactors).length };
+}
+
+function validateMatchingStructure(candidateMap, workerMap, manifestMap) {
+  return EXPECTED_FIXTURE_IDS.map(id => {
+    if (ERROR_POLICY_IDS.has(id)) {
+      return validateFixtureMatchingStructure({
+        fixtureId: id,
+        expectedError: true,
+        nativeFixture: candidateMap.get(id),
+        workerFixture: workerMap.get(id),
+        expectedErrorJustification: EXPECTED_COMPARATOR_CLASSIFICATION.get(id)
+      });
+    }
+    return validateFixtureMatchingStructure({
+      fixtureId: id,
+      nativeFixture: candidateMap.get(id),
+      workerFixture: workerMap.get(id),
+      expectedErrorJustification: manifestMap.get(id).expected_status
+    });
+  });
 }
 
 function validateE2ScientificEvidence(report, observations, nativeDiagnostics) {
@@ -770,7 +982,8 @@ function classifyFixture(id, historicalStatus, failures) {
 
 export function adjudicate(inputs, metadata = {}) {
   validateObjectFingerprints(inputs, inputs.pins);
-  const { manifestMap, candidateMap, comparisonMap } = validateSemanticContracts(inputs);
+  const { manifestMap, candidateMap, comparisonMap, structuralOutcomes } = validateSemanticContracts(inputs);
+  const structuralById = new Map(structuralOutcomes.map(item => [item.fixture_id, item]));
   const rows = EXPECTED_FIXTURE_IDS.map(id => {
     const row = comparisonMap.get(id);
     const failures = row.failures || [];
@@ -779,6 +992,7 @@ export function adjudicate(inputs, metadata = {}) {
       fixture_id: id,
       frozen_manifest_status: manifestMap.get(id).expected_status,
       historical_comparator_status: row.status,
+      structural_outcome: structuralById.get(id),
       native_classification: candidateMap.get(id).native_classification,
       ...classified
     };
@@ -877,6 +1091,7 @@ export function adjudicate(inputs, metadata = {}) {
     },
     e2_serialization_schema: inputs.webrSchemaValidation,
     negative_controls: metadata.negative_controls || [],
+    negative_control_audit_categories: NEGATIVE_CONTROL_CATEGORIES,
     deferred_requirements: [
       'Independent Red Team approval of this erratum and stop-condition amendment.',
       'CP-WEBR-02 original binding stop condition remains unresolved pending that approval.',
@@ -907,9 +1122,19 @@ export function runNegativeControls(baseInputs) {
     try { validateInputs(target); } catch (error) { rejected = true; message = String(error.message); }
     if (!rejected) fail(`negative_controls.${name}`, 'mutation was accepted');
     if (pathNeedle) requireValue(message.includes(pathNeedle), `negative_controls.${name}`, `rejected at unexpected boundary: ${message}`);
+    const category = NEGATIVE_CONTROL_CATEGORIES[name];
+    requireValue(category, `negative_controls.${name}.category`, 'negative control lacks a scientific classification');
     const detailDigest = sha256(Buffer.from(message));
-    const rejection = message.length <= 240 ? message : `${message.slice(0, message.indexOf(':'))}: rejected at pinned boundary (full diagnostic sha256 ${detailDigest})`;
-    controls.push({ name, status: 'PASS_REJECTED', rejection, detail_sha256: detailDigest });
+    const detectionLayer = /sha256|canonical_sha256/i.test(message) ? 'PINNED_HASH_OR_PROVENANCE' : 'DIRECT_SEMANTIC_OR_STRUCTURAL_ASSERTION';
+    const rejection = message.length <= 240 ? message : `${message.slice(0, message.indexOf(':'))}: rejected at ${detectionLayer.toLowerCase().replaceAll('_', ' ')} boundary (full diagnostic sha256 ${detailDigest})`;
+    controls.push({
+      name,
+      category,
+      detection_layer: detectionLayer,
+      status: 'PASS_REJECTED',
+      rejection,
+      detail_sha256: detailDigest
+    });
   };
   check('fixture_input_hash_changed', x => { x.worker.fixtures.find(item => item.id === 'fix_01_well_conditioned').input_evidence.csv_sha256 = '0'.repeat(64); }, 'production_worker.fix_01_well_conditioned.input_evidence.csv_sha256');
   check('fixture_missing', x => { x.worker.fixtures.pop(); }, 'production_worker.fixtures.length');
@@ -921,15 +1146,16 @@ export function runNegativeControls(baseInputs) {
   check('fix16_publication_restriction_removed', x => { x.worker.fixtures.find(item => item.id === 'fix_16_complete_separation').envelope.payload.publicationStatus.verdict = 'OUTPUT_READY'; }, 'production_worker.fix_16.publication_restriction');
   check('matched_pair_identity_altered', x => { x.worker.fixtures.find(item => item.id === 'fix_01_well_conditioned').envelope.payload.matchMatrix.matchedControlIds[0] = 'tampered-control'; }, 'structure.fix_01_well_conditioned.control_pair_identity');
   check('keyed_weight_changed', x => { x.worker.fixtures.find(item => item.id === 'fix_01_well_conditioned').envelope.payload.matchingWeights.weights[0] += 1; }, 'structure.fix_01_well_conditioned.keyed_weights');
-  check('factor_reference_changed', x => { x.worker.fixtures.find(item => item.id === 'fix_03_ref_level_change').envelope.payload.factorConfiguration.cov_02.referenceLevel = 'low'; }, 'structure.fix_03_ref_level_change.factor.x_cat.reference_level');
+  check('factor_reference_changed', x => { x.worker.fixtures.find(item => item.id === 'fix_03_ref_level_change').envelope.payload.factorConfiguration.cov_02.referenceLevel = 'low'; }, 'structure.fix_03_ref_level_change.factor.x_cat.application.referenceLevel');
   check('ordinary_coefficient_value_changed', x => { x.candidate.fixtures.find(item => item.id === 'fix_01_well_conditioned').native_execution.glm.coefficients['(Intercept)'].estimate += 1; }, 'scientific.candidate.canonical_sha256');
-  check('ordinary_cobalt_value_changed', x => { const row = x.comparison.numeric_comparisons.find(item => item.name.startsWith('fix_01_well_conditioned.cobalt.')); row.actual += 1; }, 'scientific.comparison.canonical_sha256');
+  check('ordinary_cobalt_value_changed', x => { const row = x.comparison.numeric_comparisons.find(item => item.name.startsWith('fix_01_well_conditioned.cobalt.') && item.semantics === 'numeric'); row.actual += 1; }, 'comparison.numeric_comparisons');
   check('genuine_runtime_warning_removed_from_fix21_native_ledger', x => { x.candidate.fixtures.find(item => item.id === 'fix_21_extreme_propensities').native_execution.warnings.glm.shift(); }, 'candidate.fix_21.warning_ledger');
   check('application_policy_warning_removed_from_fix21', x => { const p = x.worker.fixtures.find(item => item.id === 'fix_21_extreme_propensities').envelope.payload; p.warnings = []; p.numericalInstabilitySafeguard.triggered = false; }, 'production_worker.fix_21.warning_ledger');
-  check('three_fix16_tolerance_failures_concealed', x => { x.comparison.numeric_comparisons = x.comparison.numeric_comparisons.filter(item => item.status !== 'FAIL'); }, 'comparison.numeric_comparisons.length');
+  check('three_fix16_tolerance_failures_concealed', x => { x.comparison.numeric_comparisons = x.comparison.numeric_comparisons.filter(item => item.status !== 'FAIL'); }, 'comparison.recomputed_numeric_count');
   check('scientific_evidence_altered_without_reviewed_hash', x => { x.e2Comparison.fix16_native_webr.native_fit.vcov[0][0] += 1; }, 'scientific.e2Comparison.canonical_sha256');
   check('erratum_text_or_evidence_altered_without_reviewed_hash', x => { x.erratumBytes = Buffer.from(String(x.erratumBytes) + '\nmodified'); }, 'erratum.sha256');
   check('old_fail_renamed_pass_without_justification', x => { x.comparison.fixtures.find(item => item.id === 'fix_16_complete_separation').status = 'PASS'; }, 'comparison.fix_16_complete_separation.status');
+  expectEqual(controls.length, 19, 'negative_controls.count');
   return controls;
 }
 
