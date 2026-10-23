@@ -1,0 +1,220 @@
+name: CP-WEBR-02 Closure E2 Covariance and Separation Forensics
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  diagnostic-forensics:
+    name: Isolated native R and WebR discrepancy diagnostics
+    if: github.ref == 'refs/heads/development'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - name: Check out full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Verify baseline, unchanged main, pins, and immutable scientific assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/development"
+          test -z "$(git status --porcelain=v1)"
+          git merge-base --is-ancestor 1ca14f6ab3c41d1ba366db0adda22102acc90a3c HEAD
+          git fetch --no-tags origin main
+          test "$(git rev-parse origin/main)" = "53fb05e7c8d9b77b46c4a5d8b7c9cc041345f6a6"
+          git diff --exit-code 1ca14f6ab3c41d1ba366db0adda22102acc90a3c HEAD -- \
+            experiments/cp-webr-02a/fixtures \
+            experiments/cp-webr-02a/adapter/r_template.R \
+            experiments/cp-webr-02a/r1.2a/FIXTURE-ASSERTION-MATRIX.json \
+            experiments/cp-webr-02-closure/native_oracle.R \
+            experiments/cp-webr-02-closure/compare_closure.mjs \
+            experiments/cp-webr-02-closure/native-reference-candidate.json
+          test "$(shasum -a 256 experiments/cp-webr-02a/adapter/r_template.R | cut -d ' ' -f 1)" = "7989403c7d093031b93a9c971a6d4f055101bab83c0ec4417fc52e4dceee24a4"
+          node -e 'const fs=require("node:fs");const p=JSON.parse(fs.readFileSync("package.json"));const l=JSON.parse(fs.readFileSync("package-lock.json"));const w=JSON.parse(fs.readFileSync("experiments/cp-webr-00b/dependency-lock.json"));if(p.dependencies.next!=="16.4.1"||p.devDependencies["eslint-config-next"]!=="16.4.1"||l.packages[""].dependencies.next!=="16.4.1"||l.packages[""].devDependencies["eslint-config-next"]!=="16.4.1"||w.runtime.webr_npm!=="0.6.0"||w.runtime.r_version!=="4.6.0")process.exit(1);console.log("Next.js pins and WebR runtime pins verified")'
+          printf 'commit=%s\nmain=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse origin/main)"
+
+      - name: Install pinned Node.js 24.22.1
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.22.1"
+          cache: npm
+
+      - name: Install exact native R 4.6.0
+        uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
+        with:
+          r-version: "4.6.0"
+          use-public-rspm: false
+          cran: https://cran.r-project.org
+
+      - name: Record exact commit, R, and application dependency evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          Rscript --version
+          node --version
+          npm --version
+          mkdir -p "$RUNNER_TEMP/cp-webr-closure-e2"
+          git rev-parse HEAD > "$RUNNER_TEMP/cp-webr-closure-e2/commit-sha.txt"
+          git rev-parse origin/main > "$RUNNER_TEMP/cp-webr-closure-e2/main-sha.txt"
+          shasum -a 256 experiments/cp-webr-02a/adapter/r_template.R > "$RUNNER_TEMP/cp-webr-closure-e2/template.sha256"
+
+      - name: Restore the already pinned native oracle provisioning project
+        uses: r-lib/actions/setup-renv@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
+        with:
+          working-directory: experiments/cp-webr-02-closure
+          profile: "NULL"
+          bypass-cache: "true"
+
+      - name: Verify native MatchIt and cobalt package versions
+        shell: bash
+        working-directory: experiments/cp-webr-02-closure
+        run: |
+          set -euo pipefail
+          Rscript -e 'stopifnot(as.character(getRversion())=="4.6.0", as.character(packageVersion("MatchIt"))=="4.8.1", as.character(packageVersion("cobalt"))=="5.0.0"); cat("Native R 4.6.0 / MatchIt 4.8.1 / cobalt 5.0.0 PASS\n")'
+
+      - name: Provision isolated forensic R library and lock
+        id: forensic-r
+        env:
+          FORENSICS_PROJECT: ${{ runner.temp }}/cp-webr-closure-e2-renv
+          FORENSICS_LOCK: ${{ github.workspace }}/experiments/cp-webr-02-closure/forensics/renv.lock
+          FORENSICS_BOOTSTRAP_LOCK: ${{ runner.temp }}/cp-webr-closure-e2/forensics-renv.lock
+          FORENSICS_PROVISION_LOG: ${{ runner.temp }}/cp-webr-closure-e2/provision.log
+        shell: bash
+        working-directory: experiments/cp-webr-02-closure
+        run: |
+          set -euo pipefail
+          Rscript forensics/provision.R \
+            --project "$FORENSICS_PROJECT" \
+            --lockfile "$FORENSICS_LOCK" \
+            --bootstrap-lock "$FORENSICS_BOOTSTRAP_LOCK" | tee "$FORENSICS_PROVISION_LOG"
+          if [[ -f "$FORENSICS_LOCK" ]]; then cp "$FORENSICS_LOCK" "$RUNNER_TEMP/cp-webr-closure-e2/forensics-renv.lock"; fi
+          test -s "$RUNNER_TEMP/cp-webr-closure-e2/forensics-renv.lock"
+          LIB_PATH="$(sed -n 's/^library=//p' "$FORENSICS_PROVISION_LOG" | tail -1)"
+          test -n "$LIB_PATH"
+          echo "R_LIBS_USER=$LIB_PATH" >> "$GITHUB_ENV"
+          echo "R_PROFILE_USER=$FORENSICS_PROJECT/.Rprofile" >> "$GITHUB_ENV"
+
+      - name: Verify isolated diagnostic source package integrity
+        env:
+          FORENSICS_LOCK: ${{ runner.temp }}/cp-webr-closure-e2/forensics-renv.lock
+          FORENSICS_MANIFEST: ${{ runner.temp }}/cp-webr-closure-e2/source-package-integrity.json
+        run: |
+          set -euo pipefail
+          if [[ -f experiments/cp-webr-02-closure/forensics/source-package-integrity.json ]]; then
+            node experiments/cp-webr-02-closure/forensics/package_sources.mjs verify --lockfile "$FORENSICS_LOCK"
+            cp experiments/cp-webr-02-closure/forensics/source-package-integrity.json "$FORENSICS_MANIFEST"
+          else
+            node experiments/cp-webr-02-closure/forensics/package_sources.mjs bootstrap --lockfile "$FORENSICS_LOCK" --output "$FORENSICS_MANIFEST"
+          fi
+
+      - name: Run native covariance and separation diagnostics twice in fresh R processes
+        env:
+          NATIVE_ONE: ${{ runner.temp }}/cp-webr-closure-e2/native-diagnostic-1.json
+          NATIVE_TWO: ${{ runner.temp }}/cp-webr-closure-e2/native-diagnostic-2.json
+          FORENSICS_PROJECT: ${{ runner.temp }}/cp-webr-closure-e2-renv
+        shell: bash
+        run: |
+          set -euo pipefail
+          Rscript -e 'stopifnot(as.character(getRversion())=="4.6.0", as.character(packageVersion("detectseparation"))=="0.4.0", as.character(packageVersion("jsonlite"))=="2.0.0"); print(sessionInfo())'
+          cd "$FORENSICS_PROJECT"
+          Rscript "$GITHUB_WORKSPACE/experiments/cp-webr-02-closure/forensics/native_covariance.R" --output "$NATIVE_ONE" --replicate 1
+          Rscript "$GITHUB_WORKSPACE/experiments/cp-webr-02-closure/forensics/native_covariance.R" --output "$NATIVE_TWO" --replicate 2
+
+      - name: Install clean root dependencies and Chromium
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Build the actual static application and pinned WebR assets
+        run: npm run build
+
+      - name: Run two fresh Chromium WebR diagnostic shadow executions
+        env:
+          WEBR_SHADOW_EVIDENCE: ${{ runner.temp }}/cp-webr-closure-e2/webr-shadow-diagnostics.json
+          GITHUB_SHA: ${{ github.sha }}
+        run: node experiments/cp-webr-02-closure/forensics/run_webr_covariance.mjs --output "$WEBR_SHADOW_EVIDENCE"
+
+      - name: Compare native covariance, WebR shadow, production Worker anchors, and LP controls
+        env:
+          NATIVE_ONE: ${{ runner.temp }}/cp-webr-closure-e2/native-diagnostic-1.json
+          NATIVE_TWO: ${{ runner.temp }}/cp-webr-closure-e2/native-diagnostic-2.json
+          WEBR_SHADOW_EVIDENCE: ${{ runner.temp }}/cp-webr-closure-e2/webr-shadow-diagnostics.json
+          COMPARISON: ${{ runner.temp }}/cp-webr-closure-e2/covariance-comparison.json
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          node experiments/cp-webr-02-closure/forensics/compare_covariance.mjs \
+            --native-1 "$NATIVE_ONE" --native-2 "$NATIVE_TWO" \
+            --webr-1 "$WEBR_SHADOW_EVIDENCE" --webr-2 "$WEBR_SHADOW_EVIDENCE" \
+            --output "$COMPARISON"
+
+      - name: Render focused scientific interpretation report
+        if: always()
+        env:
+          COMPARISON: ${{ runner.temp }}/cp-webr-closure-e2/covariance-comparison.json
+          REPORT: ${{ runner.temp }}/cp-webr-closure-e2/CP-WEBR-02-CLOSURE-1-E2-report.md
+        run: |
+          set -euo pipefail
+          if [[ -f "$COMPARISON" ]]; then
+            node experiments/cp-webr-02-closure/forensics/render_report.mjs --comparison "$COMPARISON" --output "$REPORT"
+          fi
+
+      - name: Stage source provenance and exact machine-readable evidence
+        if: always()
+        env:
+          EVIDENCE_STAGE: ${{ runner.temp }}/cp-webr-closure-e2/artifact
+          FORENSICS_LOCK: ${{ runner.temp }}/cp-webr-closure-e2/forensics-renv.lock
+          SOURCE_MANIFEST: ${{ runner.temp }}/cp-webr-closure-e2/source-package-integrity.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$EVIDENCE_STAGE"
+          for file in "$RUNNER_TEMP/cp-webr-closure-e2/commit-sha.txt" \
+            "$RUNNER_TEMP/cp-webr-closure-e2/main-sha.txt" \
+            "$RUNNER_TEMP/cp-webr-closure-e2/template.sha256" \
+            "$RUNNER_TEMP/cp-webr-closure-e2/provision.log" \
+            "$RUNNER_TEMP/cp-webr-closure-e2/native-diagnostic-1.json" \
+            "$RUNNER_TEMP/cp-webr-closure-e2/native-diagnostic-2.json" \
+            "$RUNNER_TEMP/cp-webr-closure-e2/webr-shadow-diagnostics.json" \
+            "$RUNNER_TEMP/cp-webr-closure-e2/covariance-comparison.json" \
+            "$RUNNER_TEMP/cp-webr-closure-e2/CP-WEBR-02-CLOSURE-1-E2-report.md" \
+            "$FORENSICS_LOCK" "$SOURCE_MANIFEST"; do
+            if [[ -f "$file" ]]; then cp "$file" "$EVIDENCE_STAGE/"; fi
+          done
+          cp experiments/cp-webr-02-closure/forensics/production-worker-observations.json "$EVIDENCE_STAGE/"
+          cp experiments/cp-webr-00b/dependency-lock.json "$EVIDENCE_STAGE/webr-dependency-lock.json"
+          cp experiments/cp-webr-02-closure/fixture-integrity.json "$EVIDENCE_STAGE/"
+          cp experiments/cp-webr-02-closure/source-package-integrity.json "$EVIDENCE_STAGE/native-oracle-source-package-integrity.json"
+          cp experiments/cp-webr-02-closure/renv.lock "$EVIDENCE_STAGE/native-oracle-renv.lock"
+          sha256sum \
+            experiments/cp-webr-02-closure/forensics/native_covariance.R \
+            experiments/cp-webr-02-closure/forensics/webr_covariance_worker.js \
+            experiments/cp-webr-02-closure/forensics/run_webr_covariance.mjs \
+            experiments/cp-webr-02-closure/forensics/compare_covariance.mjs \
+            experiments/cp-webr-02-closure/forensics/provision.R \
+            experiments/cp-webr-02-closure/forensics/package_sources.mjs \
+            experiments/cp-webr-02-closure/forensics/render_report.mjs \
+            experiments/cp-webr-02-closure/forensics/diagnostic.html \
+            experiments/cp-webr-02-closure/forensics/README.md \
+            experiments/cp-webr-02-closure/forensics/production-worker-observations.json \
+            .github/workflows/experiment-cp-webr-02-closure-e2.yml > "$EVIDENCE_STAGE/forensics-source-hashes.sha256"
+          node -e 'const fs=require("node:fs"),crypto=require("node:crypto"),path=require("node:path");const d=process.env.EVIDENCE_STAGE;const files=fs.readdirSync(d).filter(n=>n!=="evidence-index.json"&&n!=="evidence-archive.sha256").sort().map(name=>{const b=fs.readFileSync(path.join(d,name));return {name,bytes:b.length,sha256:crypto.createHash("sha256").update(b).digest("hex")}});fs.writeFileSync(path.join(d,"evidence-index.json"),JSON.stringify({schema:"CP-WEBR-02-CLOSURE-1-E2-evidence-index-v1",commit_sha:process.env.GITHUB_SHA,workflow_run_id:process.env.GITHUB_RUN_ID,files},null,2)+"\n")'
+          tar -czf "$RUNNER_TEMP/cp-webr-closure-e2/evidence.tar.gz" -C "$EVIDENCE_STAGE" .
+          sha256sum "$RUNNER_TEMP/cp-webr-closure-e2/evidence.tar.gz" > "$EVIDENCE_STAGE/evidence-archive.sha256"
+          printf '\nEvidence archive SHA-256: %s\n' "$(cut -d ' ' -f 1 "$EVIDENCE_STAGE/evidence-archive.sha256")" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload E2 diagnostic evidence (research only)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cp-webr-02-closure-e2-${{ github.run_id }}
+          if-no-files-found: warn
+          path: |
+            ${{ runner.temp }}/cp-webr-closure-e2/artifact/*
+            ${{ runner.temp }}/cp-webr-closure-e2/evidence.tar.gz

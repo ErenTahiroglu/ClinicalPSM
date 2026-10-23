@@ -1,0 +1,53 @@
+{
+  "schema": "CP-WEBR-02-CLOSURE-1-E2-prior-production-worker-observations-v1",
+  "classification": "OBSERVED_PRODUCTION_WORKER_VALUES_NOT_A_GOLDEN_REFERENCE",
+  "source": {
+    "workflow_run_id": "39954671878",
+    "commit_sha": "1ca14f6ab3c41d1ba366db0adda22102acc90a3c",
+    "evidence_file": "production-worker-results.json",
+    "evidence_file_sha256": "5521d2b73b223dc9939f97f1547439685f6d0b9052d4113ac0049e2aba3dbeb7",
+    "worker_execution_path": "chromium-built-static-app-production-dedicated-worker"
+  },
+  "native_candidate_observations": {
+    "classification": "PRESERVED_NATIVE_CANDIDATE_WARNING_LEDGER_NOT_GOLDEN_AUTHORIZATION",
+    "workflow_run_id": "39954671878",
+    "candidate_reference_sha256": "ea05ce912fb03dd86f09cb779b60bd795284372d089a05a9e0124f17e766eedb",
+    "warnings": [
+      { "id": "fix_15_quasi_separation", "glm": [], "matchit": [], "cobalt_raw": [], "cobalt_std": [] },
+      { "id": "fix_16_complete_separation", "glm": [], "matchit": [], "cobalt_raw": [], "cobalt_std": [] }
+    ]
+  },
+  "fixtures": [
+    {
+      "id": "fix_15_quasi_separation",
+      "run_id": "run_1792759385987_wvkw82l",
+      "webr_version": "0.6.0",
+      "r_version": "4.6.0",
+      "converged": true,
+      "iterations": 6,
+      "glm_runtime_warnings": [],
+      "application_policy_warning_codes": [],
+      "coefficients": [
+        { "term": "(Intercept)", "estimate": -3.8647839451585693, "standard_error": 1.014114321111674 },
+        { "term": "x_quasi", "estimate": 7.120705520675716, "standard_error": 1.2747699197098885 },
+        { "term": "x_norm", "estimate": -0.38417711379171365, "standard_error": 0.5780808351466252 }
+      ],
+      "publication_verdict": "OUTPUT_READY"
+    },
+    {
+      "id": "fix_16_complete_separation",
+      "run_id": "run_1792759386110_j1mchr2",
+      "webr_version": "0.6.0",
+      "r_version": "4.6.0",
+      "converged": true,
+      "iterations": 25,
+      "glm_runtime_warnings": [],
+      "application_policy_warning_codes": ["WARN_NUMERICAL_INSTABILITY_SAFEGUARD"],
+      "coefficients": [
+        { "term": "(Intercept)", "estimate": 2.490595370814696e-7, "standard_error": 39815.87849877388 },
+        { "term": "x_sep", "estimate": 2.656606877259772, "standard_error": 3981.587849877386 }
+      ],
+      "publication_verdict": "OUTPUT_GENERATION_RESTRICTED"
+    }
+  ]
+}
