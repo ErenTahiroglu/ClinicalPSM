@@ -111,7 +111,8 @@ jobs:
           LIB_PATH="$(sed -n 's/^library=//p' "$FORENSICS_PROVISION_LOG" | tail -1)"
           test -n "$LIB_PATH"
           echo "R_LIBS_USER=$LIB_PATH" >> "$GITHUB_ENV"
-          echo "R_PROFILE_USER=$FORENSICS_PROJECT/.Rprofile" >> "$GITHUB_ENV"
+          : > "$RUNNER_TEMP/cp-webr-closure-e2/empty-user-profile.R"
+          echo "R_PROFILE_USER=$RUNNER_TEMP/cp-webr-closure-e2/empty-user-profile.R" >> "$GITHUB_ENV"
 
       - name: Verify isolated diagnostic source package integrity
         env:
