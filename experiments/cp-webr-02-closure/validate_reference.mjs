@@ -66,7 +66,7 @@ function validate(candidate, candidateBytes, candidatePath) {
   const packageNames = packages.map(item => item.name);
   exact(new Set(packageNames).size === packageNames.length, 'Source package archive manifest contains duplicate package names');
   exact(packageNames.length === provenance.source_package_manifest.package_count, 'Source package archive manifest has inconsistent package count');
-  exact(packages.every(item => /^[0-9a-f]{64}$/.test(item.sha256) && Number.isSafeInteger(item.size_bytes) && item.size_bytes > 0), 'A locked CRAN source archive lacks a valid SHA-256 or size');
+  exact(packages.every(item => /^[0-9a-f]{64}$/.test(item.sha256) && Number.isSafeInteger(item.bytes) && item.bytes > 0), 'A locked CRAN source archive lacks a valid SHA-256 or size');
   const lockedPackages = Object.entries(lock.Packages).map(([name, metadata]) => [name, metadata.Version]).sort(([a], [b]) => a.localeCompare(b));
   const sourcePackages = packages.map(item => [item.name, item.version]).sort(([a], [b]) => a.localeCompare(b));
   exact(JSON.stringify(sourcePackages) === JSON.stringify(lockedPackages), 'CRAN source package versions do not exactly match renv.lock');
