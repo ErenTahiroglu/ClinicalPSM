@@ -7,7 +7,13 @@ let runtime;
 function serializeNode(node) {
   if (node === null || typeof node !== "object") return node;
   if (node.type === "null") return null;
-  if (Array.isArray(node)) return node.map(serializeNode);
+  if (Array.isArray(node)) {
+    const values = node.map(serializeNode);
+    // WebR toJs can represent an R scalar as a one-element JS array (including
+    // list members). Preserve vectors, but serialize scalar values as scalars
+    // so fixture IDs, booleans, and numeric fields retain their R semantics.
+    return values.length === 1 ? values[0] : values;
+  }
   if (Object.hasOwn(node, "values") && Object.hasOwn(node, "type")) {
     const values = (node.values || []).map(serializeNode);
     if (node.names && node.names.length === values.length) {
