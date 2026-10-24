@@ -34,3 +34,13 @@
 ## Evidence preservation rule
 
 A GitHub Actions artifact may expire or be manually deleted. Preserve hashes and immutable metadata here, but arrange a separately authorized, integrity-verified and suitably access-controlled off-device evidence copy if long-term byte-level replay is required. Do not commit evidence archives, real clinical information or secrets into Git merely to make them 'permanent'.
+
+
+## 2026-10-24 A2-03B-R1 static repair evidence, NOT experimental results
+
+- Existing committed workflow: Git blob `eee4e6171fabfef0dff7c60c377fa1e3fb4ae61b`, SHA-256 `4d533dfa44d2c423a86466cabd00143a625103199a5fbaa08959d87bc9e564b5`.
+- Local proposed workflow-only diff: reviewer-reconstructed SHA-256 `d776141d836f5065bdd7b14d4e0cd750018d1a7cdd09abd900f6f5071fce15c9`; Git blob `dd8117178546e8d4dbe33e14e042c2a057470ecf`. **Not yet pushed** at documentation time. See [#15 accepted patch review](https://github.com/ErenTahiroglu/ClinicalPSM/issues/15#issuecomment-6389415130).
+- Delegate reports protected local `Devir/` and archived A1 ZIP hashes unchanged after fast-forward and patch; independent reviewer does not claim filesystem access to that local checkout.
+- Additional independent checks: YAML structural parse, `bash -n` for all Bash run blocks, synthetic shell summary output (blocked 0/32, missing status UNMEASURED/32, inconclusive 31/32) and no command execution from literal backticks/`$()`/shell separators.
+- A separate one-shot replacement-run authorization is documented at [#7](https://github.com/ErenTahiroglu/ClinicalPSM/issues/7#issuecomment-6389418515), subject to refreshed exact HEAD because this docs-only memory commit itself advances `development`. **Original dedicated run 40121998475 remains FAIL and 0/32.** No numerical science was measured by STATIC-01–08.
+- Receipt correction: exact-SHA Security 40121998493 and Cumulative 40121998513 for experimental commit `cc607737...` both **SUCCESS**; Security 40122874426 and Cumulative 40122874424 for docs-only `929898525...` both **SUCCESS**. These ordinary passes do not qualify the dedicated science workflow.
