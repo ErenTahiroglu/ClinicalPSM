@@ -1,0 +1,12 @@
+{
+  "schema": "CP-STAT-02-A1-FIXTURE-GENERATION-CLARIFICATION-PIN-v1.1",
+  "state": "REGISTERED_BEFORE_ANY_FIXTURE_DATA_OR_CANDIDATE_RESULTS",
+  "registered_at_parent_commit": "f40dd51af170063a622864fe0b9023d4b3ac3e7c",
+  "phase_baseline_sha": "c3bda2ed841486aadcb5c44f0caa883662a17cf2",
+  "matrix_sha256": "773c61397c0de9118a41cb25496e88a41bd80c4926545579578fbac43b8281e8",
+  "base_generation_contract_sha256": "f2b1197cdec12900552058b8614a4412bd4fcba0cf80f38b8eeb93b1714d44b9",
+  "original_preregistration_pins_sha256": "18afb761345f566a216f9461b0b2d9a5a4c8cd66fbfe70e49e43ed9ba6bc8cfb",
+  "clarification_path": "experiments/cp-stat-02/a1/fixture-generation-clarifications-v1.1.md",
+  "clarification_sha256": "d114a24fd36c2ae58bf5e017f021330abd407614bb299260e9d44f9bcb4b84c7",
+  "hypotheses_expected_classes_seeds_and_acceptance_rules_changed": false
+}
