@@ -1,0 +1,213 @@
+name: CP-STAT-02 A1 Native Separation Qualification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [development]
+    paths:
+      - ".github/workflows/experiment-cp-stat-02-a1.yml"
+      - "experiments/cp-stat-02/a1/**"
+  pull_request:
+    branches: [development]
+    paths:
+      - ".github/workflows/experiment-cp-stat-02-a1.yml"
+      - "experiments/cp-stat-02/a1/**"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  native-qualification:
+    name: Verify provenance and run preregistered native LP qualification
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      A1_OUT: ${{ runner.temp }}/cp-stat-02-a1-evidence
+      A1_E2: ${{ runner.temp }}/cp-stat-02-a1-e2
+
+    steps:
+      - name: Check out full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Install pinned Node.js 24.22.1
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.22.1"
+
+      - name: Verify phase boundary, immutable source hashes, package pins, and allowed diff scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor c3bda2ed841486aadcb5c44f0caa883662a17cf2 HEAD
+          git merge-base --is-ancestor 85f187fb7a3e383d1d4cdf92b9e8bce5900fb447 HEAD
+          git fetch --no-tags origin main
+          test "$(git rev-parse origin/main)" = "53fb05e7c8d9b77b46c4a5d8b7c9cc041345f6a6"
+          while IFS= read -r changed; do
+            case "$changed" in
+              experiments/cp-stat-02/a1/*|.github/workflows/experiment-cp-stat-02-a1.yml) ;;
+              *) echo "Out-of-scope change since A1 baseline: $changed" >&2; exit 1 ;;
+            esac
+          done < <(git diff --name-only c3bda2ed841486aadcb5c44f0caa883662a17cf2 HEAD)
+          git diff --exit-code c3bda2ed841486aadcb5c44f0caa883662a17cf2 HEAD -- \
+            apps/web src/lib/webr src/worker experiments/cp-webr-02a/adapter \
+            experiments/cp-webr-02a/fixtures experiments/cp-webr-02a/r1.2a \
+            experiments/cp-webr-02-closure/native_oracle.R \
+            experiments/cp-webr-02-closure/compare_closure.mjs \
+            docs/architecture/CP-WEBR-01-PRODUCTION-ARCHITECTURE.md \
+            docs/science/CP-WEBR-01-CANONICAL-RESULT-CONTRACT.md
+          test "$(shasum -a 256 docs/architecture/CP-WEBR-01-PRODUCTION-ARCHITECTURE.md | awk '{print $1}')" = "005f1300fde92d1509958d9058526ab8ae98c992ccfc09f3e9d13995eae44bca"
+          test "$(shasum -a 256 docs/science/CP-WEBR-01-CANONICAL-RESULT-CONTRACT.md | awk '{print $1}')" = "cafcf78a294054d893f0a43fa4b7d571e8f7383bbab8e8c54088065225fa4dd3"
+          test "$(shasum -a 256 experiments/cp-webr-02-closure/ratification-v1/CP-WEBR-02-RATIFICATION-v1.md | awk '{print $1}')" = "b8a52855dd66a12a08fe36c9b3c0cb6f25d6a87d8dfe42ad20a932ceb3ec53ba"
+          test "$(shasum -a 256 experiments/cp-webr-02-closure/ratification-v1/CP-STAT-02-STARTING-INVENTORY.md | awk '{print $1}')" = "9674051fd2ef6c320badafdd9afb9bf4f6afff49516833d6e86b8f8074c61e3d"
+          test "$(shasum -a 256 experiments/cp-webr-02-closure/e4/CP-WEBR-02-SCIENTIFIC-EQUIVALENCE-AMENDMENT-v1.md | awk '{print $1}')" = "9d0471d573033b96ff4341459eb6f39e03089140d7d4c6196d222a9c1c128d21"
+          test "$(shasum -a 256 experiments/cp-webr-02-closure/e4/evidence-pins.json | awk '{print $1}')" = "3f9272da9d7a56ccc1b700d48b84c3b05a01e0fa711b8a4d613a5d92feaebe1c"
+          test "$(shasum -a 256 experiments/cp-webr-02-closure/fixture-integrity.json | awk '{print $1}')" = "06e3bed64ba2504f82020b66fe30eead2bb3be82fa7bac2a9591e6aeb33f7af5"
+          test "$(shasum -a 256 experiments/cp-webr-02a/fixtures/fixtures_manifest.json | awk '{print $1}')" = "e799ff01a9606c91cb3d494e277e081cabdc1349a37c993a08e7057d7411e4b1"
+          test "$(shasum -a 256 experiments/cp-webr-02a/r1.2a/FIXTURE-ASSERTION-MATRIX.json | awk '{print $1}')" = "c53ed65845adfa0bdd61011ab7ba6667b5662f4144a438a0443898adc0cabeea"
+          test "$(shasum -a 256 experiments/cp-webr-02a/adapter/r_template.R | awk '{print $1}')" = "7989403c7d093031b93a9c971a6d4f055101bab83c0ec4417fc52e4dceee24a4"
+          test "$(shasum -a 256 experiments/cp-webr-02-closure/e3/CP-WEBR-02-NATIVE-PARITY-ERRATUM-v1.md | awk '{print $1}')" = "a030d1214adc7ff38f55638a77625a8c6655d6442f6d12b37faa29a39e4dec40"
+          test "$(shasum -a 256 experiments/cp-webr-02-closure/e3/evidence-pins.json | awk '{print $1}')" = "603f1720af3ce6d9a02a73a8f3e4dcff337711bd102a4407528d507c3dc6e8e5"
+          node -e 'const f=require("node:fs");const p=JSON.parse(f.readFileSync("package.json"));const l=JSON.parse(f.readFileSync("package-lock.json"));const d=JSON.parse(f.readFileSync("experiments/cp-webr-00b/dependency-lock.json"));if(p.dependencies.next!=="16.4.1"||p.devDependencies["eslint-config-next"]!=="16.4.1"||l.packages["node_modules/next"].version!=="16.4.1"||l.packages["node_modules/eslint-config-next"].version!=="16.4.1"||d.runtime.webr_npm!=="0.6.0"||d.runtime.r_version!=="4.6.0")throw new Error("dependency pin mismatch");console.log("App, WebR and R dependency pins verified")'
+          node --check experiments/cp-stat-02/a1/verify-e2-evidence.mjs
+          node --check experiments/cp-stat-02/a1/verify-source-archives.mjs
+          node --check experiments/cp-stat-02/a1/build-evidence-index.mjs
+          node --check experiments/cp-stat-02/a1/qualification-evidence.test.mjs
+          mkdir -p "$A1_OUT" "$A1_E2/download" "$A1_E2/unpacked"
+
+      - name: Download pinned E2 scientific evidence
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          repository: ${{ github.repository }}
+          run-id: "40021019295"
+          artifact-ids: "12532397023"
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/cp-stat-02-a1-e2/download
+
+      - name: Verify E2 workflow/artifact metadata and extract its internal evidence archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/12532397023" --jq '[.id, .name, .size_in_bytes, .digest, .workflow_run.id, .workflow_run.head_sha] | @tsv' > "$A1_E2/artifact-metadata.tsv"
+          expected=$'12532397023\tcp-webr-02-closure-e2-40021019295\t278143\tsha256:bb0d2cb66a9b983d40f04703fcd318fa1c76b6a02ca0d58be6bb7d858f902df3\t40021019295\tf3bf77f1d730cedf4d728ddc58d32b885c63b3bb'
+          test "$(cat "$A1_E2/artifact-metadata.tsv")" = "$expected"
+          archive="$(find "$A1_E2/download" -type f -name evidence.tar.gz -print -quit)"
+          test -n "$archive"
+          test "$(shasum -a 256 "$archive" | awk '{print $1}')" = "2f8f6487239189745ac3e735916ea1e16d70b7f6e1ee071acd4223b0ded60a85"
+          sidecar="$(find "$A1_E2/download" -type f -name evidence-archive.sha256 -print -quit)"
+          test -n "$sidecar"
+          test "$(awk '{print $1}' "$sidecar")" = "2f8f6487239189745ac3e735916ea1e16d70b7f6e1ee071acd4223b0ded60a85"
+          tar -xzf "$archive" -C "$A1_E2/unpacked"
+          node experiments/cp-stat-02/a1/verify-e2-evidence.mjs \
+            --archive "$archive" \
+            --evidence-dir "$A1_E2/unpacked" \
+            --output "$A1_OUT/e2-provenance-verification.json"
+          cp "$A1_E2/artifact-metadata.tsv" "$A1_OUT/e2-artifact-metadata.tsv"
+
+      - name: Verify pinned official CRAN source archives
+        run: node experiments/cp-stat-02/a1/verify-source-archives.mjs --output "$A1_OUT/source-archive-verification.json"
+
+      - name: Install exact native R 4.6.0
+        uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
+        with:
+          r-version: "4.6.0"
+          use-public-rspm: false
+          cran: https://cran.r-project.org
+
+      - name: Restore the isolated A1 renv lock
+        uses: r-lib/actions/setup-renv@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
+        with:
+          working-directory: experiments/cp-stat-02/a1
+          profile: "NULL"
+          bypass-cache: "true"
+
+      - name: Verify exact R and experimental package versions; parse R source
+        working-directory: experiments/cp-stat-02/a1
+        shell: bash
+        run: |
+          set -euo pipefail
+          Rscript --version | tee "$A1_OUT/R-version.txt"
+          node --version | tee "$A1_OUT/Node-version.txt"
+          Rscript -e 'stopifnot(as.character(getRversion())=="4.6.0", as.character(packageVersion("detectseparation"))=="0.4.0", as.character(packageVersion("ROI"))=="1.0.2", as.character(packageVersion("ROI.plugin.lpsolve"))=="1.0.2", as.character(packageVersion("lpSolveAPI"))=="5.5.2.0.17.15", as.character(packageVersion("jsonlite"))=="2.0.0"); parse(file="qualification.R"); cat("R syntax and all pinned method packages PASS\n")' > "$A1_OUT/R-parse-and-package-verification.txt"
+          Rscript -e 'print(utils::sessionInfo())' > "$A1_OUT/pre-run-session-info.txt"
+
+      - name: Generate the preregistered fixtures and run two-tolerance native qualification
+        id: qualify
+        working-directory: experiments/cp-stat-02/a1
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          Rscript qualification.R --outdir "$A1_OUT" > "$A1_OUT/qualification-console.log" 2>&1
+          status=$?
+          set -e
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+          cat "$A1_OUT/qualification-console.log"
+          exit "$status"
+
+      - name: Falsify qualification evidence schema and fixture identity
+        if: success()
+        env:
+          A1_EVIDENCE_DIR: ${{ runner.temp }}/cp-stat-02-a1-evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test experiments/cp-stat-02/a1/qualification-evidence.test.mjs > "$A1_OUT/qualification-evidence-tests.tap" 2>&1
+          cat "$A1_OUT/qualification-evidence-tests.tap"
+
+      - name: Build checksummed machine-readable evidence index
+        if: always()
+        id: evidence-index
+        shell: bash
+        run: |
+          set +e
+          node experiments/cp-stat-02/a1/build-evidence-index.mjs --outdir "$A1_OUT"
+          index_status=$?
+          mkdir -p "$A1_OUT"
+          tar_status=0
+          tar -czf "$A1_OUT/cp-stat-02-a1-evidence.tar.gz" -C "$A1_OUT" --exclude='./cp-stat-02-a1-evidence.tar.gz' --exclude='./cp-stat-02-a1-evidence.tar.gz.sha256' .
+          tar_status=$?
+          hash_status=0
+          shasum -a 256 "$A1_OUT/cp-stat-02-a1-evidence.tar.gz" > "$A1_OUT/cp-stat-02-a1-evidence.tar.gz.sha256"
+          hash_status=$?
+          echo "index_exit_code=$index_status" >> "$GITHUB_OUTPUT"
+          echo "archive_sha256=$(awk '{print $1}' "$A1_OUT/cp-stat-02-a1-evidence.tar.gz.sha256")" >> "$GITHUB_OUTPUT"
+          final_status=$index_status
+          if [ "$tar_status" -ne 0 ] || [ "$hash_status" -ne 0 ]; then final_status=1; fi
+          echo "archive_exit_code=$tar_status" >> "$GITHUB_OUTPUT"
+          echo "sha256_exit_code=$hash_status" >> "$GITHUB_OUTPUT"
+          exit "$final_status"
+
+      - name: Upload A1 qualification evidence, including failed runs
+        id: upload-evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cp-stat-02-a1-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/cp-stat-02-a1-evidence/cp-stat-02-a1-evidence.tar.gz
+            ${{ runner.temp }}/cp-stat-02-a1-evidence/cp-stat-02-a1-evidence.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Record workflow evidence identifiers and qualification conclusion
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## CP-STAT-02 A1 evidence"
+            echo "- Exact commit: `$GITHUB_SHA`"
+            echo "- Workflow run: `$GITHUB_RUN_ID` (attempt $GITHUB_RUN_ATTEMPT)"
+            echo "- E2 provenance: run `40021019295`, artifact `12532397023`, internal archive SHA-256 `2f8f6487239189745ac3e735916ea1e16d70b7f6e1ee071acd4223b0ded60a85`"
+            echo "- Qualification command exit: `${{ steps.qualify.outputs.exit_code || 'NOT_RUN' }}`"
+            echo "- Evidence-index command exit: `${{ steps.evidence-index.outputs.index_exit_code || 'NOT_RUN' }}`"
+            echo "- Evidence archive SHA-256: `${{ steps.evidence-index.outputs.archive_sha256 || 'NOT_CREATED' }}`"
+            echo "- Evidence artifact ID: `${{ steps.upload-evidence.outputs.artifact-id || 'NOT_UPLOADED' }}`"
+            echo "- GitHub artifact digest: `${{ steps.upload-evidence.outputs.artifact-digest || 'NOT_REPORTED' }}`"
+            echo "- Any qualification failure remains a workflow failure; the evidence upload does not change the conclusion."
+          } >> "$GITHUB_STEP_SUMMARY"

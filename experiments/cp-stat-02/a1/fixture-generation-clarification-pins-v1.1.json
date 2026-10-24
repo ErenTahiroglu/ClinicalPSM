@@ -1,7 +1,8 @@
 {
   "schema": "CP-STAT-02-A1-FIXTURE-GENERATION-CLARIFICATION-PIN-v1.1",
   "state": "REGISTERED_BEFORE_ANY_FIXTURE_DATA_OR_CANDIDATE_RESULTS",
-  "registered_at_parent_commit": "f40dd51af170063a622864fe0b9023d4b3ac3e7c",
+  "based_on_preregistration_parent_commit": "f40dd51af170063a622864fe0b9023d4b3ac3e7c",
+  "clarification_first_committed_in": "85f187fb7a3e383d1d4cdf92b9e8bce5900fb447",
   "phase_baseline_sha": "c3bda2ed841486aadcb5c44f0caa883662a17cf2",
   "matrix_sha256": "773c61397c0de9118a41cb25496e88a41bd80c4926545579578fbac43b8281e8",
   "base_generation_contract_sha256": "f2b1197cdec12900552058b8614a4412bd4fcba0cf80f38b8eeb93b1714d44b9",
