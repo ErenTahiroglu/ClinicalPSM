@@ -85,7 +85,7 @@ jobs:
           run-id: "40021019295"
           artifact-ids: "12532397023"
           github-token: ${{ github.token }}
-          path: ${{ runner.temp }}/cp-stat-02-a1-e2/download
+          path: ${{ github.workspace }}/.cp-stat-02-a1-e2/download
 
       - name: Verify E2 workflow/artifact metadata and extract its internal evidence archive
         env:
@@ -190,8 +190,8 @@ jobs:
         with:
           name: cp-stat-02-a1-${{ github.run_id }}
           path: |
-            ${{ runner.temp }}/cp-stat-02-a1-evidence/cp-stat-02-a1-evidence.tar.gz
-            ${{ runner.temp }}/cp-stat-02-a1-evidence/cp-stat-02-a1-evidence.tar.gz.sha256
+            ${{ github.workspace }}/.cp-stat-02-a1-evidence/cp-stat-02-a1-evidence.tar.gz
+            ${{ github.workspace }}/.cp-stat-02-a1-evidence/cp-stat-02-a1-evidence.tar.gz.sha256
           if-no-files-found: error
           retention-days: 90
 
