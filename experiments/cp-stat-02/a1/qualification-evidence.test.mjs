@@ -1,9 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import { resolve } from 'node:path';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const a1 = new URL('.', import.meta.url);
 const outdir = resolve(process.env.A1_EVIDENCE_DIR ?? process.argv[2] ?? '');
@@ -152,4 +155,27 @@ test('a lost direct solver status is rejected', () => {
   const valid = altered.fixtures.find((item) => item.detector_invoked);
   valid.detector_runs[0].direct_solver_probe.complete_margin.return_code = null;
   assert.throws(() => validateEvidence(altered), /solver code missing/);
+});
+
+test('missing native results produce a checksummed UNMEASURED prequalification index', () => {
+  const temp = mkdtempSync(join(tmpdir(), 'cp-stat-02-a1-unmeasured-'));
+  try {
+    const script = resolve(dirname(fileURLToPath(import.meta.url)), 'build-evidence-index.mjs');
+    execFileSync(process.execPath, [script, '--outdir', temp, '--allow-unmeasured'], {
+      env: { ...process.env, GITHUB_SHA: 'synthetic-test-sha', GITHUB_RUN_ID: 'synthetic-test-run' },
+      stdio: 'pipe',
+    });
+    const status = JSON.parse(readFileSync(resolve(temp, 'qualification-run-status.json'), 'utf8'));
+    const index = JSON.parse(readFileSync(resolve(temp, 'evidence-index.json'), 'utf8'));
+    const checksums = readFileSync(resolve(temp, 'SHA256SUMS'), 'utf8');
+    assert.equal(status.status, 'UNMEASURED');
+    assert.equal(status.evaluated_fixture_count, 0);
+    assert.equal(status.preregistered_fixture_count, 50);
+    assert.equal(index.verdict, 'UNMEASURED');
+    assert.equal(index.result_fixture_count, 0);
+    assert.deepEqual(index.evaluated_status_counts, { UNMEASURED: 50 });
+    assert.match(checksums, /qualification-run-status\.json$/m);
+  } finally {
+    rmSync(temp, { recursive: true, force: true });
+  }
 });

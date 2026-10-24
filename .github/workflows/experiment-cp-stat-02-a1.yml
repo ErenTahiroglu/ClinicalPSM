@@ -121,6 +121,8 @@ jobs:
 
       - name: Restore the isolated A1 renv lock
         uses: r-lib/actions/setup-renv@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
+        env:
+          USE_BUNDLED_LIBUV: "1"
         with:
           working-directory: experiments/cp-stat-02/a1
           profile: "NULL"
@@ -153,7 +155,7 @@ jobs:
       - name: Falsify qualification evidence schema and fixture identity
         if: success()
         env:
-          A1_EVIDENCE_DIR: ${{ runner.temp }}/cp-stat-02-a1-evidence
+          A1_EVIDENCE_DIR: ${{ github.workspace }}/.cp-stat-02-a1-evidence
         shell: bash
         run: |
           set -euo pipefail
@@ -166,17 +168,25 @@ jobs:
         shell: bash
         run: |
           set +e
-          node experiments/cp-stat-02/a1/build-evidence-index.mjs --outdir "$A1_OUT"
-          index_status=$?
+          if [ -s "$A1_OUT/a1-qualification-results.json" ]; then
+            node experiments/cp-stat-02/a1/build-evidence-index.mjs --outdir "$A1_OUT"
+            index_status=$?
+          else
+            node experiments/cp-stat-02/a1/build-evidence-index.mjs --outdir "$A1_OUT" --allow-unmeasured
+            index_status=$?
+            if [ "$index_status" -eq 0 ]; then index_status=1; fi
+          fi
           mkdir -p "$A1_OUT"
+          archive="$GITHUB_WORKSPACE/.cp-stat-02-a1-evidence.tar.gz"
+          sidecar="$archive.sha256"
           tar_status=0
-          tar -czf "$A1_OUT/cp-stat-02-a1-evidence.tar.gz" -C "$A1_OUT" --exclude='./cp-stat-02-a1-evidence.tar.gz' --exclude='./cp-stat-02-a1-evidence.tar.gz.sha256' .
+          tar -czf "$archive" -C "$A1_OUT" .
           tar_status=$?
           hash_status=0
-          shasum -a 256 "$A1_OUT/cp-stat-02-a1-evidence.tar.gz" > "$A1_OUT/cp-stat-02-a1-evidence.tar.gz.sha256"
+          shasum -a 256 "$archive" > "$sidecar"
           hash_status=$?
           echo "index_exit_code=$index_status" >> "$GITHUB_OUTPUT"
-          echo "archive_sha256=$(awk '{print $1}' "$A1_OUT/cp-stat-02-a1-evidence.tar.gz.sha256")" >> "$GITHUB_OUTPUT"
+          echo "archive_sha256=$(awk '{print $1}' "$sidecar")" >> "$GITHUB_OUTPUT"
           final_status=$index_status
           if [ "$tar_status" -ne 0 ] || [ "$hash_status" -ne 0 ]; then final_status=1; fi
           echo "archive_exit_code=$tar_status" >> "$GITHUB_OUTPUT"
@@ -190,8 +200,9 @@ jobs:
         with:
           name: cp-stat-02-a1-${{ github.run_id }}
           path: |
-            ${{ github.workspace }}/.cp-stat-02-a1-evidence/cp-stat-02-a1-evidence.tar.gz
-            ${{ github.workspace }}/.cp-stat-02-a1-evidence/cp-stat-02-a1-evidence.tar.gz.sha256
+            ${{ github.workspace }}/.cp-stat-02-a1-evidence.tar.gz
+            ${{ github.workspace }}/.cp-stat-02-a1-evidence.tar.gz.sha256
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 90
 
