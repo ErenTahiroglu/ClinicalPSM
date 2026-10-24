@@ -1,6 +1,6 @@
 # CP-STAT-02-A2 — Last independently reviewed status
 
-**Snapshot date:** 2026-10-24. **Snapshot scientific evidence commit:** [`0f27cf3c5a5c0428fdcb3495caebdcaddcae79dd`](https://github.com/ErenTahiroglu/ClinicalPSM/commit/0f27cf3c5a5c0428fdcb3495caebdcaddcae79dd). **Accepted A2-03A preregistration evidence:** [`44b4faaa4b3ed9054a3b05be2741fb1c0d326cbe`](https://github.com/ErenTahiroglu/ClinicalPSM/commit/44b4faaa4b3ed9054a3b05be2741fb1c0d326cbe). **These are evidence SHAs, not an assertion of current live HEAD; re-check GitHub.** `main` was `53fb05e7c8d9b77b46c4a5d8b7c9cc041345f6a6` at review.
+**Snapshot date:** 2026-10-24. **Snapshot scientific evidence commit:** [`0f27cf3c5a5c0428fdcb3495caebdcaddcae79dd`](https://github.com/ErenTahiroglu/ClinicalPSM/commit/0f27cf3c5a5c0428fdcb3495caebdcaddcae79dd). **Accepted A2-03A preregistration evidence:** [`44b4faaa4b3ed9054a3b05be2741fb1c0d326cbe`](https://github.com/ErenTahiroglu/ClinicalPSM/commit/44b4faaa4b3ed9054a3b05be2741fb1c0d326cbe). **A2-03B attempted-execution commit:** [`cc607737e8725e2d774d8bf34686e9055572301e`](https://github.com/ErenTahiroglu/ClinicalPSM/commit/cc607737e8725e2d774d8bf34686e9055572301e), **CI FAILED before preflight, ZERO solver calls**. These are scientific/provenance SHAs, not an assertion of live HEAD; re-check GitHub. `main` was `53fb05e7c8d9b77b46c4a5d8b7c9cc041345f6a6` at review.
 
 ## Scientific gates
 
@@ -12,6 +12,7 @@
 | A2-01 source semantics | #5 CLOSED, reviewer accepted `4ab9509f550f15af52bad8c2199c8102f10e61b7` |
 | A2-02 archived exact ground truth | #6 CLOSED, reviewer accepted `0f27cf3c5a5c0428fdcb3495caebdcaddcae79dd` |
 | A2-03A independent HiGHS preregistration | **ACCEPTED as PLAN ONLY**, #7 OPEN; 32 fixed calls, source/wheel provenance pins, prespecified reviewer clarification in [#7 Red Team comment](https://github.com/ErenTahiroglu/ClinicalPSM/issues/7#issuecomment-6387366807); no solver outcomes |
+| A2-03B first numerical attempt | **BLOCKED** infrastructure at `pip --report` after checkout deleted staging directory; [run 40121998475](https://github.com/ErenTahiroglu/ClinicalPSM/actions/runs/40121998475), **0/32 LP**, **0/15 locked-CI falsification checks**, no numerical outcome; #7 OPEN, recovery #15 OPEN |
 | F1 numerical root-cause investigation | #4 OPEN/INCOMPLETE; mathematical ground truth established, fixture-specific numerical mechanism UNRESOLVED |
 | Production general-purpose separation detector | BLOCKED/NOT_QUALIFIED |
 | Real clinical data, publication/release and main merge | NOT AUTHORIZED by these scientific experiments |
@@ -21,7 +22,7 @@
 [A2 parent #3](https://github.com/ErenTahiroglu/ClinicalPSM/issues/3) — OPEN.
 
 - **Completed:** [#5 source audit](https://github.com/ErenTahiroglu/ClinicalPSM/issues/5), [#6 exact archived proof](https://github.com/ErenTahiroglu/ClinicalPSM/issues/6).
-- **Next:** [#7 independently pinned SciPy/HiGHS numerical LP investigation](https://github.com/ErenTahiroglu/ClinicalPSM/issues/7) — A2-03A plan accepted; A2-03B **single bounded implementation/run** only after versioned reviewer-required metric/formula annex is frozen before any LP; 32 calls maximum; no adaptive retries.
+- **Next:** [#15 A2-03B-R1 infrastructure recovery authorization gate](https://github.com/ErenTahiroglu/ClinicalPSM/issues/15) — **review offline minimal checkout/staging and shell-summary fix without re-running CI**. Accepted A2-03A v1 and additive A2-03B v1.1 annex remain frozen. Original 03B one-run budget consumed. Only a **separately approved** future limited run may supply numerical observations to [#7](https://github.com/ErenTahiroglu/ClinicalPSM/issues/7).
 - **Parallel after explicit scope authorization:** [#8 negative-control precondition analysis](https://github.com/ErenTahiroglu/ClinicalPSM/issues/8).
 - **Then:** [#9 independent F1 synthesis and #4 coordinator disposition](https://github.com/ErenTahiroglu/ClinicalPSM/issues/9).
 - **Conditional downstream:** [#10 F2 design decision](https://github.com/ErenTahiroglu/ClinicalPSM/issues/10), [#11 F3 holdout validation](https://github.com/ErenTahiroglu/ClinicalPSM/issues/11), [#12 F4 Wasm/licensing screening](https://github.com/ErenTahiroglu/ClinicalPSM/issues/12), [#13 F5 final A2 review](https://github.com/ErenTahiroglu/ClinicalPSM/issues/13).
@@ -42,3 +43,9 @@ Fixture `cpstat02a1_33_heterogeneous_scale_overlap`: three exact opposite-respon
 ## Work boundaries
 
 No rerun of the 50 A1 scenarios, no changing expected class/tolerance to obtain 50 PASS, no automatic CI retry loop, no patient data, no production statistical/Worker modification, no release/deployment. Full repository issue/doc overhaul waits until A2 independent closure.
+
+## 2026-10-24 A2-03B CI blocker (independently verified)
+
+Exact A2-03B experimental commit `cc607737e8725e2d774d8bf34686e9055572301e`; CI `40121998475` FAIL **before preflight**. The workflow creates `.a2-03b` before `actions/checkout`; checkout `clean:true` discards it; pinned pip's `--report .a2-03b/pip-install-report.json` errors because directory is missing. Downloading wheels **does not** constitute an installed and verified locked environment. The summary shell also evaluates unescaped Markdown backticks as commands. Evidence artifact `12571224297`, outer SHA-256 `2fcc8b064b23a0f50ca4fe874606a4a1ea861b87913b321fc1d4155a1696273b`, 1,497 bytes, 3/3 listed payload hashes PASS, records `linprog_invocation_attempts=0`, `completed_manifest_cells=0`, and 0/15 CI falsification tests. Reported 15/15 local preflight unit controls are **not** CI-qualified. Original A1 48/2 FAIL and package NOT_QUALIFIED stay unchanged.
+
+At this snapshot [Security run 40121998493](https://github.com/ErenTahiroglu/ClinicalPSM/actions/runs/40121998493) SUCCESS; [Cumulative run 40121998513](https://github.com/ErenTahiroglu/ClinicalPSM/actions/runs/40121998513) last inspected IN_PROGRESS, not a claimed PASS. #15 governs any future exception to the one-run policy; do not rerun the original job.
