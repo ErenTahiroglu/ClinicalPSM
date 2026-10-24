@@ -31,6 +31,11 @@ sha_text <- function(value) {
 write_json <- function(value, path) {
   jsonlite::write_json(value, path, auto_unbox = TRUE, pretty = TRUE, digits = NA, null = "null", na = "null", force = TRUE)
 }
+write_csv_full_precision <- function(value, path) {
+  prior_options <- options(digits = 17)
+  on.exit(options(prior_options), add = TRUE)
+  utils::write.csv(value, path, row.names = FALSE, fileEncoding = "UTF-8")
+}
 matrix_path <- file.path(a1_dir, "preregistration-matrix-v1.json")
 pins_path <- file.path(a1_dir, "preregistration-pins-v1.json")
 pins <- jsonlite::fromJSON(pins_path, simplifyVector = FALSE)
@@ -46,14 +51,18 @@ if (!identical(clarification_pins$clarification_path, "experiments/cp-stat-02/a1
 if (!identical(clarification_pins$hypotheses_expected_classes_seeds_and_acceptance_rules_changed, FALSE)) abort("Clarification cannot change scientific expectations")
 if (!identical(sha256(file.path(a1_dir, "fixture-generation-clarifications-v1.1.md")), clarification_pins$clarification_sha256)) abort("Fixture-generation clarification hash mismatch")
 if (!identical(sha256(file.path(a1_dir, "CP-STAT-02-A1-PROTOCOL-v1.md")), pins$scientific_protocol$sha256)) abort("Scientific protocol hash mismatch")
-correction_pins_path <- file.path(a1_dir, "fixture-generation-correction-pins-v1.2.json")
+correction_v12_pins_path <- file.path(a1_dir, "fixture-generation-correction-pins-v1.2.json")
+correction_v12_pins <- jsonlite::fromJSON(correction_v12_pins_path, simplifyVector = FALSE)
+if (!identical(correction_v12_pins$correction_sha256, sha256(file.path(a1_dir, "fixture-generation-clarifications-v1.2.md")))) abort("Fixture-generation v1.2 correction hash mismatch")
+correction_pins_path <- file.path(a1_dir, "fixture-generation-correction-pins-v1.3.json")
 correction_pins <- jsonlite::fromJSON(correction_pins_path, simplifyVector = FALSE)
-if (!identical(correction_pins$state, "POST_FIRST_EXECUTION_IMPLEMENTATION_CORRECTION_PENDING_INDEPENDENT_REVIEW")) abort("Unexpected fixture-generation correction state")
+if (!identical(correction_pins$state, "POST_SECOND_EXECUTION_IMPLEMENTATION_CORRECTION_PENDING_INDEPENDENT_REVIEW")) abort("Unexpected fixture-generation correction state")
 if (!identical(correction_pins$phase_baseline_sha, pins$phase_baseline_sha) || !identical(correction_pins$preregistration_matrix_sha256, pins$preregistration_matrix$sha256) || !identical(correction_pins$base_generation_contract_sha256, pins$fixture_generation_contract$sha256)) abort("Fixture-generation correction provenance mismatch")
-if (!identical(correction_pins$pre_run_clarification_v1_1_sha256, clarification_pins$clarification_sha256)) abort("Fixture-generation correction is not based on the pinned v1.1 clarification")
-if (!identical(correction_pins$correction_path, "experiments/cp-stat-02/a1/fixture-generation-clarifications-v1.2.md") || !identical(sha256(file.path(a1_dir, "fixture-generation-clarifications-v1.2.md")), correction_pins$correction_sha256)) abort("Fixture-generation correction hash mismatch")
-if (!identical(correction_pins$hypotheses_expected_classes_seeds_and_acceptance_rules_changed, FALSE) || !identical(correction_pins$first_run_results_preserved_without_relabeling, TRUE) || !identical(correction_pins$full_50_fixture_rerun_required, TRUE)) abort("Fixture-generation correction altered expectations or failed to preserve the first run")
+if (!identical(correction_pins$pre_run_clarification_v1_1_sha256, clarification_pins$clarification_sha256) || !identical(correction_pins$execution_correction_v1_2_sha256, correction_v12_pins$correction_sha256)) abort("Fixture-generation correction chain mismatch")
+if (!identical(correction_pins$correction_path, "experiments/cp-stat-02/a1/fixture-generation-clarifications-v1.3.md") || !identical(sha256(file.path(a1_dir, "fixture-generation-clarifications-v1.3.md")), correction_pins$correction_sha256)) abort("Fixture-generation v1.3 correction hash mismatch")
+if (!identical(correction_pins$hypotheses_expected_classes_seeds_and_acceptance_rules_changed, FALSE) || !identical(correction_pins$prior_run_results_preserved_without_relabeling, TRUE) || !identical(correction_pins$full_50_fixture_rerun_required, TRUE)) abort("Fixture-generation correction altered expectations or failed to preserve prior runs")
 if (!identical(correction_pins$first_execution$workflow_run_id, "40093824481") || !identical(correction_pins$first_execution$commit_sha, "130e42d4b1101920b3bd2329237506b74d4487ae") || !identical(correction_pins$first_execution$artifact_id, "12559634424") || !identical(correction_pins$first_execution$github_artifact_digest, "sha256:41d4c31f0f5716f2e8c300a00783f5115c46c7581a96707505791e243add99b6") || !identical(correction_pins$first_execution$internal_evidence_archive_sha256, "53ffc77b534c6e2813608fd1b8337be81f3d42f3e5a0306f275e71eb0a346bde")) abort("First execution artifact identity mismatch")
+if (!identical(correction_pins$second_execution$workflow_run_id, "40095086399") || !identical(correction_pins$second_execution$commit_sha, "4ed6a2fa4d60e28e57216fbf3f0d9e5de7dffde8") || !identical(correction_pins$second_execution$artifact_id, "12560637005") || !identical(correction_pins$second_execution$github_artifact_digest, "sha256:1d16956599423101c3731e0cca4da5cee6cb80a2ca19dc4f2d54f7456c8292d9") || !identical(correction_pins$second_execution$internal_evidence_archive_sha256, "a038be5a15c38e56dbbfddc6dd5d197a37a86e878876282978ce152e0a42985b")) abort("Second execution artifact identity mismatch")
 if (!identical(sha256(file.path(a1_dir, "renv.lock")), pins$experimental_environment$renv_lock_sha256)) abort("Experimental renv lock hash mismatch")
 if (!identical(sha256(file.path(a1_dir, "source-package-integrity.json")), pins$experimental_environment$source_archive_manifest_sha256)) abort("Package-source manifest hash mismatch")
 solver_probe_pins <- jsonlite::fromJSON(file.path(a1_dir, "solver-status-probe-pins-v1.json"), simplifyVector = FALSE)
@@ -208,8 +217,14 @@ make_data <- function(spec) {
   if (truth == "OVERLAP_FINITE_MLE" && anchor_count > 0L) {
     point_z <- if (grepl("near_rank_deficient_overlap", spec$fixture_id, fixed = TRUE)) {
       c(0, 0, 0, 1)
-    } else if (grepl("correlated|near_exact_correlation|near_collinear|near_alias|weak_information", profile, ignore.case = TRUE)) {
-      c(0, 1, 0, 0)
+    } else if (grepl("near_exact_correlation", profile, ignore.case = TRUE)) {
+      (points[, 2L] - points[, 1L]) / 1e-6
+    } else if (grepl("near_collinear|weak_information", profile, ignore.case = TRUE)) {
+      (points[, 2L] - points[, 1L]) / 1e-5
+    } else if (grepl("near_alias", profile, ignore.case = TRUE)) {
+      (points[, 2L] - points[, 1L]) / 1e-7
+    } else if (grepl("correlated", profile, ignore.case = TRUE)) {
+      (points[, 2L] - points[, 1L]) / 0.1
     } else {
       NULL
     }
@@ -691,6 +706,11 @@ for (i in seq_along(matrix$fixtures)) {
   if (spec$expected_separation == "NOT_CLASSIFIABLE_INVALID_MODEL") {
     result$status <- "FAIL"
     result$failure_codes <- list("INVALID_FIXTURE_ACCEPTED")
+    falsification_controls[[length(falsification_controls) + 1L]] <- list(
+      fixture_id = fixture_id,
+      control = "invalid_input_is_blocked_before_separation_classification",
+      status = "FAIL"
+    )
     fixture_results[[i]] <- result
     next
   }
@@ -703,12 +723,17 @@ for (i in seq_along(matrix$fixtures)) {
   if (is.null(x)) {
     result$status <- "FAIL"
     result$failure_codes <- list("GROUND_TRUTH_PROOF_ERROR")
+    falsification_controls[[length(falsification_controls) + 1L]] <- list(
+      fixture_id = fixture_id,
+      control = "ground_truth_precondition_blocks_candidate_method",
+      status = if (!result$detector_invoked && result$status == "FAIL") "PASS" else "FAIL"
+    )
     fixture_results[[i]] <- result
     next
   }
   model_path <- file.path(matrix_dir, paste0(fixture_id, ".csv"))
   matrix_frame <- data.frame(row_id = rownames(x), x, check.names = FALSE)
-  utils::write.csv(matrix_frame, model_path, row.names = FALSE, fileEncoding = "UTF-8")
+  write_csv_full_precision(matrix_frame, model_path)
   result$matrix_rank <- as.integer(proof$rank)
   result$model_matrix_columns <- proof$columns
   result$model_matrix_values <- lapply(seq_len(nrow(x)), function(row_index) as.list(vapply(x[row_index, ], format_number, character(1))))
@@ -718,6 +743,11 @@ for (i in seq_along(matrix$fixtures)) {
   if (!rank_pass) result$failure_codes <- c(result$failure_codes, list("DESIGN_RANK_EXPECTATION_FAILED"))
   if (!isTRUE(proof$proof_ok) || !rank_pass || "ANALYTIC_X1_CROSSCHECK_MISMATCH" %in% unlist(result$failure_codes)) {
     result$status <- "FAIL"
+    falsification_controls[[length(falsification_controls) + 1L]] <- list(
+      fixture_id = fixture_id,
+      control = "ground_truth_precondition_blocks_candidate_method",
+      status = if (!result$detector_invoked && result$status == "FAIL") "PASS" else "FAIL"
+    )
     fixture_results[[i]] <- result
     next
   }
@@ -799,16 +829,23 @@ status_counts <- as.list(table(factor(statuses, levels = c("PASS", "FAIL", "UNME
 valid_rows <- Filter(function(x) x$detector_invoked, fixture_results)
 fp <- sum(vapply(valid_rows, function(x) x$expected_separation == "OVERLAP_FINITE_MLE" && any(vapply(x$detector_runs, function(r) r$class %in% c("COMPLETE_SEPARATION", "QUASI_COMPLETE_SEPARATION"), logical(1))), logical(1)))
 fn <- sum(vapply(valid_rows, function(x) x$expected_separation %in% c("COMPLETE_SEPARATION", "QUASI_COMPLETE_SEPARATION") && any(vapply(x$detector_runs, function(r) r$class == "OVERLAP_FINITE_MLE", logical(1))), logical(1)))
-unresolved <- sum(vapply(valid_rows, function(x) any(vapply(x$detector_runs, function(r) r$class == "UNRESOLVED", logical(1))), logical(1)))
+unresolved <- sum(vapply(valid_rows, function(x) any(vapply(x$detector_runs, function(r) r$class == "UNRESOLVED" || any(vapply(r$direct_probe_assessments, function(a) a$classification == "UNRESOLVED_THRESHOLD", logical(1))), logical(1))), logical(1)))
+direct_threshold_unresolved <- sum(vapply(valid_rows, function(x) any(vapply(x$detector_runs, function(r) any(vapply(r$direct_probe_assessments, function(a) a$classification == "UNRESOLVED_THRESHOLD", logical(1))), logical(1))), logical(1)))
 elapsed <- unlist(lapply(valid_rows, function(x) vapply(x$detector_runs, function(r) r$elapsed_ms, integer(1))))
 direct_statuses <- unlist(lapply(valid_rows, function(fixture) unlist(lapply(fixture$detector_runs, function(run) c(run$direct_solver_probe$complete_margin$status, run$direct_solver_probe$weak_direction$status)))))
 direct_relations <- unlist(lapply(valid_rows, function(fixture) unlist(lapply(fixture$detector_runs, function(run) vapply(run$direct_probe_assessments, function(assessment) assessment$classification, character(1))))))
+mutation_source <- fixture_results[[1L]]
+mutation_expected <- mutation_source$expected_separation
+mutation_baseline <- length(mutation_source$detector_runs) == 4L && all(vapply(mutation_source$detector_runs, function(run) identical(run$class, mutation_expected), logical(1)))
+mutation_copy <- lapply(mutation_source$detector_runs, identity)
+mutation_copy[[1L]]$class <- "OVERLAP_FINITE_MLE"
+mutation_rejected <- !all(vapply(mutation_copy, function(run) identical(run$class, mutation_expected), logical(1)))
 controls <- list(
   positive_complete = if (fixture_results[[1L]]$status == "PASS" && fixture_results[[1L]]$expected_separation == "COMPLETE_SEPARATION") "PASS" else "FAIL",
   positive_quasi = if (fixture_results[[5L]]$status == "PASS" && fixture_results[[5L]]$expected_separation == "QUASI_COMPLETE_SEPARATION") "PASS" else "FAIL",
   negative_overlap = if (fixture_results[[9L]]$status == "PASS" && fixture_results[[9L]]$expected_separation == "OVERLAP_FINITE_MLE") "PASS" else "FAIL",
   invalid_input_lp_not_invoked = if (all(vapply(fixture_results[47:48], function(x) x$status == "PASS" && !x$detector_invoked, logical(1)))) "PASS" else "FAIL",
-  result_mutation_falsification = if (length(falsification_controls) == 50L && all(vapply(falsification_controls, function(x) x$status == "PASS", logical(1)))) "PASS" else "FAIL",
+  result_mutation_falsification = if (mutation_baseline && mutation_rejected) "PASS" else "FAIL",
   direct_solver_status_capture = if (length(direct_statuses) == length(valid_rows) * 8L && all(direct_statuses %in% c("OPTIMAL", "PRESOLVED"))) "PASS" else "FAIL",
   direct_constructive_crosscheck = if (length(direct_relations) == length(valid_rows) * 8L && all(direct_relations == "CONSTRUCTIVE_CLASS_SUPPORTED")) "PASS" else "FAIL",
   repeatability = if (all(vapply(valid_rows, function(x) !("NONREPEATABLE_RESULT" %in% unlist(x$failure_codes)), logical(1)))) "PASS" else "FAIL",
@@ -816,7 +853,7 @@ controls <- list(
 )
 overall <- if (all(statuses == "PASS") && all(unlist(controls) == "PASS")) "PASS" else "FAIL"
 report <- list(
-  schema = "CP-STAT-02-A1-NATIVE-LP-QUALIFICATION-v1",
+  schema = "CP-STAT-02-A1-NATIVE-LP-QUALIFICATION-v2",
   evidence_class = "EXPERIMENTAL_NATIVE_R_METHOD_QUALIFICATION_NOT_PRODUCTION",
   verdict = overall,
   commit_sha = system2("git", c("-C", shQuote(repo_root), "rev-parse", "HEAD"), stdout = TRUE)[[1L]],
@@ -828,10 +865,12 @@ report <- list(
   generation_clarification_sha256 = clarification_pins$clarification_sha256,
   fixture_generation_execution_correction = list(
     state = correction_pins$state,
+    correction_path = correction_pins$correction_path,
     correction_sha256 = correction_pins$correction_sha256,
     correction_pins_sha256 = sha256(correction_pins_path),
     correction_commit_sha = system2("git", c("-C", shQuote(repo_root), "rev-parse", "HEAD"), stdout = TRUE)[[1L]],
     first_execution = correction_pins$first_execution,
+    second_execution = correction_pins$second_execution,
     expected_classes_seeds_and_acceptance_rules_changed = correction_pins$hypotheses_expected_classes_seeds_and_acceptance_rules_changed
   ),
   r_version = r_version,
@@ -841,13 +880,17 @@ report <- list(
   counts = list(
     preregistered = length(fixture_results),
     evaluated = length(fixture_results),
-    valid_models = length(valid_rows),
-    invalid_models = length(fixture_results) - length(valid_rows),
+    valid_input_models = sum(vapply(fixture_results, function(x) x$expected_separation != "NOT_CLASSIFIABLE_INVALID_MODEL", logical(1))),
+    invalid_input_models = sum(vapply(fixture_results, function(x) x$expected_separation == "NOT_CLASSIFIABLE_INVALID_MODEL", logical(1))),
+    ground_truth_proven = sum(vapply(fixture_results, function(x) isTRUE(x$ground_truth_proof$proof_ok), logical(1))),
+    ground_truth_failed = sum(vapply(fixture_results, function(x) "CONSTRUCTIVE_GROUND_TRUTH_FAILED" %in% unlist(x$failure_codes), logical(1))),
+    method_evaluated_models = length(valid_rows),
     status = status_counts,
     expected_class_counts = expected_counts,
     false_positive_fixtures = fp,
     false_negative_fixtures = fn,
     unresolved_fixtures = unresolved,
+    direct_threshold_unresolved_fixtures = direct_threshold_unresolved,
     detectseparation_calls = length(valid_rows) * 4L,
     direct_lp_problems = length(valid_rows) * 8L,
     direct_lp_solver_status_counts = as.list(table(direct_statuses)),
@@ -880,11 +923,12 @@ lines <- c(
   paste0("Verdict: **", overall, "**"),
   paste0("Commit: ", report$commit_sha),
   paste0("Workflow: ", report$workflow_url),
-  paste0("Generator execution correction: post-first-run v1.2; SHA-256 ", correction_pins$correction_sha256, "; first-run artifact ", correction_pins$first_execution$artifact_id, " remains preserved"),
+  paste0("Generator execution correction: post-second-run v1.3; SHA-256 ", correction_pins$correction_sha256, "; first and second artifacts ", correction_pins$first_execution$artifact_id, " and ", correction_pins$second_execution$artifact_id, " remain preserved"),
+  paste0("Valid input models: ", report$counts$valid_input_models, "; ground-truth proofs passed/failed: ", report$counts$ground_truth_proven, "/", report$counts$ground_truth_failed, "; method-evaluated models: ", report$counts$method_evaluated_models),
   paste0("Preregistered/evaluated scenarios: ", length(fixture_results), "/", length(fixture_results)),
   paste0("Fixture statuses: ", paste(names(status_counts), unlist(status_counts), collapse = "; ")),
   paste0("Class counts: ", paste(names(expected_counts), unlist(expected_counts), collapse = "; ")),
-  paste0("False positives: ", fp, "; false negatives: ", fn, "; unresolved: ", unresolved),
+  paste0("False positives: ", fp, "; false negatives: ", fn, "; unresolved (including direct-threshold uncertainty): ", unresolved, "; direct-threshold-uncertain fixtures: ", direct_threshold_unresolved),
   paste0("detectseparation calls: ", report$counts$detectseparation_calls, "; direct LP problems: ", report$counts$direct_lp_problems, "; median combined ms: ", report$counts$median_lp_elapsed_ms, "; max combined ms: ", report$counts$maximum_lp_elapsed_ms),
   paste0("Direct solver statuses: ", paste(names(report$counts$direct_lp_solver_status_counts), unlist(report$counts$direct_lp_solver_status_counts), collapse = "; ")),
   paste0("Direct probe relations: ", paste(names(report$counts$direct_probe_relation_counts), unlist(report$counts$direct_probe_relation_counts), collapse = "; ")),

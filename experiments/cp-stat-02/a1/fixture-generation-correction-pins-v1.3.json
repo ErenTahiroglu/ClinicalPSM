@@ -1,0 +1,40 @@
+{
+  "schema": "CP-STAT-02-A1-FIXTURE-GENERATION-CORRECTION-PIN-v1.3",
+  "state": "POST_SECOND_EXECUTION_IMPLEMENTATION_CORRECTION_PENDING_INDEPENDENT_REVIEW",
+  "phase_baseline_sha": "c3bda2ed841486aadcb5c44f0caa883662a17cf2",
+  "preregistration_matrix_sha256": "773c61397c0de9118a41cb25496e88a41bd80c4926545579578fbac43b8281e8",
+  "base_generation_contract_sha256": "f2b1197cdec12900552058b8614a4412bd4fcba0cf80f38b8eeb93b1714d44b9",
+  "pre_run_clarification_v1_1_sha256": "d114a24fd36c2ae58bf5e017f021330abd407614bb299260e9d44f9bcb4b84c7",
+  "execution_correction_v1_2_sha256": "1ae4a3cb3a271948419c9148ab67d4272849e959f5a61ca683a76be619ef7d4f",
+  "correction_path": "experiments/cp-stat-02/a1/fixture-generation-clarifications-v1.3.md",
+  "correction_sha256": "2a8567acd5540c40c133d5c6e44d4f5c6e55516fa5518ed3d7690cbf0bf2a995",
+  "correction_committed_after_workflow_run": "40095086399",
+  "affected_fixtures": [
+    "cpstat02a1_24_high_correlation_overlap",
+    "cpstat02a1_25_near_exact_correlation",
+    "cpstat02a1_50_weak_information_finite"
+  ],
+  "hypotheses_expected_classes_seeds_and_acceptance_rules_changed": false,
+  "prior_run_results_preserved_without_relabeling": true,
+  "full_50_fixture_rerun_required": true,
+  "second_execution": {
+    "workflow_run_id": "40095086399",
+    "commit_sha": "4ed6a2fa4d60e28e57216fbf3f0d9e5de7dffde8",
+    "artifact_id": "12560637005",
+    "github_artifact_digest": "sha256:1d16956599423101c3731e0cca4da5cee6cb80a2ca19dc4f2d54f7456c8292d9",
+    "internal_evidence_archive_sha256": "a038be5a15c38e56dbbfddc6dd5d197a37a86e878876282978ce152e0a42985b",
+    "result": "FAIL",
+    "scenarios_evaluated": 50,
+    "pass": 45,
+    "fail": 5,
+    "false_positive_fixtures": 1,
+    "false_negative_fixtures": 0
+  },
+  "first_execution": {
+    "workflow_run_id": "40093824481",
+    "commit_sha": "130e42d4b1101920b3bd2329237506b74d4487ae",
+    "artifact_id": "12559634424",
+    "github_artifact_digest": "sha256:41d4c31f0f5716f2e8c300a00783f5115c46c7581a96707505791e243add99b6",
+    "internal_evidence_archive_sha256": "53ffc77b534c6e2813608fd1b8337be81f3d42f3e5a0306f275e71eb0a346bde"
+  }
+}

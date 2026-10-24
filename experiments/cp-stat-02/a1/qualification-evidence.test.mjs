@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 const a1 = new URL('.', import.meta.url);
 const outdir = resolve(process.env.A1_EVIDENCE_DIR ?? process.argv[2] ?? '');
 const matrix = JSON.parse(await readFile(new URL('preregistration-matrix-v1.json', a1), 'utf8'));
-const correctionPins = JSON.parse(readFileSync(new URL('fixture-generation-correction-pins-v1.2.json', a1), 'utf8'));
+const correctionPins = JSON.parse(readFileSync(new URL('fixture-generation-correction-pins-v1.3.json', a1), 'utf8'));
 const report = JSON.parse(await readFile(resolve(outdir, 'a1-qualification-results.json'), 'utf8'));
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 const parseCsvRow = (line) => {
@@ -39,10 +39,12 @@ const parseCsvRow = (line) => {
 };
 
 function validateEvidence(candidate) {
-  assert.equal(candidate.schema, 'CP-STAT-02-A1-NATIVE-LP-QUALIFICATION-v1');
+  assert.equal(candidate.schema, 'CP-STAT-02-A1-NATIVE-LP-QUALIFICATION-v2');
   assert.equal(candidate.fixtures.length, 50);
   assert.equal(candidate.fixture_generation_execution_correction.correction_sha256, correctionPins.correction_sha256, 'execution correction document digest mismatch');
-  assert.equal(candidate.fixture_generation_execution_correction.correction_pins_sha256, sha256(readFileSync(new URL('fixture-generation-correction-pins-v1.2.json', a1))));
+  assert.equal(candidate.fixture_generation_execution_correction.correction_pins_sha256, sha256(readFileSync(new URL('fixture-generation-correction-pins-v1.3.json', a1))));
+  assert.equal(candidate.fixture_generation_execution_correction.correction_path, correctionPins.correction_path);
+  assert.deepEqual(candidate.fixture_generation_execution_correction.second_execution, correctionPins.second_execution);
   assert.equal(candidate.fixture_generation_execution_correction.expected_classes_seeds_and_acceptance_rules_changed, false);
   const ids = candidate.fixtures.map((fixture) => fixture.fixture_id);
   assert.equal(new Set(ids).size, 50, 'fixture IDs must be unique');
@@ -77,20 +79,35 @@ function validateEvidence(candidate) {
       assert.equal(fixture.status, 'PASS');
       continue;
     }
+    assert.ok(fixture.ground_truth_proof);
+    if (fixture.model_matrix_sha256) {
+      const modelPath = resolve(outdir, 'model-matrices', `${fixture.fixture_id}.csv`);
+      const modelBytes = readFileSync(modelPath);
+      assert.equal(sha256(modelBytes), fixture.model_matrix_sha256, `model-matrix hash mismatch: ${fixture.fixture_id}`);
+      const modelRows = modelBytes.toString('utf8').trimEnd().split(/\r?\n/).map(parseCsvRow);
+      assert.deepEqual(modelRows[0].slice(1), fixture.model_matrix_columns);
+      assert.deepEqual(modelRows.slice(1).map((row) => row[0]), ids, `model-matrix row identities/order mismatch: ${fixture.fixture_id}`);
+      assert.equal(fixture.model_matrix_values.length, ids.length);
+      fixture.model_matrix_values.forEach((row, index) => {
+        assert.ok(row && typeof row === 'object' && !Array.isArray(row));
+        assert.deepEqual(Object.keys(row), fixture.model_matrix_columns, `named model-matrix row columns/order mismatch: ${fixture.fixture_id}`);
+        assert.ok(Object.values(row).every((value) => typeof value === 'string'));
+        assert.deepEqual(fixture.model_matrix_columns.map((column) => row[column]), modelRows[index + 1].slice(1), `named model-matrix numeric values/order mismatch: ${fixture.fixture_id}`);
+      });
+    }
+    if (fixture.ground_truth_proof.proof_ok !== true) {
+      assert.equal(fixture.status, 'FAIL', `failed ground truth was not retained as a failure: ${fixture.fixture_id}`);
+      assert.equal(fixture.detector_invoked, false, `candidate method ran before ground-truth proof: ${fixture.fixture_id}`);
+      assert.ok(fixture.failure_codes.includes('CONSTRUCTIVE_GROUND_TRUTH_FAILED') || fixture.failure_codes.includes('GROUND_TRUTH_PROOF_ERROR'));
+      continue;
+    }
     if (spec.expected_separation === 'OVERLAP_FINITE_MLE') {
       assert.equal(fixture.ground_truth_proof.anchor_pairs_exact, true, `overlap anchor pairs must remain identical: ${fixture.fixture_id}`);
       assert.equal(fixture.ground_truth_proof.anchor_matrix_rank, fixture.matrix_rank, `overlap anchors must span the observed design: ${fixture.fixture_id}`);
     }
     assert.equal(fixture.detector_invoked, true);
     assert.equal(fixture.detector_runs.length, 4, `two tolerances times two runs required: ${fixture.fixture_id}`);
-    const modelPath = resolve(outdir, 'model-matrices', `${fixture.fixture_id}.csv`);
-    const modelBytes = readFileSync(modelPath);
-    assert.equal(sha256(modelBytes), fixture.model_matrix_sha256, `model-matrix hash mismatch: ${fixture.fixture_id}`);
-    const modelRows = modelBytes.toString('utf8').trimEnd().split(/\r?\n/).map(parseCsvRow);
-    assert.deepEqual(modelRows[0].slice(1), fixture.model_matrix_columns);
-    assert.deepEqual(modelRows.slice(1).map((row) => row[0]), ids, `model-matrix row identities/order mismatch: ${fixture.fixture_id}`);
-    assert.equal(fixture.model_matrix_values.length, ids.length);
-    assert.ok(fixture.model_matrix_values.every((row) => row.length === fixture.model_matrix_columns.length));
+    assert.ok(fixture.model_matrix_sha256);
     if (spec.expected_design_rank === 'full_rank') assert.equal(fixture.matrix_rank, fixture.model_matrix_columns.length);
     if (spec.expected_design_rank === 'rank_deficient') assert.ok(fixture.matrix_rank < fixture.model_matrix_columns.length);
     assert.ok(['COMPLETE_SEPARATION', 'QUASI_COMPLETE_SEPARATION', 'OVERLAP_FINITE_MLE', 'UNRESOLVED'].includes(fixture.analytic_x1_crosscheck.class));
@@ -117,8 +134,10 @@ function validateEvidence(candidate) {
   }
   assert.equal(candidate.counts.preregistered, 50);
   assert.equal(candidate.counts.evaluated, 50);
-  assert.equal(candidate.counts.valid_models, 48);
-  assert.equal(candidate.counts.invalid_models, 2);
+  assert.equal(candidate.counts.valid_input_models, 48);
+  assert.equal(candidate.counts.invalid_input_models, 2);
+  assert.equal(candidate.counts.method_evaluated_models, candidate.fixtures.filter((fixture) => fixture.detector_invoked).length);
+  assert.equal(candidate.counts.ground_truth_failed, candidate.fixtures.filter((fixture) => fixture.expected_separation !== 'NOT_CLASSIFIABLE_INVALID_MODEL' && fixture.ground_truth_proof?.proof_ok !== true).length);
   assert.equal(candidate.verdict, candidate.fixtures.every((fixture) => fixture.status === 'PASS') && Object.values(candidate.controls).every((value) => value === 'PASS') ? 'PASS' : 'FAIL');
 }
 
@@ -143,6 +162,14 @@ test('changing an expected class is rejected independently of its stored result'
   const fixture = altered.fixtures.find((item) => item.expected_separation === 'COMPLETE_SEPARATION');
   fixture.expected_separation = 'OVERLAP_FINITE_MLE';
   assert.throws(() => validateEvidence(altered), /expected class changed/);
+});
+
+test('mutating an observed detector class cannot retain a passing fixture status', () => {
+  const altered = structuredClone(report);
+  const fixture = altered.fixtures.find((item) => item.status === 'PASS' && item.detector_invoked);
+  assert.ok(fixture);
+  fixture.detector_runs[0].class = fixture.expected_separation === 'COMPLETE_SEPARATION' ? 'OVERLAP_FINITE_MLE' : 'COMPLETE_SEPARATION';
+  assert.throws(() => validateEvidence(altered), /failure concealed/);
 });
 
 test('an input hash mutation is rejected', () => {

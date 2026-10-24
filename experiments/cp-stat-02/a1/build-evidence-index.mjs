@@ -14,15 +14,19 @@ const readJson = async (path) => JSON.parse(await readFile(path, 'utf8'));
 const matrix = await readJson(resolve(here, 'preregistration-matrix-v1.json'));
 const pins = await readJson(resolve(here, 'preregistration-pins-v1.json'));
 const clarificationPins = await readJson(resolve(here, 'fixture-generation-clarification-pins-v1.1.json'));
-const correctionPinsPath = resolve(here, 'fixture-generation-correction-pins-v1.2.json');
+const correctionV12PinsPath = resolve(here, 'fixture-generation-correction-pins-v1.2.json');
+const correctionV12Pins = await readJson(correctionV12PinsPath);
+const correctionPinsPath = resolve(here, 'fixture-generation-correction-pins-v1.3.json');
 const correctionPins = await readJson(correctionPinsPath);
 const resultsPath = resolve(outdir, 'a1-qualification-results.json');
 if (clarificationPins.matrix_sha256 !== pins.preregistration_matrix.sha256 || clarificationPins.base_generation_contract_sha256 !== pins.fixture_generation_contract.sha256) fail('Generation clarification pin does not match the original preregistration');
 if (clarificationPins.original_preregistration_pins_sha256 !== sha256(await readFile(resolve(here, 'preregistration-pins-v1.json'))) || clarificationPins.hypotheses_expected_classes_seeds_and_acceptance_rules_changed !== false) fail('Generation clarification changed or lost the original preregistration pin');
 if (clarificationPins.clarification_sha256 !== sha256(await readFile(resolve(here, clarificationPins.clarification_path.split('/').at(-1))))) fail('Generation clarification SHA-256 mismatch');
-if (correctionPins.preregistration_matrix_sha256 !== pins.preregistration_matrix.sha256 || correctionPins.base_generation_contract_sha256 !== pins.fixture_generation_contract.sha256 || correctionPins.pre_run_clarification_v1_1_sha256 !== clarificationPins.clarification_sha256) fail('Execution correction provenance does not match the original preregistration chain');
-if (correctionPins.correction_sha256 !== sha256(await readFile(resolve(here, correctionPins.correction_path.split('/').at(-1)))) || correctionPins.hypotheses_expected_classes_seeds_and_acceptance_rules_changed !== false || correctionPins.first_run_results_preserved_without_relabeling !== true || correctionPins.full_50_fixture_rerun_required !== true) fail('Execution correction hash or scope is invalid');
+if (correctionV12Pins.correction_sha256 !== sha256(await readFile(resolve(here, correctionV12Pins.correction_path.split('/').at(-1))))) fail('v1.2 correction hash mismatch');
+if (correctionPins.preregistration_matrix_sha256 !== pins.preregistration_matrix.sha256 || correctionPins.base_generation_contract_sha256 !== pins.fixture_generation_contract.sha256 || correctionPins.pre_run_clarification_v1_1_sha256 !== clarificationPins.clarification_sha256 || correctionPins.execution_correction_v1_2_sha256 !== correctionV12Pins.correction_sha256) fail('Execution correction provenance does not match the original preregistration chain');
+if (correctionPins.correction_sha256 !== sha256(await readFile(resolve(here, correctionPins.correction_path.split('/').at(-1)))) || correctionPins.hypotheses_expected_classes_seeds_and_acceptance_rules_changed !== false || correctionPins.prior_run_results_preserved_without_relabeling !== true || correctionPins.full_50_fixture_rerun_required !== true) fail('Execution correction hash or scope is invalid');
 if (correctionPins.first_execution?.workflow_run_id !== '40093824481' || correctionPins.first_execution?.commit_sha !== '130e42d4b1101920b3bd2329237506b74d4487ae' || correctionPins.first_execution?.artifact_id !== '12559634424' || correctionPins.first_execution?.github_artifact_digest !== 'sha256:41d4c31f0f5716f2e8c300a00783f5115c46c7581a96707505791e243add99b6' || correctionPins.first_execution?.internal_evidence_archive_sha256 !== '53ffc77b534c6e2813608fd1b8337be81f3d42f3e5a0306f275e71eb0a346bde') fail('First execution evidence identity does not match the preserved failed run');
+if (correctionPins.second_execution?.workflow_run_id !== '40095086399' || correctionPins.second_execution?.commit_sha !== '4ed6a2fa4d60e28e57216fbf3f0d9e5de7dffde8' || correctionPins.second_execution?.artifact_id !== '12560637005' || correctionPins.second_execution?.github_artifact_digest !== 'sha256:1d16956599423101c3731e0cca4da5cee6cb80a2ca19dc4f2d54f7456c8292d9' || correctionPins.second_execution?.internal_evidence_archive_sha256 !== 'a038be5a15c38e56dbbfddc6dd5d197a37a86e878876282978ce152e0a42985b') fail('Second execution evidence identity does not match the preserved failed run');
 
 async function walk(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -45,9 +49,11 @@ const sourcePaths = [
   'preregistration-pins-v1.json',
   'fixture-generation-clarification-pins-v1.1.json',
   'fixture-generation-correction-pins-v1.2.json',
+  'fixture-generation-correction-pins-v1.3.json',
   'fixture-generation-contract-v1.md',
   'fixture-generation-clarifications-v1.1.md',
   'fixture-generation-clarifications-v1.2.md',
+  'fixture-generation-clarifications-v1.3.md',
   'CP-STAT-02-A1-PROTOCOL-v1.md',
   'CP-WEBR-02-INDEPENDENT-CLOSURE-VERIFICATION-v1.md',
   'solver-status-probe-preregistration-v1.md',
@@ -112,6 +118,7 @@ try {
 
 const results = await readJson(resultsPath);
 if (results.fixtures?.length !== 50) fail('Expected exactly 50 reported fixtures');
+if (results.schema !== 'CP-STAT-02-A1-NATIVE-LP-QUALIFICATION-v2') fail('Qualification results have an unsupported schema');
 if (results.fixture_generation_execution_correction?.correction_sha256 !== correctionPins.correction_sha256 || results.fixture_generation_execution_correction?.correction_pins_sha256 !== sha256(await readFile(correctionPinsPath))) fail('Qualification results do not identify the versioned execution correction');
 const expectedIds = matrix.fixtures.map((fixture) => fixture.fixture_id);
 const resultIds = results.fixtures.map((fixture) => fixture.fixture_id);
@@ -123,6 +130,8 @@ if (String(results.workflow_run_id) !== (process.env.GITHUB_RUN_ID ?? String(res
 const resultById = new Map(results.fixtures.map((fixture) => [fixture.fixture_id, fixture]));
 let validCount = 0;
 let invalidCount = 0;
+let groundTruthFailedCount = 0;
+let methodEvaluatedCount = 0;
 for (const spec of matrix.fixtures) {
   const record = resultById.get(spec.fixture_id);
   const inputPath = resolve(outdir, record.input_csv_path ?? '');
@@ -138,12 +147,19 @@ for (const spec of matrix.fixtures) {
     if (record.detector_invoked !== false || record.status !== 'PASS') fail(`Invalid fixture reached candidate method: ${spec.fixture_id}`);
   } else {
     validCount += 1;
-    if (record.detector_invoked !== true || !record.model_matrix_sha256 || record.detector_runs?.length !== 4) fail(`Missing valid-model evidence: ${spec.fixture_id}`);
+    if (!record.model_matrix_sha256 || !record.ground_truth_proof) fail(`Missing model or ground-truth evidence: ${spec.fixture_id}`);
     const modelPath = resolve(outdir, 'model-matrices', `${spec.fixture_id}.csv`);
     if (sha256(await readFile(modelPath)) !== record.model_matrix_sha256) fail(`Model-matrix SHA mismatch: ${spec.fixture_id}`);
+    if (record.ground_truth_proof.proof_ok !== true) {
+      groundTruthFailedCount += 1;
+      if (record.detector_invoked !== false || record.status !== 'FAIL' || !record.failure_codes?.length) fail(`Invalid ground-truth proof was not failed closed: ${spec.fixture_id}`);
+    } else {
+      methodEvaluatedCount += 1;
+      if (record.detector_invoked !== true || record.detector_runs?.length !== 4) fail(`Missing method-run evidence: ${spec.fixture_id}`);
+    }
   }
 }
-if (validCount !== 48 || invalidCount !== 2) fail(`Unexpected valid/invalid scenario counts: ${validCount}/${invalidCount}`);
+if (validCount !== 48 || invalidCount !== 2 || results.counts.valid_input_models !== validCount || results.counts.invalid_input_models !== invalidCount || results.counts.ground_truth_failed !== groundTruthFailedCount || results.counts.method_evaluated_models !== methodEvaluatedCount) fail(`Unexpected scenario accounting: valid=${validCount}, invalid=${invalidCount}, ground_truth_failed=${groundTruthFailedCount}, method_evaluated=${methodEvaluatedCount}`);
 
 const checksumPath = resolve(outdir, 'SHA256SUMS');
 const existingFiles = (await walk(outdir)).filter((path) => path !== checksumPath && !path.endsWith(`${sep}evidence-index.json`)).sort();
@@ -162,6 +178,10 @@ const index = {
   phase_baseline_sha: pins.phase_baseline_sha,
   fixture_count: 50,
   result_fixture_count: results.fixtures.length,
+  results_schema: results.schema,
+  method_evaluated_fixture_count: methodEvaluatedCount,
+  ground_truth_failed_fixture_count: groundTruthFailedCount,
+  invalid_input_fixture_count: invalidCount,
   evaluated_status_counts: results.counts.status,
   preregistered_matrix_sha256: pins.preregistration_matrix.sha256,
   generator_contract_sha256: pins.fixture_generation_contract.sha256,
