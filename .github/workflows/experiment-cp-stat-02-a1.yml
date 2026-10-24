@@ -23,8 +23,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
-      A1_OUT: ${{ runner.temp }}/cp-stat-02-a1-evidence
-      A1_E2: ${{ runner.temp }}/cp-stat-02-a1-e2
+      A1_OUT: ${{ github.workspace }}/.cp-stat-02-a1-evidence
+      A1_E2: ${{ github.workspace }}/.cp-stat-02-a1-e2
 
     steps:
       - name: Check out full history
