@@ -11,6 +11,8 @@
 | Frozen exact proof #6 | [commit `0f27cf3c5a5c0428fdcb3495caebdcaddcae79dd`](https://github.com/ErenTahiroglu/ClinicalPSM/commit/0f27cf3c5a5c0428fdcb3495caebdcaddcae79dd) | fixture 31 mathematically complete; fixture 33 mathematically no separation/finite MLE; [Security 40113354457](https://github.com/ErenTahiroglu/ClinicalPSM/actions/runs/40113354457) and [Cumulative 40113354461](https://github.com/ErenTahiroglu/ClinicalPSM/actions/runs/40113354461) succeeded |
 | #6 proof artifacts | `experiments/cp-stat-02/a2-f1/exact-proof/{EXACT_RATIONAL_PROOF_REPORT.md,EXACT_PROOF_DECISION.md,proof-results.json,proof-evidence-manifest.json,exact_proof.py,proof-tests.py}` at above commit | Precise rows, full rational margins/rank, falsification tests and hash-bounded assertions |
 | #5 source artifacts | `experiments/cp-stat-02/a2-f1/source-audit/{DETECTSEPARATION_V0.4_SOURCE_AUDIT.md,SOURCE_AUDIT_DECISION.md,source-provenance.json}` at above commit | Exact source paths, hashes, LP semantics |
+| A2-03A preregistration (PLAN ONLY) | [commit `44b4faaa4b3ed9054a3b05be2741fb1c0d326cbe`](https://github.com/ErenTahiroglu/ClinicalPSM/commit/44b4faaa4b3ed9054a3b05be2741fb1c0d326cbe), 6 files under `experiments/cp-stat-02/a2-f1/highs-forensics/` | Source-/hash-pinned HiGHS 1.12.0 embedded in SciPy 1.18.1, Python 3.13.17, 32-call maximum; [#7 Red Team pre-execution terms](https://github.com/ErenTahiroglu/ClinicalPSM/issues/7#issuecomment-6387366807). Security `40115904473`, Cumulative `40115904460` SUCCESS; **no solver run** |
+| Memory pilot #14 | [docs commit `bc2cceec8cd3308fb60842e0d7b33e89fc976d6d`](https://github.com/ErenTahiroglu/ClinicalPSM/commit/bc2cceec8cd3308fb60842e0d7b33e89fc976d6d) | 5 docs files; own Cumulative 40114611452 SUCCESS, own Security 40114611488 CANCELLED, next descendant Security 40115904473 SUCCESS with same docs; #14 CLOSED as scoped governance only |
 | Original external source | `ikosmidis/detectseparation` `v0.4` tag commit `2bb2104338aeb49f6c01bacb7ede7cfa09033c88` | Code-level decision threshold, distinct from ROI solver controls |
 
 ## Contradictions and bounds (never silently normalize)
@@ -22,6 +24,8 @@
 **A2-EVID-BOUND-003 — Non-independent supplemental LP:** original A1 direct probe uses lpSolveAPI/lp_solve, same underlying solver family as `detectseparation` ROI/lpsolve. There are no archived primal/dual residual fields. Do not promote that probe to independent replication.
 
 **A2-EVID-BOUND-004 — Scientific meaning:** mathematical finiteness of the logistic MLE for fixture 33 does not establish causal population positivity, balancing, matching quality, or publishability.
+
+**A2-EVID-BOUND-005 — A2-03A protocol versus results:** A2-03A v1 and Red Team pre-execution clarifications fix the scientific plan, solver source and numeric contracts; this is not an executed LP dataset. Results, residuals, dual certificates and classification effects remain **UNMEASURED**. The later run must hash an additive v1.1 metric-interpretation annex before any LP and keep all historical v1 outcomes and thresholds untouched.
 
 ## Evidence preservation rule
 
