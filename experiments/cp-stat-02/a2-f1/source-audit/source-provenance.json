@@ -1,0 +1,120 @@
+{
+  "schema": "CP-STAT-02-A2-01-DETECTSEPARATION-SOURCE-PROVENANCE-v2",
+  "status": "READY_FOR_INDEPENDENT_RED_TEAM_REVIEW",
+  "audit_date": "2026-10-24",
+  "repository": {
+    "branch": "development",
+    "baseline_sha": "579a2532a5fe210917e2b37e7d7f950c8d01d78f",
+    "main_sha": "53fb05e7c8d9b77b46c4a5d8b7c9cc041345f6a6"
+  },
+  "upstream": {
+    "repository": "https://github.com/ikosmidis/detectseparation",
+    "tag": "v0.4",
+    "tag_commit": "2bb2104338aeb49f6c01bacb7ede7cfa09033c88",
+    "tag_verification": "git ls-remote returned the commit for refs/tags/v0.4"
+  },
+  "files": [
+    {
+      "path": "R/auxiliary.R",
+      "url": "https://raw.githubusercontent.com/ikosmidis/detectseparation/v0.4/R/auxiliary.R",
+      "relevant_lines": ["1-9"],
+      "git_blob_sha": "06f6e232467bdbc49eff730ea7f086cf879b70ff",
+      "sha256": "a01f9c00107174c349c327684d553afdd74834c0579f0d486f485bc888f60c46",
+      "line_count": 9,
+      "verification": "raw bytes retrieved; git hash-object matched the commit-tree blob"
+    },
+    {
+      "path": "R/zzz_conventions.R",
+      "url": "https://github.com/ikosmidis/detectseparation/blob/2bb2104338aeb49f6c01bacb7ede7cfa09033c88/R/zzz_conventions.R",
+      "relevant_lines": ["file identity only"],
+      "git_blob_sha": "1a6654a7319a73ffd05f85f0df7c8370ee9593c3",
+      "sha256": "UNVERIFIED: source bytes not downloaded",
+      "verification": "immutable commit-tree identity verified; independent review identifies file as exported aliases, not check_ROI_solver"
+    },
+    {
+      "path": "R/detect_separation.R",
+      "url": "https://raw.githubusercontent.com/ikosmidis/detectseparation/v0.4/R/detect_separation.R",
+      "relevant_lines": ["225-268", "306-376"],
+      "git_blob_sha": "b39f41bb4df29e76c25a924e239a78b1ad027b4e",
+      "sha256": "e257302365de9f9d8bedc82b8f8e17340eb8023bca0e0c64696104a56c934224",
+      "line_count": 377,
+      "verification": "previously retrieved exact v0.4 raw bytes; SHA-256 and git hash-object rechecked in R2"
+    },
+    {
+      "path": "R/detect_infinite_estimates.R",
+      "url": "https://raw.githubusercontent.com/ikosmidis/detectseparation/v0.4/R/detect_infinite_estimates.R",
+      "relevant_lines": ["162-249"],
+      "git_blob_sha": "006b12127a5feb5572c0060c5d7900546df93ca6",
+      "sha256": "4739edb72606716ef721021235f6401b63ac8b82a2b4997c17ef73b3753f18b5",
+      "line_count": 250,
+      "verification": "previously retrieved exact v0.4 raw bytes; SHA-256 and git hash-object rechecked in R2"
+    },
+    {
+      "path": "R/linear_programs.R",
+      "url": "https://raw.githubusercontent.com/ikosmidis/detectseparation/v0.4/R/linear_programs.R",
+      "relevant_lines": ["39-82", "116-236", "239-286"],
+      "git_blob_sha": "4230f83bfa5db960081ba1ba147e16a54f239c6e",
+      "sha256": "ca37986a24f9ea33e188fb15ccaf2e0376434a8214785ef781ff0488ca4c1b18",
+      "line_count": 286,
+      "verification": "previously retrieved exact v0.4 raw bytes; SHA-256 and git hash-object rechecked in R2"
+    }
+  ],
+  "helper_correction": {
+    "function": "check_ROI_solver",
+    "correct_file": "R/auxiliary.R",
+    "lines": "3-8",
+    "behavior": "for solver != lpsolve, checks/loads ROI.plugin.<solver> through pkgload::check_suggested and requireNamespace; for lpsolve, returns without plugin-loading work",
+    "effect_on_lp": "does not alter LP constraints or solver feasibility settings",
+    "previous_draft_error": "incorrectly attributed the helper to R/zzz_conventions.R"
+  },
+  "prior_wrong_path_request": {
+    "path": "R/zzz_conventions.R",
+    "result": "one prior raw request failed with curl DNS error; no repeated request was made",
+    "resolution": "independent review supplied the correct auxiliary.R path; exact helper bytes were retrieved and verified in R2"
+  },
+  "a1_dependencies": {
+    "ROI": {
+      "version": "1.0-2",
+      "source_url": "https://cran.r-project.org/src/contrib/ROI_1.0-2.tar.gz",
+      "source_archive_bytes": 114366,
+      "source_archive_sha256": "3e884b711aa0519b6d416f924795b57ebb073ab6f9cfcc3410ed15d92f20197d",
+      "manifest_match": true,
+      "verified_source_paths": ["ROI/R/bounds.R:138", "ROI/R/bounds.R:177-210"]
+    },
+    "ROI.plugin.lpsolve": {
+      "version": "1.0-2",
+      "source_url": "https://cran.r-project.org/src/contrib/ROI.plugin.lpsolve_1.0-2.tar.gz",
+      "source_archive_bytes": 9235,
+      "source_archive_sha256": "b225677ed988bf349ae59f6c682f553c8c7b128f23b2bcb71f6ae982bf0bef75",
+      "manifest_match": true,
+      "verified_source_paths": ["ROI.plugin.lpsolve/R/plugin.R:26-33", "ROI.plugin.lpsolve/R/plugin.R:115-202", "ROI.plugin.lpsolve/R/zzz.R:9-42", "ROI.plugin.lpsolve/R/status_codes.R:2-28"]
+    },
+    "ROI_initial_archive_path_attempt": "https://cran.r-project.org/src/contrib/Archive/ROI/ROI_1.0-2.tar.gz returned HTTP 404; the exact current CRAN contrib URL above succeeded and matched the A1 manifest. No retry loop was used."
+  },
+  "solver_manual": {
+    "package": "lpSolveAPI",
+    "version": "5.5.2.0-17.15",
+    "url": "https://cran.r-project.org/web/packages/lpSolveAPI/lpSolveAPI.pdf",
+    "pages_used": [14, 31, 32, 33, 34, 48, 56],
+    "version_verified_from_manual_cover": true,
+    "manual_bytes_downloaded_for_sha256": false,
+    "use": "constraint-code mapping, solver status-code mapping, and documented lpSolve control defaults"
+  },
+  "a1_evidence": {
+    "workflow_id": "40097510667",
+    "artifact_id": "12560933385",
+    "github_artifact_sha256": "ebf2d899a4d1bb8404415183dd35d4d7eb221b5a33b0eec1f8d7e9eb4e5c5c6a",
+    "local_zip_sha256_verified": true,
+    "internal_archive_sha256": "326b94c50d9cbbdf72967c0df0d495761e7b736afb30906e60030c3d1d8ae554",
+    "historical_results_preserved": "50 evaluated; 48 PASS; 2 FAIL; detector NOT QUALIFIED"
+  },
+  "execution_limits_observed": {
+    "a1_reruns": 0,
+    "fixture_regeneration": false,
+    "scipy_or_highs_runs": 0,
+    "new_separation_lp_experiments": 0,
+    "fixture_31_or_33_reclassification": false,
+    "a1_files_modified": false,
+    "scientific_ci_runs": 0
+  }
+}
