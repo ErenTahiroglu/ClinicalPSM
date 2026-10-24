@@ -1,0 +1,137 @@
+{
+  "contract": "CP-STAT-02-A2-03A-NUMERICAL-ACCEPTANCE-v1",
+  "status": "PREREGISTERED_NOT_EXECUTED",
+  "scope": {
+    "fixture_ids": [
+      "cpstat02a1_31_small_scale_complete",
+      "cpstat02a1_33_heterogeneous_scale_overlap"
+    ],
+    "source_artifact_id": "12560933385",
+    "source_workflow_id": "40097510667",
+    "outer_archive_sha256": "ebf2d899a4d1bb8404415183dd35d4d7eb221b5a33b0eec1f8d7e9eb4e5c5c6a",
+    "internal_archive_sha256": "326b94c50d9cbbdf72967c0df0d495761e7b736afb30906e60030c3d1d8ae554",
+    "exact_proof_manifest_sha256": "809aefbb94c320b9368bc740a38fa39c87db279da82a7f96aa8622a98add6ef4",
+    "matrix_sha256": {
+      "cpstat02a1_31_small_scale_complete": "ea55df16749f235ee69b4634ec37408a2bb6361a9fb26b820170cbaf0373370e",
+      "cpstat02a1_33_heterogeneous_scale_overlap": "be5efb7a008f0ca285691c32faff08b48df19054bd1f09bc25e0e1c10609add1"
+    },
+    "a1_result_preserved": {
+      "evaluated": 50,
+      "pass": 48,
+      "fail": 2,
+      "unmeasured": 0,
+      "general_detector": "NOT_QUALIFIED"
+    }
+  },
+  "data_contract": {
+    "matrix_source": "A1 internal archive model-matrices/*.csv only",
+    "fixture_csv_is_solver_input": false,
+    "regenerate_from_seed": false,
+    "row_count": {
+      "cpstat02a1_31_small_scale_complete": 80,
+      "cpstat02a1_33_heterogeneous_scale_overlap": 128
+    },
+    "ordered_columns": ["(Intercept)", "x1", "x2"],
+    "response_encoding": "y_i in {0,1}; s_i = 2*y_i - 1",
+    "solver_parse": "Read archived decimal token once as binary64; retain token text for exact witness verification",
+    "expected_class_passed_to_solver": false
+  },
+  "execution_matrix": {
+    "fixtures": 2,
+    "representations": ["raw", "column_max_normalized"],
+    "methods": [
+      {
+        "method": "highs-ds",
+        "role": "primary",
+        "same_underlying_highs_implementation": true
+      },
+      {
+        "method": "highs-ipm",
+        "role": "algorithm_sensitivity_only",
+        "same_underlying_highs_implementation": true
+      }
+    ],
+    "problems": ["complete_margin_A", "weak_margin_B"],
+    "fresh_process_repeats_per_cell": 2,
+    "maximum_linprog_calls": 32,
+    "adaptive_retries": false
+  },
+  "solver_options": {
+    "shared": {
+      "primal_feasibility_tolerance": 1e-9,
+      "dual_feasibility_tolerance": 1e-9,
+      "presolve": false,
+      "maxiter": 100000,
+      "time_limit_seconds": 60.0,
+      "disp": false
+    },
+    "highs_ds": {
+      "method": "highs-ds",
+      "ipm_optimality_tolerance": "NOT_APPLICABLE"
+    },
+    "highs_ipm": {
+      "method": "highs-ipm",
+      "ipm_optimality_tolerance": 1e-10
+    },
+    "thread_control": "No undocumented thread option will be passed; record any exposed runtime/build information and make no bitwise-determinism claim",
+    "package_classification_threshold": "detectseparation control$tolerance is a different package-level decision threshold and is not supplied to HiGHS"
+  },
+  "independent_checks": {
+    "required_status": 0,
+    "required_success": true,
+    "required_finite_objective_and_coefficients": true,
+    "recompute_signed_margins_from_original_decimal_tokens": true,
+    "exact_rationalize_binary64_coefficients_using_integer_ratio": true,
+    "positive_complete_certificate": "Every exact signed margin Z_i*beta is strictly greater than zero",
+    "positive_weak_certificate": "Every exact signed margin is nonnegative and at least one is strictly positive",
+    "zero_objective_rule": "A zero or near-zero objective and success flag do not prove absence of a separator; compare with validated dual diagnostics and the accepted exact #6 proof",
+    "rank_and_conditioning": "Record exact rank from accepted proof and separately report numerical singular values/condition diagnostics; do not substitute floating rank for exact rank"
+  },
+  "numeric_acceptance": {
+    "solver_primal_feasibility_tolerance": 1e-9,
+    "solver_dual_feasibility_tolerance": 1e-9,
+    "solver_ipm_optimality_tolerance": 1e-10,
+    "high_confidence_margin_signal_floor": 1e-8,
+    "margin_floor_meaning": "Fixed reporting threshold at ten times the configured primal feasibility tolerance; not a mathematical class boundary and not a changed detectseparation tolerance",
+    "independent_scaled_primal_violation_max": 1e-8,
+    "independent_scaled_stationarity_residual_max_when_available": 1e-8,
+    "relative_primal_dual_gap_max_when_available": 1e-8,
+    "repeat_objective_relative_difference_max": 1e-8,
+    "coefficient_identity": "Bitwise coefficient equality is not required; preserve and compare all vectors. Exact verified certificate class must be stable across repeats for a repeatability claim.",
+    "dual_fields": "Capture SciPy inequality, lower-bound and upper-bound residuals/marginals when present; missing, non-finite, or unverifiable diagnostics cannot establish a negative separation claim"
+  },
+  "typed_outcomes": [
+    {
+      "value": "MATHEMATICAL_CERTIFICATE_SUPPORTED",
+      "meaning": "A positive primal direction independently satisfies the exact required signed-margin inequalities against the archived decimal matrix"
+    },
+    {
+      "value": "NUMERICAL_RESULT_INCONCLUSIVE",
+      "meaning": "No exact positive witness was verified, or a zero/near-zero objective lacks adequate independently checked optimality evidence; this is not proof of no separation"
+    },
+    {
+      "value": "SOLVER_DISAGREEMENT",
+      "meaning": "Prespecified repeats, raw/scaled arms, algorithms, or the accepted exact proof imply incompatible results; preserve each raw result"
+    },
+    {
+      "value": "SOLVER_EXECUTION_FAILED",
+      "meaning": "Exception, nonzero/unknown termination, limit, malformed result, non-finite required field, or failed environment/input preflight"
+    }
+  ],
+  "failure_mapping": {
+    "status_nonzero_or_success_false": "SOLVER_EXECUTION_FAILED",
+    "missing_or_mutated_input_identity": "SOLVER_EXECUTION_FAILED",
+    "primal_scaled_violation_above_limit": "NUMERICAL_RESULT_INCONCLUSIVE",
+    "near_boundary_without_exact_positive_witness": "NUMERICAL_RESULT_INCONCLUSIVE",
+    "prespecified_repeat_or_method_conflict": "SOLVER_DISAGREEMENT",
+    "solver_zero_objective_without_negative_certificate": "NUMERICAL_RESULT_INCONCLUSIVE"
+  },
+  "interpretation_boundary": {
+    "solver_success_is_not_certificate": true,
+    "highs_ds_and_highs_ipm_are_independent_engines": false,
+    "fixture31_historical_classification_changes": false,
+    "fixture33_historical_classification_changes": false,
+    "production_detector_qualified": false,
+    "causal_positivity_established": false
+  }
+}
