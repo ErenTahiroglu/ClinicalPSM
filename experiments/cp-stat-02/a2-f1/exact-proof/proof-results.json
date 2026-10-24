@@ -1,0 +1,1966 @@
+{
+  "evidence_verification": {
+    "artifact_id": "12560933385",
+    "fixtures": [
+      {
+        "factor_contrasts": null,
+        "factor_levels": [],
+        "factor_reference": "A",
+        "fixture_id": "cpstat02a1_31_small_scale_complete",
+        "formula": "treat ~ x1 + x2",
+        "input_csv_sha256": "c158e73cb10ec32363008efb2683f37da8313765e55f325924d18e413cf63720",
+        "input_vs_matrix_predictor_binary64_differences": {
+          "x1": 80,
+          "x2": 79
+        },
+        "model_matrix_sha256": "ea55df16749f235ee69b4634ec37408a2bb6361a9fb26b820170cbaf0373370e",
+        "ordered_columns": [
+          "(Intercept)",
+          "x1",
+          "x2"
+        ],
+        "response_sha256": "9abecedb87b35e402ae693df6b489f221c3a5ec429612a5c12930b6f351e1fcf",
+        "row_count": 80,
+        "row_order_sha256": "b0966dae50ab3177f76fc229ddf6f9b16a73da875c41fa2aa5eb2cba1472be00",
+        "spec_sha256": "5019685bcb4e1f481238fb83d8d80efb4d676e3a3f0a0ac8ff2ce0113f7a1b5d"
+      },
+      {
+        "factor_contrasts": null,
+        "factor_levels": [],
+        "factor_reference": "A",
+        "fixture_id": "cpstat02a1_33_heterogeneous_scale_overlap",
+        "formula": "treat ~ x1 + x2",
+        "input_csv_sha256": "3e2d14547da868f0c7f6fbc1606977e969e2103ae2f3186e097591d2e585f564",
+        "input_vs_matrix_predictor_binary64_differences": {
+          "x1": 117,
+          "x2": 118
+        },
+        "model_matrix_sha256": "be5efb7a008f0ca285691c32faff08b48df19054bd1f09bc25e0e1c10609add1",
+        "ordered_columns": [
+          "(Intercept)",
+          "x1",
+          "x2"
+        ],
+        "response_sha256": "fbce83ae705baff427e639d5ba1a7b644150de50e2f133b454e0b7fb393e1b13",
+        "row_count": 128,
+        "row_order_sha256": "f3dd0c9c3bc9c214f9b44b9b636628aa043611c7edf4b49751b354f3ac90176b",
+        "spec_sha256": "a90daedf8c3d174303c5a38c4c8d941383d083de4f8a44c2f6819e54ff228745"
+      }
+    ],
+    "internal_archive_sha256": "326b94c50d9cbbdf72967c0df0d495761e7b736afb30906e60030c3d1d8ae554",
+    "outer_artifact_sha256": "ebf2d899a4d1bb8404415183dd35d4d7eb221b5a33b0eec1f8d7e9eb4e5c5c6a",
+    "sha256sums_entries_verified": 160,
+    "sha256sums_file_sha256": "4723788c74e4be0717edebe0851840a66e3d62d9bf6a0afb6eb7631cf6d5c201",
+    "unlisted_file_sha256": {
+      "evidence-index.json": "2d355d9697d0a43ae36029ade1deb276e01137ef7386806a5831a6dc6e59994f"
+    },
+    "unlisted_files_covered_by_internal_archive_digest": [
+      "evidence-index.json"
+    ],
+    "workflow_id": "40097510667"
+  },
+  "exact_arithmetic": {
+    "binary64_reconstruction": "After decimal Fractions are constructed, exact integer/rational round-to-nearest-even reconstructs the binary64 represented by R sprintf('%.17g'); no Python float values are used.",
+    "decimal_tokens": "Parsed directly with fractions.Fraction(token); no float conversion precedes exact rational construction.",
+    "model_matrix_serialization_source": "experiments/cp-stat-02/a1/qualification.R format_number() uses sprintf('%.17g'); R session records x86_64-pc-linux-gnu, R 4.6.0.",
+    "solver_dependencies_used": []
+  },
+  "fixture_31": {
+    "archived_expected_class": "COMPLETE_SEPARATION",
+    "binary64_reconstructed_maximum_margin": {
+      "decimal_approximation": "1.97443987103179083940200123914454622E-6",
+      "denominator": "2361183241434822606848",
+      "numerator": "4662014334700997"
+    },
+    "binary64_reconstructed_minimum_margin": {
+      "decimal_approximation": "1.00502979964949184668403497217026299E-6",
+      "denominator": "4722366482869645213696",
+      "numerator": "4746119040149955"
+    },
+    "classification": "MATHEMATICAL_GROUND_TRUTH_CONFIRMED",
+    "columns": [
+      "(Intercept)",
+      "x1",
+      "x2"
+    ],
+    "decimal_rational_margins": [
+      {
+        "margin": {
+          "decimal_approximation": "1.66299852728843680000000000000000000E-6",
+          "denominator": "625000000000000000000",
+          "numerator": "1039374079555273"
+        },
+        "row_id": "sub_0001"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.27605312573723490000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "12760531257372349"
+        },
+        "row_id": "sub_0002"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.75813916954211890000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "17581391695421189"
+        },
+        "row_id": "sub_0003"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.12626198120415210000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "11262619812041521"
+        },
+        "row_id": "sub_0004"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.06969758402556180000000000000000000E-6",
+          "denominator": "5000000000000000000000",
+          "numerator": "5348487920127809"
+        },
+        "row_id": "sub_0005"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.27315468620508900000000000000000000E-6",
+          "denominator": "1000000000000000000000",
+          "numerator": "1273154686205089"
+        },
+        "row_id": "sub_0006"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.03019897313788520000000000000000000E-6",
+          "denominator": "2500000000000000000000",
+          "numerator": "2575497432844713"
+        },
+        "row_id": "sub_0007"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.56359186628833410000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "15635918662883341"
+        },
+        "row_id": "sub_0008"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.13980300840921680000000000000000000E-6",
+          "denominator": "1250000000000000000000",
+          "numerator": "1424753760511521"
+        },
+        "row_id": "sub_0009"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.52092470019124430000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "15209247001912443"
+        },
+        "row_id": "sub_0010"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.87980346567928780000000000000000000E-6",
+          "denominator": "5000000000000000000000",
+          "numerator": "9399017328396439"
+        },
+        "row_id": "sub_0011"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.97276166663505110000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "19727616666350511"
+        },
+        "row_id": "sub_0012"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.30375979887321580000000000000000000E-6",
+          "denominator": "5000000000000000000000",
+          "numerator": "6518798994366079"
+        },
+        "row_id": "sub_0013"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.58820561808533960000000000000000000E-6",
+          "denominator": "2500000000000000000000",
+          "numerator": "3970514045213349"
+        },
+        "row_id": "sub_0014"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.92311758082360030000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "19231175808236003"
+        },
+        "row_id": "sub_0015"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.55095233279280350000000000000000000E-6",
+          "denominator": "2000000000000000000000",
+          "numerator": "3101904665585607"
+        },
+        "row_id": "sub_0016"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.26075388817116620000000000000000000E-6",
+          "denominator": "5000000000000000000000",
+          "numerator": "6303769440855831"
+        },
+        "row_id": "sub_0017"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.00502979964949180000000000000000000E-6",
+          "denominator": "5000000000000000000000",
+          "numerator": "5025148998247459"
+        },
+        "row_id": "sub_0018"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.18580483552068470000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "11858048355206847"
+        },
+        "row_id": "sub_0019"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.42729639005847270000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "14272963900584727"
+        },
+        "row_id": "sub_0020"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.37202930869534600000000000000000000E-6",
+          "denominator": "500000000000000000000",
+          "numerator": "686014654347673"
+        },
+        "row_id": "sub_0021"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.06832204945385450000000000000000000E-6",
+          "denominator": "2000000000000000000000",
+          "numerator": "2136644098907709"
+        },
+        "row_id": "sub_0022"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.52618682943284510000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "15261868294328451"
+        },
+        "row_id": "sub_0023"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.72176097822375590000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "17217609782237559"
+        },
+        "row_id": "sub_0024"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.16770394332706910000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "11677039433270691"
+        },
+        "row_id": "sub_0025"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.48567294864915310000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "14856729486491531"
+        },
+        "row_id": "sub_0026"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.49141603219322850000000000000000000E-6",
+          "denominator": "2000000000000000000000",
+          "numerator": "2982832064386457"
+        },
+        "row_id": "sub_0027"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.13860181439667930000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "11386018143966793"
+        },
+        "row_id": "sub_0028"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.82985179196111850000000000000000000E-6",
+          "denominator": "2000000000000000000000",
+          "numerator": "3659703583922237"
+        },
+        "row_id": "sub_0029"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.80802264926023770000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "18080226492602377"
+        },
+        "row_id": "sub_0030"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.37987778778187930000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "13798777877818793"
+        },
+        "row_id": "sub_0031"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.24338858667761080000000000000000000E-6",
+          "denominator": "2500000000000000000000",
+          "numerator": "3108471466694027"
+        },
+        "row_id": "sub_0032"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.19215685431845470000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "11921568543184547"
+        },
+        "row_id": "sub_0033"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.26752735185436900000000000000000000E-6",
+          "denominator": "1000000000000000000000",
+          "numerator": "1267527351854369"
+        },
+        "row_id": "sub_0034"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.26180890924297260000000000000000000E-6",
+          "denominator": "5000000000000000000000",
+          "numerator": "6309044546214863"
+        },
+        "row_id": "sub_0035"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.39666974265128370000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "13966697426512837"
+        },
+        "row_id": "sub_0036"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.35457931039854870000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "13545793103985487"
+        },
+        "row_id": "sub_0037"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.13335418794304130000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "11333541879430413"
+        },
+        "row_id": "sub_0038"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.21492210240103300000000000000000000E-6",
+          "denominator": "1000000000000000000000",
+          "numerator": "1214922102401033"
+        },
+        "row_id": "sub_0039"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.59723444283008570000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "15972344428300857"
+        },
+        "row_id": "sub_0040"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.11635958426631980000000000000000000E-6",
+          "denominator": "5000000000000000000000",
+          "numerator": "5581797921331599"
+        },
+        "row_id": "sub_0041"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.00939087942242620000000000000000000E-6",
+          "denominator": "5000000000000000000000",
+          "numerator": "5046954397112131"
+        },
+        "row_id": "sub_0042"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.07245699479244650000000000000000000E-6",
+          "denominator": "2000000000000000000000",
+          "numerator": "2144913989584893"
+        },
+        "row_id": "sub_0043"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.95787738682702160000000000000000000E-6",
+          "denominator": "1250000000000000000000",
+          "numerator": "2447346733533777"
+        },
+        "row_id": "sub_0044"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.01057593477889890000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "10105759347788989"
+        },
+        "row_id": "sub_0045"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.03363757370971130000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "10336375737097113"
+        },
+        "row_id": "sub_0046"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.78573962976224700000000000000000000E-6",
+          "denominator": "1000000000000000000000",
+          "numerator": "1785739629762247"
+        },
+        "row_id": "sub_0047"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.25346940523013460000000000000000000E-6",
+          "denominator": "5000000000000000000000",
+          "numerator": "6267347026150673"
+        },
+        "row_id": "sub_0048"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.14134837756864710000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "11413483775686471"
+        },
+        "row_id": "sub_0049"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.20126263052225110000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "12012626305222511"
+        },
+        "row_id": "sub_0050"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.84748463844880450000000000000000000E-6",
+          "denominator": "2000000000000000000000",
+          "numerator": "3694969276897609"
+        },
+        "row_id": "sub_0051"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.97443987103179080000000000000000000E-6",
+          "denominator": "2500000000000000000000",
+          "numerator": "4936099677579477"
+        },
+        "row_id": "sub_0052"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.31729383929632610000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "13172938392963261"
+        },
+        "row_id": "sub_0053"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.02171814558096230000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "10217181455809623"
+        },
+        "row_id": "sub_0054"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.40759600163437420000000000000000000E-6",
+          "denominator": "5000000000000000000000",
+          "numerator": "7037980008171871"
+        },
+        "row_id": "sub_0055"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.82107651792466630000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "18210765179246663"
+        },
+        "row_id": "sub_0056"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.56509147188626210000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "15650914718862621"
+        },
+        "row_id": "sub_0057"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.18223515385761860000000000000000000E-6",
+          "denominator": "5000000000000000000000",
+          "numerator": "5911175769288093"
+        },
+        "row_id": "sub_0058"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.67949640727601940000000000000000000E-6",
+          "denominator": "5000000000000000000000",
+          "numerator": "8397482036380097"
+        },
+        "row_id": "sub_0059"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.87861639447510230000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "18786163944751023"
+        },
+        "row_id": "sub_0060"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.39926921995356680000000000000000000E-6",
+          "denominator": "2500000000000000000000",
+          "numerator": "3498173049883917"
+        },
+        "row_id": "sub_0061"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.67377474647946640000000000000000000E-6",
+          "denominator": "1250000000000000000000",
+          "numerator": "2092218433099333"
+        },
+        "row_id": "sub_0062"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.54913993389345700000000000000000000E-6",
+          "denominator": "1000000000000000000000",
+          "numerator": "1549139933893457"
+        },
+        "row_id": "sub_0063"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.91312356316484490000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "19131235631648449"
+        },
+        "row_id": "sub_0064"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.83222614414989940000000000000000000E-6",
+          "denominator": "5000000000000000000000",
+          "numerator": "9161130720749497"
+        },
+        "row_id": "sub_0065"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.56808127416297790000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "15680812741629779"
+        },
+        "row_id": "sub_0066"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.78288988396525370000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "17828898839652537"
+        },
+        "row_id": "sub_0067"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.38086788449436420000000000000000000E-6",
+          "denominator": "5000000000000000000000",
+          "numerator": "6904339422471821"
+        },
+        "row_id": "sub_0068"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.01970011927187430000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "10197001192718743"
+        },
+        "row_id": "sub_0069"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.54284312785603090000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "15428431278560309"
+        },
+        "row_id": "sub_0070"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.73114950419403600000000000000000000E-6",
+          "denominator": "250000000000000000000",
+          "numerator": "432787376048509"
+        },
+        "row_id": "sub_0071"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.36665712692774830000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "13666571269277483"
+        },
+        "row_id": "sub_0072"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.17200394836254420000000000000000000E-6",
+          "denominator": "5000000000000000000000",
+          "numerator": "5860019741812721"
+        },
+        "row_id": "sub_0073"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.23568144836463020000000000000000000E-6",
+          "denominator": "5000000000000000000000",
+          "numerator": "6178407241823151"
+        },
+        "row_id": "sub_0074"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.72988198883831490000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "17298819888383149"
+        },
+        "row_id": "sub_0075"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.77909347950480880000000000000000000E-6",
+          "denominator": "1250000000000000000000",
+          "numerator": "2223866849381011"
+        },
+        "row_id": "sub_0076"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.92057001497596510000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "19205700149759651"
+        },
+        "row_id": "sub_0077"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.41600012080743910000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "14160001208074391"
+        },
+        "row_id": "sub_0078"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.48820170969702290000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "14882017096970229"
+        },
+        "row_id": "sub_0079"
+      },
+      {
+        "margin": {
+          "decimal_approximation": "1.88932816777378310000000000000000000E-6",
+          "denominator": "10000000000000000000000",
+          "numerator": "18893281677737831"
+        },
+        "row_id": "sub_0080"
+      }
+    ],
+    "fixture_id": "cpstat02a1_31_small_scale_complete",
+    "historical_A1_classifications": {
+      "1e-4": "QUASI_COMPLETE_SEPARATION",
+      "1e-8": "COMPLETE_SEPARATION"
+    },
+    "independent_interval_check": {
+      "all_control_x1_negative": true,
+      "all_treated_x1_positive": true,
+      "maximum_control_x1": {
+        "decimal_approximation": "-1.00939087942242620000000000000000000E-6",
+        "denominator": "5000000000000000000000",
+        "numerator": "-5046954397112131"
+      },
+      "minimum_treated_x1": {
+        "decimal_approximation": "1.00502979964949180000000000000000000E-6",
+        "denominator": "5000000000000000000000",
+        "numerator": "5025148998247459"
+      }
+    },
+    "invertible_scale": {
+      "corresponding_unscaled_direction": [
+        "0",
+        "1e-6",
+        "0"
+      ],
+      "explanation": "X_scaled = X_unscaled * diag(1, 1e-6, 1); coefficient map beta_unscaled = diag(1, 1e-6, 1) beta_scaled is invertible.",
+      "factor": {
+        "decimal_approximation": "1.00000000000000000000000000000000000E-6",
+        "denominator": "1000000",
+        "numerator": "1"
+      },
+      "nonzero": true,
+      "scaled_direction": [
+        "0",
+        "1",
+        "0"
+      ]
+    },
+    "maximum_margin": {
+      "exact": {
+        "decimal_approximation": "1.97443987103179080000000000000000000E-6",
+        "denominator": "2500000000000000000000",
+        "numerator": "4936099677579477"
+      },
+      "row_id": "sub_0052"
+    },
+    "minimum_margin": {
+      "exact": {
+        "decimal_approximation": "1.00502979964949180000000000000000000E-6",
+        "denominator": "5000000000000000000000",
+        "numerator": "5025148998247459"
+      },
+      "row_id": "sub_0018"
+    },
+    "model_matrix_binary64_exact_rank": {
+      "pivot_columns": [
+        0,
+        1,
+        2
+      ],
+      "pivot_values": [
+        {
+          "decimal_approximation": "1.00000000000000000000000000000000000E+0",
+          "denominator": "1",
+          "numerator": "1"
+        },
+        {
+          "decimal_approximation": "-3.86945401551201926301348094083820683E-7",
+          "denominator": "1180591620717411303424",
+          "numerator": "-456824498746483"
+        },
+        {
+          "decimal_approximation": "-2.98371770574211138113515999626561216E-2",
+          "denominator": "293907806046910636549916852224",
+          "numerator": "-8769379247579856546986846095"
+        }
+      ],
+      "rank": 3
+    },
+    "model_matrix_exact_rank": {
+      "pivot_columns": [
+        0,
+        1,
+        2
+      ],
+      "pivot_values": [
+        {
+          "decimal_approximation": "1.00000000000000000000000000000000000E+0",
+          "denominator": "1",
+          "numerator": "1"
+        },
+        {
+          "decimal_approximation": "-3.86945401551201900000000000000000000E-7",
+          "denominator": "10000000000000000000000",
+          "numerator": "-3869454015512019"
+        },
+        {
+          "decimal_approximation": "-2.98371770574210885544137944039367537E-2",
+          "denominator": "48368175193900237500000000000000",
+          "numerator": "-1443169807204763977653883638353"
+        }
+      ],
+      "rank": 3
+    },
+    "proof_scope": "Exact archived decimal-rational model matrix and exact reconstructed IEEE-754 binary64 values; no numerical optimizer used.",
+    "sample_size": 80,
+    "strictly_positive_margins_for_all_rows": true,
+    "treatment_counts": {
+      "control": 40,
+      "treated": 40
+    },
+    "witness_beta_exact": [
+      {
+        "decimal_approximation": "0.00000000000000000000000000000000000E+35",
+        "denominator": "1",
+        "numerator": "0"
+      },
+      {
+        "decimal_approximation": "1.00000000000000000000000000000000000E+0",
+        "denominator": "1",
+        "numerator": "1"
+      },
+      {
+        "decimal_approximation": "0.00000000000000000000000000000000000E+35",
+        "denominator": "1",
+        "numerator": "0"
+      }
+    ],
+    "witness_nonzero": true
+  },
+  "fixture_33": {
+    "archived_expected_class": "OVERLAP_FINITE_MLE",
+    "binary64_serialization_transfer_verified": true,
+    "causal_positivity_note": "This finite-sample logistic-model result does not establish population causal positivity, common support, adequate matching, balance, or causal validity.",
+    "classification": "MATHEMATICAL_GROUND_TRUTH_CONFIRMED",
+    "columns": [
+      "(Intercept)",
+      "x1",
+      "x2"
+    ],
+    "common_anchor_group_count": 3,
+    "common_anchor_groups": [
+      {
+        "control_row_ids": [
+          "sub_0001"
+        ],
+        "exact_decimal_rational_row_equality": true,
+        "exact_reconstructed_binary64_row_equality": true,
+        "member_of_complete_common_anchor_set": true,
+        "model_matrix_values_original_decimal_tokens": [
+          "1",
+          "0",
+          "0"
+        ],
+        "treated_row_ids": [
+          "sub_0002"
+        ]
+      },
+      {
+        "control_row_ids": [
+          "sub_0003"
+        ],
+        "exact_decimal_rational_row_equality": true,
+        "exact_reconstructed_binary64_row_equality": true,
+        "member_of_complete_common_anchor_set": true,
+        "model_matrix_values_original_decimal_tokens": [
+          "1",
+          "1.0000000000000001e-05",
+          "0"
+        ],
+        "treated_row_ids": [
+          "sub_0004"
+        ]
+      },
+      {
+        "control_row_ids": [
+          "sub_0005"
+        ],
+        "exact_decimal_rational_row_equality": true,
+        "exact_reconstructed_binary64_row_equality": true,
+        "member_of_complete_common_anchor_set": true,
+        "model_matrix_values_original_decimal_tokens": [
+          "1",
+          "0",
+          "100000"
+        ],
+        "treated_row_ids": [
+          "sub_0006"
+        ]
+      }
+    ],
+    "common_row_count": 6,
+    "exact_decimal_rational_ranks": {
+      "rank_A": {
+        "pivot_columns": [
+          0,
+          1,
+          2
+        ],
+        "pivot_values": [
+          {
+            "decimal_approximation": "1.00000000000000000000000000000000000E+0",
+            "denominator": "1",
+            "numerator": "1"
+          },
+          {
+            "decimal_approximation": "1.00000000000000010000000000000000000E-5",
+            "denominator": "1000000000000000000000",
+            "numerator": "10000000000000001"
+          },
+          {
+            "decimal_approximation": "1.00000000000000000000000000000000000E+5",
+            "denominator": "1",
+            "numerator": "100000"
+          }
+        ],
+        "rank": 3
+      },
+      "rank_X": {
+        "pivot_columns": [
+          0,
+          1,
+          2
+        ],
+        "pivot_values": [
+          {
+            "decimal_approximation": "1.00000000000000000000000000000000000E+0",
+            "denominator": "1",
+            "numerator": "1"
+          },
+          {
+            "decimal_approximation": "1.00000000000000010000000000000000000E-5",
+            "denominator": "1000000000000000000000",
+            "numerator": "10000000000000001"
+          },
+          {
+            "decimal_approximation": "1.00000000000000000000000000000000000E+5",
+            "denominator": "1",
+            "numerator": "100000"
+          }
+        ],
+        "rank": 3
+      },
+      "rank_common_rows": {
+        "pivot_columns": [
+          0,
+          1,
+          2
+        ],
+        "pivot_values": [
+          {
+            "decimal_approximation": "1.00000000000000000000000000000000000E+0",
+            "denominator": "1",
+            "numerator": "1"
+          },
+          {
+            "decimal_approximation": "1.00000000000000010000000000000000000E-5",
+            "denominator": "1000000000000000000000",
+            "numerator": "10000000000000001"
+          },
+          {
+            "decimal_approximation": "1.00000000000000000000000000000000000E+5",
+            "denominator": "1",
+            "numerator": "100000"
+          }
+        ],
+        "rank": 3
+      }
+    },
+    "exact_reconstructed_binary64_ranks": {
+      "rank_A": {
+        "pivot_columns": [
+          0,
+          1,
+          2
+        ],
+        "pivot_values": [
+          {
+            "decimal_approximation": "1.00000000000000000000000000000000000E+0",
+            "denominator": "1",
+            "numerator": "1"
+          },
+          {
+            "decimal_approximation": "1.00000000000000008180305391403130955E-5",
+            "denominator": "590295810358705651712",
+            "numerator": "5902958103587057"
+          },
+          {
+            "decimal_approximation": "1.00000000000000000000000000000000000E+5",
+            "denominator": "1",
+            "numerator": "100000"
+          }
+        ],
+        "rank": 3
+      },
+      "rank_X": {
+        "pivot_columns": [
+          0,
+          1,
+          2
+        ],
+        "pivot_values": [
+          {
+            "decimal_approximation": "1.00000000000000000000000000000000000E+0",
+            "denominator": "1",
+            "numerator": "1"
+          },
+          {
+            "decimal_approximation": "1.00000000000000008180305391403130955E-5",
+            "denominator": "590295810358705651712",
+            "numerator": "5902958103587057"
+          },
+          {
+            "decimal_approximation": "1.00000000000000000000000000000000000E+5",
+            "denominator": "1",
+            "numerator": "100000"
+          }
+        ],
+        "rank": 3
+      }
+    },
+    "fixture_id": "cpstat02a1_33_heterogeneous_scale_overlap",
+    "historical_A1_classifications": {
+      "1e-4": "OVERLAP_FINITE_MLE",
+      "1e-8": "QUASI_COMPLETE_SEPARATION"
+    },
+    "historical_A1_ground_truth_summary_consistent": true,
+    "independent_determinant_certificate": {
+      "binary64_reconstructed_determinant": {
+        "decimal_approximation": "1.00000000000000008180305391403130955E+0",
+        "denominator": "18446744073709551616",
+        "numerator": "18446744073709553125"
+      },
+      "both_nonzero": true,
+      "decimal_rational_determinant": {
+        "decimal_approximation": "1.00000000000000010000000000000000000E+0",
+        "denominator": "10000000000000000",
+        "numerator": "10000000000000001"
+      }
+    },
+    "mathematical_implication": "Each identical treated/control anchor row forces A_i beta = 0 for every weak separating direction. Since anchor rank equals the full column count, beta=0 is the only such direction; therefore no nonzero weak separator exists. Full column rank then gives a finite, unique logistic MLE.",
+    "rank_A_equals_rank_X": true,
+    "sample_size": 128,
+    "selected_independent_anchor_basis": [
+      {
+        "control_row_ids": [
+          "sub_0001"
+        ],
+        "decimal_values": [
+          "1",
+          "0",
+          "0"
+        ],
+        "treated_row_ids": [
+          "sub_0002"
+        ]
+      },
+      {
+        "control_row_ids": [
+          "sub_0003"
+        ],
+        "decimal_values": [
+          "1",
+          "1.0000000000000001e-05",
+          "0"
+        ],
+        "treated_row_ids": [
+          "sub_0004"
+        ]
+      },
+      {
+        "control_row_ids": [
+          "sub_0005"
+        ],
+        "decimal_values": [
+          "1",
+          "0",
+          "100000"
+        ],
+        "treated_row_ids": [
+          "sub_0006"
+        ]
+      }
+    ],
+    "treatment_counts": {
+      "control": 62,
+      "treated": 66
+    }
+  },
+  "historical_a1_outcome": {
+    "evaluated": 50,
+    "fail": 2,
+    "general_detector": "NOT_QUALIFIED",
+    "original_fixture_31_classification": "TOLERANCE_SENSITIVE_UNRESOLVED",
+    "original_fixture_33_classification": "FALSE_POSITIVE",
+    "pass": 48,
+    "scientific_outcomes_modified": false,
+    "unmeasured": 0
+  },
+  "historical_a1_supplemental_lp_diagnostics": {
+    "cpstat02a1_31_small_scale_complete": {
+      "runs": [
+        {
+          "direct_probe_assessments": [
+            {
+              "classification": "UNRESOLVED_THRESHOLD",
+              "complete_margin_state": "POSITIVE_WITHIN_THRESHOLD",
+              "threshold": "0.0001",
+              "weak_direction_state": "POSITIVE_ABOVE_THRESHOLD"
+            },
+            {
+              "classification": "CONSTRUCTIVE_CLASS_SUPPORTED",
+              "complete_margin_state": "POSITIVE_ABOVE_THRESHOLD",
+              "threshold": "1e-08",
+              "weak_direction_state": "POSITIVE_ABOVE_THRESHOLD"
+            }
+          ],
+          "package_class": "QUASI_COMPLETE_SEPARATION",
+          "package_solver_configuration": {
+            "implementation": "ROI",
+            "separation_type": true,
+            "solver": "lpsolve",
+            "solver_control": [],
+            "tolerance": "0.0001"
+          },
+          "package_solver_failure_code": null,
+          "package_solver_return_code": "NOT_EXPOSED_BY_PUBLIC_PACKAGE_API",
+          "replicate": 1,
+          "residuals_recorded_in_A1": false,
+          "supplemental_complete_margin": {
+            "objective": "9.57807668562188e-07",
+            "return_code": 0,
+            "status": "OPTIMAL",
+            "threshold_interpretations": [
+              {
+                "interpretation": "POSITIVE_WITHIN_THRESHOLD_UNRESOLVED",
+                "threshold": "0.0001"
+              },
+              {
+                "interpretation": "ABOVE_THRESHOLD",
+                "threshold": "1e-08"
+              }
+            ]
+          },
+          "supplemental_independent_solver_replication": false,
+          "supplemental_same_solver_as_candidate": true,
+          "supplemental_weak_direction": {
+            "objective": "0.000109810010999123",
+            "return_code": 0,
+            "status": "OPTIMAL",
+            "threshold_interpretations": [
+              {
+                "interpretation": "ABOVE_THRESHOLD",
+                "threshold": "0.0001"
+              },
+              {
+                "interpretation": "ABOVE_THRESHOLD",
+                "threshold": "1e-08"
+              }
+            ]
+          },
+          "tolerance": "0.0001"
+        },
+        {
+          "direct_probe_assessments": [
+            {
+              "classification": "UNRESOLVED_THRESHOLD",
+              "complete_margin_state": "POSITIVE_WITHIN_THRESHOLD",
+              "threshold": "0.0001",
+              "weak_direction_state": "POSITIVE_ABOVE_THRESHOLD"
+            },
+            {
+              "classification": "CONSTRUCTIVE_CLASS_SUPPORTED",
+              "complete_margin_state": "POSITIVE_ABOVE_THRESHOLD",
+              "threshold": "1e-08",
+              "weak_direction_state": "POSITIVE_ABOVE_THRESHOLD"
+            }
+          ],
+          "package_class": "QUASI_COMPLETE_SEPARATION",
+          "package_solver_configuration": {
+            "implementation": "ROI",
+            "separation_type": true,
+            "solver": "lpsolve",
+            "solver_control": [],
+            "tolerance": "0.0001"
+          },
+          "package_solver_failure_code": null,
+          "package_solver_return_code": "NOT_EXPOSED_BY_PUBLIC_PACKAGE_API",
+          "replicate": 2,
+          "residuals_recorded_in_A1": false,
+          "supplemental_complete_margin": {
+            "objective": "9.57807668562188e-07",
+            "return_code": 0,
+            "status": "OPTIMAL",
+            "threshold_interpretations": [
+              {
+                "interpretation": "POSITIVE_WITHIN_THRESHOLD_UNRESOLVED",
+                "threshold": "0.0001"
+              },
+              {
+                "interpretation": "ABOVE_THRESHOLD",
+                "threshold": "1e-08"
+              }
+            ]
+          },
+          "supplemental_independent_solver_replication": false,
+          "supplemental_same_solver_as_candidate": true,
+          "supplemental_weak_direction": {
+            "objective": "0.000109810010999123",
+            "return_code": 0,
+            "status": "OPTIMAL",
+            "threshold_interpretations": [
+              {
+                "interpretation": "ABOVE_THRESHOLD",
+                "threshold": "0.0001"
+              },
+              {
+                "interpretation": "ABOVE_THRESHOLD",
+                "threshold": "1e-08"
+              }
+            ]
+          },
+          "tolerance": "0.0001"
+        },
+        {
+          "direct_probe_assessments": [
+            {
+              "classification": "UNRESOLVED_THRESHOLD",
+              "complete_margin_state": "POSITIVE_WITHIN_THRESHOLD",
+              "threshold": "0.0001",
+              "weak_direction_state": "POSITIVE_ABOVE_THRESHOLD"
+            },
+            {
+              "classification": "CONSTRUCTIVE_CLASS_SUPPORTED",
+              "complete_margin_state": "POSITIVE_ABOVE_THRESHOLD",
+              "threshold": "1e-08",
+              "weak_direction_state": "POSITIVE_ABOVE_THRESHOLD"
+            }
+          ],
+          "package_class": "COMPLETE_SEPARATION",
+          "package_solver_configuration": {
+            "implementation": "ROI",
+            "separation_type": true,
+            "solver": "lpsolve",
+            "solver_control": [],
+            "tolerance": "1e-08"
+          },
+          "package_solver_failure_code": null,
+          "package_solver_return_code": "NOT_EXPOSED_BY_PUBLIC_PACKAGE_API",
+          "replicate": 1,
+          "residuals_recorded_in_A1": false,
+          "supplemental_complete_margin": {
+            "objective": "9.57807668562188e-07",
+            "return_code": 0,
+            "status": "OPTIMAL",
+            "threshold_interpretations": [
+              {
+                "interpretation": "POSITIVE_WITHIN_THRESHOLD_UNRESOLVED",
+                "threshold": "0.0001"
+              },
+              {
+                "interpretation": "ABOVE_THRESHOLD",
+                "threshold": "1e-08"
+              }
+            ]
+          },
+          "supplemental_independent_solver_replication": false,
+          "supplemental_same_solver_as_candidate": true,
+          "supplemental_weak_direction": {
+            "objective": "0.000109810010999123",
+            "return_code": 0,
+            "status": "OPTIMAL",
+            "threshold_interpretations": [
+              {
+                "interpretation": "ABOVE_THRESHOLD",
+                "threshold": "0.0001"
+              },
+              {
+                "interpretation": "ABOVE_THRESHOLD",
+                "threshold": "1e-08"
+              }
+            ]
+          },
+          "tolerance": "1e-08"
+        },
+        {
+          "direct_probe_assessments": [
+            {
+              "classification": "UNRESOLVED_THRESHOLD",
+              "complete_margin_state": "POSITIVE_WITHIN_THRESHOLD",
+              "threshold": "0.0001",
+              "weak_direction_state": "POSITIVE_ABOVE_THRESHOLD"
+            },
+            {
+              "classification": "CONSTRUCTIVE_CLASS_SUPPORTED",
+              "complete_margin_state": "POSITIVE_ABOVE_THRESHOLD",
+              "threshold": "1e-08",
+              "weak_direction_state": "POSITIVE_ABOVE_THRESHOLD"
+            }
+          ],
+          "package_class": "COMPLETE_SEPARATION",
+          "package_solver_configuration": {
+            "implementation": "ROI",
+            "separation_type": true,
+            "solver": "lpsolve",
+            "solver_control": [],
+            "tolerance": "1e-08"
+          },
+          "package_solver_failure_code": null,
+          "package_solver_return_code": "NOT_EXPOSED_BY_PUBLIC_PACKAGE_API",
+          "replicate": 2,
+          "residuals_recorded_in_A1": false,
+          "supplemental_complete_margin": {
+            "objective": "9.57807668562188e-07",
+            "return_code": 0,
+            "status": "OPTIMAL",
+            "threshold_interpretations": [
+              {
+                "interpretation": "POSITIVE_WITHIN_THRESHOLD_UNRESOLVED",
+                "threshold": "0.0001"
+              },
+              {
+                "interpretation": "ABOVE_THRESHOLD",
+                "threshold": "1e-08"
+              }
+            ]
+          },
+          "supplemental_independent_solver_replication": false,
+          "supplemental_same_solver_as_candidate": true,
+          "supplemental_weak_direction": {
+            "objective": "0.000109810010999123",
+            "return_code": 0,
+            "status": "OPTIMAL",
+            "threshold_interpretations": [
+              {
+                "interpretation": "ABOVE_THRESHOLD",
+                "threshold": "0.0001"
+              },
+              {
+                "interpretation": "ABOVE_THRESHOLD",
+                "threshold": "1e-08"
+              }
+            ]
+          },
+          "tolerance": "1e-08"
+        }
+      ],
+      "supplemental_column_scale": [
+        1,
+        1,
+        "2.56667911156774"
+      ],
+      "supplemental_effective_solver_control": {
+        "anti.degen": [
+          "fixedvars",
+          "stalling"
+        ],
+        "basis.crash": "none",
+        "bb.depthlimit": -50,
+        "bb.floorfirst": "automatic",
+        "bb.rule": [
+          "pseudononint",
+          "greedy",
+          "dynamic",
+          "rcostfixing"
+        ],
+        "break.at.first": false,
+        "break.at.value": "1e+30",
+        "epsilon": [
+          "1e-10",
+          "1e-09",
+          "1e-12",
+          "1e-07",
+          "1e-05",
+          "2e-07"
+        ],
+        "improve": [
+          "dualfeas",
+          "thetagap"
+        ],
+        "infinite": "1e+30",
+        "maxpivot": 250,
+        "mip.gap": [
+          "1e-11",
+          "1e-11"
+        ],
+        "negrange": -1000000,
+        "obj.in.basis": true,
+        "pivoting": [
+          "devex",
+          "adaptive"
+        ],
+        "presolve": "none",
+        "scalelimit": 5,
+        "scaling": [
+          "geometric",
+          "equilibrate",
+          "integers"
+        ],
+        "sense": "maximize",
+        "simplextype": [
+          "dual",
+          "primal"
+        ],
+        "timeout": 120,
+        "verbose": "neutral"
+      },
+      "supplemental_formulation": "column-scaled then row-scaled signed model matrix; positive scaling preserves existence of a separating direction",
+      "supplemental_row_scale": [
+        "1.03706218163651",
+        "1.084832559702",
+        "1.0309099027279",
+        "1.02918605298429",
+        "1.011995174415",
+        "1.07838251071417",
+        "1.06728838804522",
+        "1.02189816765152",
+        "1.14865516712497",
+        "1.06538172617428",
+        "1.00607327697164",
+        "1.09485430440376",
+        "1.06315938669129",
+        "1.05108878522723",
+        "1.01320236293544",
+        "1.09423468814421",
+        "1.04117126669461",
+        "1.01142219527341",
+        "1.09125197176053",
+        "1.20361758912253",
+        "1.11585913172759",
+        "1.01789341280536",
+        "1.00079109859863",
+        "1.18003719162815",
+        "1.13006370463036",
+        "1.00215452228689",
+        "1.02140465661886",
+        "1.01106082653794",
+        "1.23959488697901",
+        "1.0001724473255",
+        "1.01628968387967",
+        "1.00016806940674",
+        "1.00328781419269",
+        "1.41421356237366",
+        "1.08801272121169",
+        "1.21392407741635",
+        "1.11504722741102",
+        "1.01262438781075",
+        "1.02655989682056",
+        "1.0170523125884",
+        "1.01570335228064",
+        "1.00824165875629",
+        "1.00004614194399",
+        "1.13606444269748",
+        "1.08406766238389",
+        "1.00437571380996",
+        "1.01387979557823",
+        "1.00956285945773",
+        "1.08272761710655",
+        "1.08983369607879",
+        "1.17037901293583",
+        "1.00640801591899",
+        "1.00478431614171",
+        "1.069214568761",
+        "1.1822445594012",
+        "1.23028821715667",
+        "1.00855803006771",
+        "1.0114668000561",
+        "1.00003263509734",
+        "1.15389927079165",
+        "1.07958450118451",
+        "1.0039280975842",
+        "1.00020398478691",
+        "1.06373395475627",
+        "1.02443039317115",
+        "1.02125277587417",
+        "1.00632718482478",
+        "1.02959126269746",
+        "1.03164240004167",
+        "1.1819163220382",
+        "1.0168059516284",
+        "1.05087325076617",
+        "1.04871185961103",
+        "1.15315390115454",
+        "1.0000623508487",
+        "1.00022334290716",
+        "1.04976051863469",
+        "1.38496469360104",
+        "1.00061007771054",
+        "1.02544681977702"
+      ]
+    },
+    "cpstat02a1_33_heterogeneous_scale_overlap": {
+      "runs": [
+        {
+          "direct_probe_assessments": [
+            {
+              "classification": "CONSTRUCTIVE_CLASS_SUPPORTED",
+              "complete_margin_state": "NONPOSITIVE",
+              "threshold": "0.0001",
+              "weak_direction_state": "NONPOSITIVE"
+            },
+            {
+              "classification": "CONSTRUCTIVE_CLASS_SUPPORTED",
+              "complete_margin_state": "NONPOSITIVE",
+              "threshold": "1e-08",
+              "weak_direction_state": "NONPOSITIVE"
+            }
+          ],
+          "package_class": "OVERLAP_FINITE_MLE",
+          "package_solver_configuration": {
+            "implementation": "ROI",
+            "separation_type": true,
+            "solver": "lpsolve",
+            "solver_control": [],
+            "tolerance": "0.0001"
+          },
+          "package_solver_failure_code": null,
+          "package_solver_return_code": "NOT_EXPOSED_BY_PUBLIC_PACKAGE_API",
+          "replicate": 1,
+          "residuals_recorded_in_A1": false,
+          "supplemental_complete_margin": {
+            "objective": 0,
+            "return_code": 0,
+            "status": "OPTIMAL",
+            "threshold_interpretations": [
+              {
+                "interpretation": "NONPOSITIVE_OBJECTIVE",
+                "threshold": "0.0001"
+              },
+              {
+                "interpretation": "NONPOSITIVE_OBJECTIVE",
+                "threshold": "1e-08"
+              }
+            ]
+          },
+          "supplemental_independent_solver_replication": false,
+          "supplemental_same_solver_as_candidate": true,
+          "supplemental_weak_direction": {
+            "objective": 0,
+            "return_code": 0,
+            "status": "OPTIMAL",
+            "threshold_interpretations": [
+              {
+                "interpretation": "NONPOSITIVE_OBJECTIVE",
+                "threshold": "0.0001"
+              },
+              {
+                "interpretation": "NONPOSITIVE_OBJECTIVE",
+                "threshold": "1e-08"
+              }
+            ]
+          },
+          "tolerance": "0.0001"
+        },
+        {
+          "direct_probe_assessments": [
+            {
+              "classification": "CONSTRUCTIVE_CLASS_SUPPORTED",
+              "complete_margin_state": "NONPOSITIVE",
+              "threshold": "0.0001",
+              "weak_direction_state": "NONPOSITIVE"
+            },
+            {
+              "classification": "CONSTRUCTIVE_CLASS_SUPPORTED",
+              "complete_margin_state": "NONPOSITIVE",
+              "threshold": "1e-08",
+              "weak_direction_state": "NONPOSITIVE"
+            }
+          ],
+          "package_class": "OVERLAP_FINITE_MLE",
+          "package_solver_configuration": {
+            "implementation": "ROI",
+            "separation_type": true,
+            "solver": "lpsolve",
+            "solver_control": [],
+            "tolerance": "0.0001"
+          },
+          "package_solver_failure_code": null,
+          "package_solver_return_code": "NOT_EXPOSED_BY_PUBLIC_PACKAGE_API",
+          "replicate": 2,
+          "residuals_recorded_in_A1": false,
+          "supplemental_complete_margin": {
+            "objective": 0,
+            "return_code": 0,
+            "status": "OPTIMAL",
+            "threshold_interpretations": [
+              {
+                "interpretation": "NONPOSITIVE_OBJECTIVE",
+                "threshold": "0.0001"
+              },
+              {
+                "interpretation": "NONPOSITIVE_OBJECTIVE",
+                "threshold": "1e-08"
+              }
+            ]
+          },
+          "supplemental_independent_solver_replication": false,
+          "supplemental_same_solver_as_candidate": true,
+          "supplemental_weak_direction": {
+            "objective": 0,
+            "return_code": 0,
+            "status": "OPTIMAL",
+            "threshold_interpretations": [
+              {
+                "interpretation": "NONPOSITIVE_OBJECTIVE",
+                "threshold": "0.0001"
+              },
+              {
+                "interpretation": "NONPOSITIVE_OBJECTIVE",
+                "threshold": "1e-08"
+              }
+            ]
+          },
+          "tolerance": "0.0001"
+        },
+        {
+          "direct_probe_assessments": [
+            {
+              "classification": "CONSTRUCTIVE_CLASS_SUPPORTED",
+              "complete_margin_state": "NONPOSITIVE",
+              "threshold": "0.0001",
+              "weak_direction_state": "NONPOSITIVE"
+            },
+            {
+              "classification": "CONSTRUCTIVE_CLASS_SUPPORTED",
+              "complete_margin_state": "NONPOSITIVE",
+              "threshold": "1e-08",
+              "weak_direction_state": "NONPOSITIVE"
+            }
+          ],
+          "package_class": "QUASI_COMPLETE_SEPARATION",
+          "package_solver_configuration": {
+            "implementation": "ROI",
+            "separation_type": true,
+            "solver": "lpsolve",
+            "solver_control": [],
+            "tolerance": "1e-08"
+          },
+          "package_solver_failure_code": null,
+          "package_solver_return_code": "NOT_EXPOSED_BY_PUBLIC_PACKAGE_API",
+          "replicate": 1,
+          "residuals_recorded_in_A1": false,
+          "supplemental_complete_margin": {
+            "objective": 0,
+            "return_code": 0,
+            "status": "OPTIMAL",
+            "threshold_interpretations": [
+              {
+                "interpretation": "NONPOSITIVE_OBJECTIVE",
+                "threshold": "0.0001"
+              },
+              {
+                "interpretation": "NONPOSITIVE_OBJECTIVE",
+                "threshold": "1e-08"
+              }
+            ]
+          },
+          "supplemental_independent_solver_replication": false,
+          "supplemental_same_solver_as_candidate": true,
+          "supplemental_weak_direction": {
+            "objective": 0,
+            "return_code": 0,
+            "status": "OPTIMAL",
+            "threshold_interpretations": [
+              {
+                "interpretation": "NONPOSITIVE_OBJECTIVE",
+                "threshold": "0.0001"
+              },
+              {
+                "interpretation": "NONPOSITIVE_OBJECTIVE",
+                "threshold": "1e-08"
+              }
+            ]
+          },
+          "tolerance": "1e-08"
+        },
+        {
+          "direct_probe_assessments": [
+            {
+              "classification": "CONSTRUCTIVE_CLASS_SUPPORTED",
+              "complete_margin_state": "NONPOSITIVE",
+              "threshold": "0.0001",
+              "weak_direction_state": "NONPOSITIVE"
+            },
+            {
+              "classification": "CONSTRUCTIVE_CLASS_SUPPORTED",
+              "complete_margin_state": "NONPOSITIVE",
+              "threshold": "1e-08",
+              "weak_direction_state": "NONPOSITIVE"
+            }
+          ],
+          "package_class": "QUASI_COMPLETE_SEPARATION",
+          "package_solver_configuration": {
+            "implementation": "ROI",
+            "separation_type": true,
+            "solver": "lpsolve",
+            "solver_control": [],
+            "tolerance": "1e-08"
+          },
+          "package_solver_failure_code": null,
+          "package_solver_return_code": "NOT_EXPOSED_BY_PUBLIC_PACKAGE_API",
+          "replicate": 2,
+          "residuals_recorded_in_A1": false,
+          "supplemental_complete_margin": {
+            "objective": 0,
+            "return_code": 0,
+            "status": "OPTIMAL",
+            "threshold_interpretations": [
+              {
+                "interpretation": "NONPOSITIVE_OBJECTIVE",
+                "threshold": "0.0001"
+              },
+              {
+                "interpretation": "NONPOSITIVE_OBJECTIVE",
+                "threshold": "1e-08"
+              }
+            ]
+          },
+          "supplemental_independent_solver_replication": false,
+          "supplemental_same_solver_as_candidate": true,
+          "supplemental_weak_direction": {
+            "objective": 0,
+            "return_code": 0,
+            "status": "OPTIMAL",
+            "threshold_interpretations": [
+              {
+                "interpretation": "NONPOSITIVE_OBJECTIVE",
+                "threshold": "0.0001"
+              },
+              {
+                "interpretation": "NONPOSITIVE_OBJECTIVE",
+                "threshold": "1e-08"
+              }
+            ]
+          },
+          "tolerance": "1e-08"
+        }
+      ],
+      "supplemental_column_scale": [
+        1,
+        1,
+        "299065.040562573"
+      ],
+      "supplemental_effective_solver_control": {
+        "anti.degen": [
+          "fixedvars",
+          "stalling"
+        ],
+        "basis.crash": "none",
+        "bb.depthlimit": -50,
+        "bb.floorfirst": "automatic",
+        "bb.rule": [
+          "pseudononint",
+          "greedy",
+          "dynamic",
+          "rcostfixing"
+        ],
+        "break.at.first": false,
+        "break.at.value": "1e+30",
+        "epsilon": [
+          "1e-10",
+          "1e-09",
+          "1e-12",
+          "1e-07",
+          "1e-05",
+          "2e-07"
+        ],
+        "improve": [
+          "dualfeas",
+          "thetagap"
+        ],
+        "infinite": "1e+30",
+        "maxpivot": 250,
+        "mip.gap": [
+          "1e-11",
+          "1e-11"
+        ],
+        "negrange": -1000000,
+        "obj.in.basis": true,
+        "pivoting": [
+          "devex",
+          "adaptive"
+        ],
+        "presolve": "none",
+        "scalelimit": 5,
+        "scaling": [
+          "geometric",
+          "equilibrate",
+          "integers"
+        ],
+        "sense": "maximize",
+        "simplextype": [
+          "dual",
+          "primal"
+        ],
+        "timeout": 120,
+        "verbose": "neutral"
+      },
+      "supplemental_formulation": "column-scaled then row-scaled signed model matrix; positive scaling preserves existence of a separating direction",
+      "supplemental_row_scale": [
+        1,
+        1,
+        "1.00000000005",
+        "1.00000000005",
+        "1.05442255512333",
+        "1.05442255512333",
+        "1.00017421513078",
+        "1.00417758207983",
+        "1.00020133880399",
+        "1.00217084722175",
+        "1.00285103648694",
+        "1.00056357927931",
+        "1.00021116286367",
+        "1.3741420433772",
+        "1.02569945145669",
+        "1.00841587807034",
+        "1.08978090408029",
+        "1.10251127323655",
+        "1.0805601895273",
+        "1.05390114229831",
+        "1.21289805035318",
+        "1.02006859444379",
+        "1.01010925687744",
+        "1.41421356242264",
+        "1.00626305670542",
+        "1.08403829952206",
+        "1.06847787949532",
+        "1.2264665600834",
+        "1.01314924133537",
+        "1.12155917784039",
+        "1.00015418822551",
+        "1.01392606106074",
+        "1.07230038458169",
+        "1.12018930776524",
+        "1.00634387028205",
+        "1.00151654944436",
+        "1.00454742566089",
+        "1.00416152684287",
+        "1.33452518201482",
+        "1.00472771528391",
+        "1.11357069325821",
+        "1.05326086193315",
+        "1.02447615198094",
+        "1.01280331195238",
+        "1.02388355907306",
+        "1.00086479051876",
+        "1.02011031036901",
+        "1.13253545571103",
+        "1.12798583768495",
+        "1.01571050825956",
+        "1.02949981875469",
+        "1.36027795743101",
+        "1.3186253909524",
+        "1.02212613912647",
+        "1.05517507883317",
+        "1.02718439119164",
+        "1.00237572137407",
+        "1.02864452405151",
+        "1.1554038460471",
+        "1.10432276202908",
+        "1.1330331150028",
+        "1.00714335874331",
+        "1.01248153710476",
+        "1.01289103825783",
+        "1.16004762930833",
+        "1.04590303596914",
+        "1.02439409595",
+        "1.01182561507591",
+        "1.00802914361096",
+        "1.04771578591137",
+        "1.07139351747798",
+        "1.00000985218113",
+        "1.05510936101813",
+        "1.02953979630125",
+        "1.00990789774383",
+        "1.04482294991364",
+        "1.00690051501392",
+        "1.05842044337987",
+        "1.01040395520621",
+        "1.05321006358919",
+        "1.01095913611135",
+        "1.00001278448445",
+        "1.00502744523521",
+        "1.02541511484824",
+        "1.05947950064013",
+        "1.09704288274769",
+        "1.00927258977633",
+        "1.00896155402752",
+        "1.17770302909374",
+        "1.01442241312206",
+        "1.38510641677714",
+        "1.02077209917245",
+        "1.00951558971991",
+        "1.26551430509738",
+        "1.04944147036787",
+        "1.03603681828217",
+        "1.00522123857608",
+        "1.00307532138665",
+        "1.02817467586346",
+        "1.02086023997084",
+        "1.00051847709944",
+        "1.16430540831097",
+        "1.01925054319631",
+        "1.00217108088465",
+        "1.03204068307064",
+        "1.06981092358893",
+        "1.00978326778216",
+        "1.08257112460592",
+        "1.02903365656445",
+        "1.00040366699675",
+        "1.04208043951718",
+        "1.19932668855717",
+        "1.00422349881049",
+        "1.01692057940329",
+        "1.01470457997999",
+        "1.01261501294401",
+        "1.03984968345394",
+        "1.04976898154115",
+        "1.23572849718727",
+        "1.03145315072151",
+        "1.12920312625222",
+        "1.00085629511552",
+        "1.0001991705096",
+        "1.04266207390705",
+        "1.01042094089264",
+        "1.01640658205083",
+        "1.04552115056046",
+        "1.0435525085764"
+      ]
+    }
+  },
+  "product_safety": {
+    "causal_positivity_established": false,
+    "fixture_31_policy": "RESTRICT_INFERENCE_OUTPUT",
+    "fixture_33_policy": "CONTINUE_TO_SEPARATE_GLM_MATCHING_AND_BALANCE_GATES",
+    "production_detector_qualified": false
+  },
+  "schema": "CP-STAT-02-A2-02-EXACT-RATIONAL-PROOFS-v1"
+}
