@@ -1,0 +1,91 @@
+{
+  "schema": "CP-WEBR-02-RATIFICATION-EVIDENCE-PINS-v1",
+  "ratification_status": "AUTHORIZED_BY_OWNER_PROMPT_SUBJECT_TO_EXACT_SHA_CI",
+  "ratification_date": "2026-10-24",
+  "ratification_record_sha256": "b8a52855dd66a12a08fe36c9b3c0cb6f25d6a87d8dfe42ad20a932ceb3ec53ba",
+  "required_baseline_sha": "cfa3df50a089b0e6b8bd705de94faf5ba1457d59",
+  "main_sha": "53fb05e7c8d9b77b46c4a5d8b7c9cc041345f6a6",
+  "original_roadmap_sha256": "005f1300fde92d1509958d9058526ab8ae98c992ccfc09f3e9d13995eae44bca",
+  "amendment_sha256": "9d0471d573033b96ff4341459eb6f39e03089140d7d4c6196d222a9c1c128d21",
+  "e4_pins_sha256": "3f9272da9d7a56ccc1b700d48b84c3b05a01e0fa711b8a4d613a5d92feaebe1c",
+  "frozen": {
+    "fixture_manifest_sha256": "e799ff01a9606c91cb3d494e277e081cabdc1349a37c993a08e7057d7411e4b1",
+    "fixture_integrity_sha256": "06e3bed64ba2504f82020b66fe30eead2bb3be82fa7bac2a9591e6aeb33f7af5",
+    "template_sha256": "7989403c7d093031b93a9c971a6d4f055101bab83c0ec4417fc52e4dceee24a4",
+    "assertion_matrix_sha256": "c53ed65845adfa0bdd61011ab7ba6667b5662f4144a438a0443898adc0cabeea",
+    "native_oracle_source_sha256": "fe524d3330b59ef8b2b60b1b93cd1d21ed4b02ab9e62642b432078bf4d706f87",
+    "candidate_native_reference_sha256": "ea05ce912fb03dd86f09cb779b60bd795284372d089a05a9e0124f17e766eedb",
+    "production_worker_results_sha256": "5521d2b73b223dc9939f97f1547439685f6d0b9052d4113ac0049e2aba3dbeb7"
+  },
+  "toolchain": {
+    "next": "16.4.1",
+    "eslint_config_next": "16.4.1",
+    "webr": "0.6.0",
+    "r": "4.6.0",
+    "MatchIt": "4.8.1",
+    "cobalt": "5.0.0"
+  },
+  "source_evidence": {
+    "e1_worker": { "workflow_run_id": "39954671878", "artifact_id": "12501434045", "artifact_name": "cp-webr-02-closure-evidence-39954671878", "artifact_digest": "sha256:e41eafc0bf236997063b9c3a868371f974275fd3a5c3a81d8ef3a0f29aaef230", "artifact_size_bytes": 869911, "source_commit_sha": "1ca14f6ab3c41d1ba366db0adda22102acc90a3c" },
+    "e2": { "workflow_run_id": "40021019295", "artifact_id": "12532397023", "artifact_name": "cp-webr-02-closure-e2-40021019295", "artifact_digest": "sha256:bb0d2cb66a9b983d40f04703fcd318fa1c76b6a02ca0d58be6bb7d858f902df3", "artifact_size_bytes": 278143, "commit_sha": "f3bf77f1d730cedf4d728ddc58d32b885c63b3bb" },
+    "e3": { "workflow_run_id": "40030723272", "artifact_id": "12533809065", "artifact_name": "cp-webr-02-closure-e3-40030723272", "artifact_digest": "sha256:9326cc163fddd03129a5777f49b23983b74ffb490b58038c2a265c2ae0b60b7f", "artifact_size_bytes": 53704, "commit_sha": "ad7de4547b3b131d5d81c046eea035f80aff4ec0" },
+    "e4": { "workflow_run_id": "40034455858", "artifact_id": "12536466975", "artifact_name": "cp-webr-02-closure-e4-40034455858", "artifact_digest": "sha256:2d2cd2a8750210f6a5a94d9064a4e930ca8701139ed30716e16fa6e5ac24b773", "artifact_size_bytes": 3386750, "commit_sha": "cfa3df50a089b0e6b8bd705de94faf5ba1457d59", "evidence_index_sha256": "a70ee8d47186d6ec1ad5d4016757fe8c4d3e872714102747229a4874f631cbef", "sha256sums_sha256": "9ac3671936ecdf1f5845f154acfb2b172edd8c8450c14e7ab289f8bc7d27888e" }
+  },
+  "fixture_ids": [
+    "fix_01_well_conditioned", "fix_02_mixed_types", "fix_03_ref_level_change", "fix_04_input_row_order", "fix_05_exact_distance_ties", "fix_06_no_caliper_nearest", "fix_07_prob_scale_caliper", "fix_08_linear_logit_caliper", "fix_09_standardized_caliper", "fix_10_whole_vs_pooled_sd", "fix_11_pre_match_discard", "fix_12_caliper_unmatched", "fix_13_more_treated_than_control", "fix_14_more_controls_than_treated", "fix_15_quasi_separation", "fix_16_complete_separation", "fix_17_rank_deficient", "fix_18_zero_variance", "fix_19_missing_values", "fix_19b_missing_treatment", "fix_20_malformed_category", "fix_21_extreme_propensities", "fix_22_small_sample", "fix_23_no_eligible_match", "fix_24_duplicate_ids"
+  ],
+  "historical_strict": {
+    "workflow_run_id": "40030723201",
+    "commit_sha": "ad7de4547b3b131d5d81c046eea035f80aff4ec0",
+    "comparison_artifact_id": "12535595517",
+    "comparison_artifact_name": "cp-webr-02-closure-comparison-40030723201",
+    "comparison_artifact_size_bytes": 291391,
+    "comparison_artifact_digest": "sha256:ec570e3263b0c463efbec05f2c79ddfed27796736008b45bf4d72b013f6acc34",
+    "comparison_report_sha256": "67498f5c09185e1a003a500c1b72be281e8740ca4b02d32d1676921764049002",
+    "evidence_artifact_id": "12534797742",
+    "evidence_artifact_name": "cp-webr-02-closure-evidence-40030723201",
+    "evidence_artifact_size_bytes": 870205,
+    "evidence_artifact_digest": "sha256:73da9920a9e6dcf175229db9310e4b02c2b2499a2d0e5cdbd8b08bcff62e0604"
+  },
+  "required_baseline_workflows": {
+    "strict_closure": {
+      "workflow_run_id": "40034455633",
+      "commit_sha": "cfa3df50a089b0e6b8bd705de94faf5ba1457d59",
+      "conclusion": "failure",
+      "comparison_artifact_id": "12537164468",
+      "comparison_artifact_name": "cp-webr-02-closure-comparison-40034455633",
+      "comparison_artifact_size_bytes": 290790,
+      "comparison_artifact_digest": "sha256:5251c6a435fd0fc818b521dfda63d8055ee7c0f821c387386f57d117500fc7aa",
+      "comparison_report_sha256": "7f804e9fe20bc48dec21502f1cc953d5f35d532c68d20fc9cb7de7a0a114f54a",
+      "evidence_artifact_id": "12538240630",
+      "evidence_artifact_name": "cp-webr-02-closure-evidence-40034455633",
+      "evidence_artifact_size_bytes": 875278,
+      "evidence_artifact_digest": "sha256:32c94f62b56dbc72538b0b136124486006cf8c7941a538d03b1ef7471e342253",
+      "evidence_archive_sha256": "227eda0611e715055b00a8f021d328110dce99f3ddf7c3bb41793f706a9f3ba6",
+      "evidence_archive_size_bytes": 932968,
+      "evidence_index_sha256": "0717f32c313eca332a9eecab407603e565a3f80fd09dab6ac12f8762f237b3ab"
+    },
+    "security": { "workflow_run_id": "40034455827", "commit_sha": "cfa3df50a089b0e6b8bd705de94faf5ba1457d59", "conclusion": "success" },
+    "cumulative": { "workflow_run_id": "40034455721", "commit_sha": "cfa3df50a089b0e6b8bd705de94faf5ba1457d59", "conclusion": "success" }
+  },
+  "expected_strict_failures": [
+    "fix_15_quasi_separation:warning/diagnostic distinction is absent",
+    "fix_16_complete_separation.coefficient.(Intercept).standard_error",
+    "fix_16_complete_separation.coefficient.x_sep.standard_error",
+    "fix_16_complete_separation.glm.maximum_standard_error"
+  ],
+  "ratification_strict_numeric_failures": [
+    { "name": "fix_16_complete_separation.coefficient.(Intercept).standard_error", "actual": 39815.87849877388, "reference": 39815.8764977931, "absolute_difference": 0.0020009807849419303, "tolerance": 0.0001, "status": "FAIL" },
+    { "name": "fix_16_complete_separation.coefficient.x_sep.standard_error", "actual": 3981.587849877386, "reference": 3981.58764977931, "absolute_difference": 0.00020009807576570893, "tolerance": 0.0001, "status": "FAIL" },
+    { "name": "fix_16_complete_separation.glm.maximum_standard_error", "actual": 39815.87849877388, "reference": 39815.8764977931, "absolute_difference": 0.0020009807849419303, "tolerance": 0.0001, "status": "FAIL" }
+  ],
+  "ratification_counts": { "total": 25, "ordinary_parity": 18, "expected_policy_error": 5, "fix15_warning_exception": 1, "fix16_restricted_non_identifiable": 1, "original_numeric_failures": 3, "covariance_cause": "UNRESOLVED", "aggregate_numeric_parity": false },
+  "current_strict_negative_control_names": [
+    "fixture_omitted", "fixture_duplicated", "covariate_omitted", "unexpected_covariate", "reference_replaced", "reference_hash_mismatch", "native_R_version_changed", "package_version_changed", "factor_reference_changed", "matched_pair_identity_changed", "matching_weight_changed", "coefficient_beyond_tolerance", "cobalt_balance_changed", "numeric_to_null_corruption", "expected_error_became_success", "publication_restriction_removed", "direct_node_result_substitution", "numeric_reference_value_changed"
+  ],
+  "e3_negative_control_names": [
+    "fixture_input_hash_changed", "fixture_missing", "fixture_duplicated", "exception_requested_for_unrelated_fixture", "nonseparated_fixture_labelled_separated", "lp_provenance_removed", "unsupported_separation_claim", "fix16_publication_restriction_removed", "matched_pair_identity_altered", "keyed_weight_changed", "factor_reference_changed", "ordinary_coefficient_value_changed", "ordinary_cobalt_value_changed", "genuine_runtime_warning_removed_from_fix21_native_ledger", "application_policy_warning_removed_from_fix21", "three_fix16_tolerance_failures_concealed", "scientific_evidence_altered_without_reviewed_hash", "erratum_text_or_evidence_altered_without_reviewed_hash", "old_fail_renamed_pass_without_justification"
+  ],
+  "original_tolerance": 0.0001,
+  "issue_tracker": { "open_project_issues": 0, "governance_record_used": true }
+}

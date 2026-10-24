@@ -1,0 +1,186 @@
+name: CP-WEBR-02 Scientific Amendment Ratification v1
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [development]
+    paths:
+      - ".github/workflows/experiment-cp-webr-02-ratification-v1.yml"
+      - "experiments/cp-webr-02-closure/ratification-v1/**"
+      - "experiments/cp-webr-02-closure/e3/**"
+      - "experiments/cp-webr-02-closure/e4/**"
+      - "experiments/cp-webr-02-closure/fixture-integrity.json"
+      - "experiments/cp-webr-02-closure/native_oracle.R"
+      - "experiments/cp-webr-02-closure/compare_closure.mjs"
+      - "experiments/cp-webr-02a/adapter/**"
+      - "experiments/cp-webr-02a/fixtures/**"
+      - "experiments/cp-webr-02a/r1.2a/FIXTURE-ASSERTION-MATRIX.json"
+      - "experiments/cp-webr-00b/dependency-lock.json"
+      - "experiments/cp-webr-02-closure/renv.lock"
+      - "docs/architecture/CP-WEBR-01-PRODUCTION-ARCHITECTURE.md"
+      - "docs/science/CP-WEBR-01-CANONICAL-RESULT-CONTRACT.md"
+      - "package.json"
+      - "package-lock.json"
+      - "apps/web/**"
+      - "src/lib/webr/**"
+      - "src/worker/**"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  ratification:
+    name: Verify amendment authority, immutable evidence, and exact 18/5/1/1 closure
+    if: github.ref == 'refs/heads/development'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Verify exact-SHA baseline, main, frozen assets, and unchanged production source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/development"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -z "$(git status --porcelain=v1)"
+          git merge-base --is-ancestor cfa3df50a089b0e6b8bd705de94faf5ba1457d59 HEAD
+          git fetch --no-tags origin main
+          test "$(git rev-parse origin/main)" = "53fb05e7c8d9b77b46c4a5d8b7c9cc041345f6a6"
+          git diff --exit-code 1ca14f6ab3c41d1ba366db0adda22102acc90a3c HEAD -- \
+            apps/web \
+            src/lib/webr \
+            src/worker \
+            experiments/cp-webr-02a/adapter \
+            experiments/cp-webr-02a/fixtures \
+            experiments/cp-webr-02a/CP-WEBR-02A-EXPERIMENT-CONTRACT.md \
+            experiments/cp-webr-02a/CP-WEBR-02A-R1.2a-TEST-CONTRACT.md \
+            experiments/cp-webr-02a/r1.2a/FIXTURE-ASSERTION-MATRIX.json \
+            experiments/cp-webr-02-closure/native_oracle.R \
+            experiments/cp-webr-02-closure/compare_closure.mjs \
+            experiments/cp-webr-02-closure/fixture-integrity.json \
+            docs/architecture/CP-WEBR-01-PRODUCTION-ARCHITECTURE.md
+          test "$(shasum -a 256 experiments/cp-webr-02-closure/ratification-v1/evidence-pins.json | awk '{print $1}')" = "28cacbdba0f6845a82ec1d45f5be11844e5088f1f0f579ebdf39b5703664890a"
+          test "$(shasum -a 256 experiments/cp-webr-02-closure/ratification-v1/CP-WEBR-02-RATIFICATION-v1.md | awk '{print $1}')" = "b8a52855dd66a12a08fe36c9b3c0cb6f25d6a87d8dfe42ad20a932ceb3ec53ba"
+          test "$(shasum -a 256 experiments/cp-webr-02-closure/e4/CP-WEBR-02-SCIENTIFIC-EQUIVALENCE-AMENDMENT-v1.md | awk '{print $1}')" = "9d0471d573033b96ff4341459eb6f39e03089140d7d4c6196d222a9c1c128d21"
+          test "$(shasum -a 256 docs/architecture/CP-WEBR-01-PRODUCTION-ARCHITECTURE.md | awk '{print $1}')" = "005f1300fde92d1509958d9058526ab8ae98c992ccfc09f3e9d13995eae44bca"
+          test "$(shasum -a 256 experiments/cp-webr-02a/fixtures/fixtures_manifest.json | awk '{print $1}')" = "e799ff01a9606c91cb3d494e277e081cabdc1349a37c993a08e7057d7411e4b1"
+          test "$(shasum -a 256 experiments/cp-webr-02a/adapter/r_template.R | awk '{print $1}')" = "7989403c7d093031b93a9c971a6d4f055101bab83c0ec4417fc52e4dceee24a4"
+          test "$(shasum -a 256 experiments/cp-webr-02a/r1.2a/FIXTURE-ASSERTION-MATRIX.json | awk '{print $1}')" = "c53ed65845adfa0bdd61011ab7ba6667b5662f4144a438a0443898adc0cabeea"
+          test "$(shasum -a 256 experiments/cp-webr-02-closure/native_oracle.R | awk '{print $1}')" = "fe524d3330b59ef8b2b60b1b93cd1d21ed4b02ab9e62642b432078bf4d706f87"
+          node -e 'const f=require("node:fs");const p=JSON.parse(f.readFileSync("package.json"));const l=JSON.parse(f.readFileSync("package-lock.json"));const d=JSON.parse(f.readFileSync("experiments/cp-webr-00b/dependency-lock.json"));const r=JSON.parse(f.readFileSync("experiments/cp-webr-02-closure/renv.lock"));if(p.dependencies.next!=="16.4.1"||p.devDependencies["eslint-config-next"]!=="16.4.1"||l.packages["node_modules/next"].version!=="16.4.1"||l.packages["node_modules/eslint-config-next"].version!=="16.4.1"||d.runtime.webr_npm!=="0.6.0"||d.runtime.r_version!=="4.6.0"||r.R.Version!=="4.6.0"||r.Packages.MatchIt.Version!=="4.8.1"||r.Packages.cobalt.Version!=="5.0.0")process.exit(1);console.log("Frozen hashes and dependency pins verified")'
+
+      - name: Install pinned Node.js 24.22.1
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.22.1"
+
+      - name: Prepare evidence directories
+        env:
+          CPW_RATIFY_TEMP: ${{ runner.temp }}/cp-webr-ratification
+        shell: bash
+        run: mkdir -p "$CPW_RATIFY_TEMP"/{e4-download,current-comparison,current-evidence-download,current-evidence-unpacked,upstream,runs,artifacts,jobs,output,upload-check}
+
+      - name: Download exact E4 ratification evidence
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          repository: ${{ github.repository }}
+          run-id: "40034455858"
+          artifact-ids: "12536466975"
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/cp-webr-ratification/e4-download
+
+      - name: Download exact-baseline strict comparison report
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          repository: ${{ github.repository }}
+          run-id: "40034455633"
+          artifact-ids: "12537164468"
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/cp-webr-ratification/current-comparison
+
+      - name: Download exact-baseline strict evidence artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          repository: ${{ github.repository }}
+          run-id: "40034455633"
+          artifact-ids: "12538240630"
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/cp-webr-ratification/current-evidence-download
+
+      - name: Fetch immutable GitHub run and artifact metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CPW_RATIFY_TEMP: ${{ runner.temp }}/cp-webr-ratification
+        shell: bash
+        run: |
+          set -euo pipefail
+          for id in 39954671878 40021019295 40030723272 40030723201 40034455633 40034455858 40034455827 40034455721; do
+            gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${id}" > "$CPW_RATIFY_TEMP/runs/${id}.json"
+          done
+          for id in 12501434045 12532397023 12533809065 12536466975 12535595517 12534797742 12537164468 12538240630; do
+            gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${id}" > "$CPW_RATIFY_TEMP/artifacts/${id}.json"
+          done
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/40034455633" > "$CPW_RATIFY_TEMP/strict-run.json"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/40034455633/jobs?per_page=100" > "$CPW_RATIFY_TEMP/jobs/strict-baseline.json"
+          node -e 'const f=require("node:fs"),p=process.argv[1],runs={},artifacts={};for(const id of ["39954671878","40021019295","40030723272","40030723201","40034455633","40034455858","40034455827","40034455721"])runs[id]=JSON.parse(f.readFileSync(`${p}/runs/${id}.json`));for(const id of ["12501434045","12532397023","12533809065","12536466975","12535595517","12534797742","12537164468","12538240630"])artifacts[id]=JSON.parse(f.readFileSync(`${p}/artifacts/${id}.json`));const jobs=JSON.parse(f.readFileSync(`${p}/jobs/strict-baseline.json`));f.writeFileSync(`${p}/upstream-metadata.json`,JSON.stringify({runs,artifacts,jobs:{strict_baseline:jobs}},null,2)+"\n")' "$CPW_RATIFY_TEMP"
+
+      - name: Extract current strict evidence archive
+        env:
+          CPW_RATIFY_TEMP: ${{ runner.temp }}/cp-webr-ratification
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$CPW_RATIFY_TEMP/current-evidence-download/cp-webr-02-closure-evidence.tar.gz"
+          test -f "$archive"
+          tar -xzf "$archive" -C "$CPW_RATIFY_TEMP/current-evidence-unpacked"
+
+      - name: Run ratification-specific falsification controls
+        run: node --test --test-reporter=spec experiments/cp-webr-02-closure/ratification-v1/verify_ratification.test.mjs
+
+      - name: Generate exact-SHA ratification record and closure report
+        env:
+          CPW_RATIFY_TEMP: ${{ runner.temp }}/cp-webr-ratification
+        shell: bash
+        run: |
+          set -euo pipefail
+          node experiments/cp-webr-02-closure/ratification-v1/verify_ratification.mjs \
+            --evidence-dir "$CPW_RATIFY_TEMP" \
+            --output-dir "$CPW_RATIFY_TEMP/output" \
+            --commit-sha "$GITHUB_SHA" \
+            --workflow-run-id "$GITHUB_RUN_ID"
+
+      - name: Upload immutable ratification report and evidence manifest
+        id: upload-ratification
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cp-webr-02-ratification-v1-${{ github.run_id }}
+          path: ${{ runner.temp }}/cp-webr-ratification/output/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Re-download and verify ratification artifact bytes
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: cp-webr-02-ratification-v1-${{ github.run_id }}
+          path: ${{ runner.temp }}/cp-webr-ratification/upload-check
+
+      - name: Record exact run and artifact metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_ID: ${{ steps.upload-ratification.outputs.artifact-id }}
+          CPW_RATIFY_TEMP: ${{ runner.temp }}/cp-webr-ratification
+        shell: bash
+        run: |
+          set -euo pipefail
+          (cd "$CPW_RATIFY_TEMP/upload-check" && shasum -a 256 -c SHA256SUMS)
+          metadata="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}" --jq '{id, name, size_in_bytes, digest, expired, workflow_run_id: .workflow_run.id, head_sha: .workflow_run.head_sha}')"
+          printf '%s\n' "$metadata" >> "$GITHUB_STEP_SUMMARY"
+          printf '\nRatification commit: `%s`\n' "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          printf '\nCP-WEBR-02: `CP_WEBR_02_CLOSED_UNDER_RATIFIED_SCIENTIFIC_EQUIVALENCE_AMENDMENT_V1` under the approved v1 interpretation.\n' >> "$GITHUB_STEP_SUMMARY"
+          printf '\nOriginal strict numerical parity: **FAIL**; three numeric failures retained; 25/25 numerical parity: **FALSE**.\n' >> "$GITHUB_STEP_SUMMARY"
+          printf '\nCP-STAT-02, CP-PUB-01 and CP-RELEASE remain outside this ratification. No deployment is performed.\n' >> "$GITHUB_STEP_SUMMARY"
