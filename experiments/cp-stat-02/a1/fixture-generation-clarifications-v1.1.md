@@ -1,8 +1,8 @@
 # CP-STAT-02-A1 Fixture Generation Clarifications v1.1
 
-**State:** Registered before any A1 fixture data or candidate-method results were generated.  
-**Applies to:** The exact 50 fixture IDs, seeds, hypotheses, expected classes, and comparison rules in `preregistration-matrix-v1.json`.  
-**Base generation contract:** `fixture-generation-contract-v1.md`, SHA-256 `f2b1197cdec12900552058b8614a4412bd4fcba0cf80f38b8eeb93b1714d44b9`.  
+**State:** Registered before any A1 fixture data or candidate-method results were generated.\
+**Applies to:** The exact 50 fixture IDs, seeds, hypotheses, expected classes, and comparison rules in `preregistration-matrix-v1.json`.\
+**Base generation contract:** `fixture-generation-contract-v1.md`, SHA-256 `f2b1197cdec12900552058b8614a4412bd4fcba0cf80f38b8eeb93b1714d44b9`.\
 **Scope:** Deterministic implementation details only. No hypothesis, expected class, seed, or acceptance rule is changed.
 
 ## Required ID-specific mapping

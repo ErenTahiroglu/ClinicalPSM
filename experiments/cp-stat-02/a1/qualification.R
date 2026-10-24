@@ -46,7 +46,7 @@ clarification_pins <- jsonlite::fromJSON(file.path(a1_dir, "fixture-generation-c
 if (!identical(clarification_pins$phase_baseline_sha, pins$phase_baseline_sha)) abort("Fixture-generation clarification baseline mismatch")
 if (!identical(clarification_pins$matrix_sha256, pins$preregistration_matrix$sha256)) abort("Fixture-generation clarification matrix mismatch")
 if (!identical(clarification_pins$base_generation_contract_sha256, pins$fixture_generation_contract$sha256)) abort("Fixture-generation clarification base-contract mismatch")
-if (!identical(sha256(pins_path), clarification_pins$original_preregistration_pins_sha256)) abort("Original preregistration pins hash mismatch")
+if (!identical(clarification_pins$original_preregistration_pins_sha256, "18afb761345f566a216f9461b0b2d9a5a4c8cd66fbfe70e49e43ed9ba6bc8cfb") || !identical(sha256(pins_path), clarification_pins$normalized_preregistration_pins_sha256)) abort("Original or whitespace-normalized preregistration pins hash mismatch")
 if (!identical(clarification_pins$clarification_path, "experiments/cp-stat-02/a1/fixture-generation-clarifications-v1.1.md")) abort("Unexpected fixture-generation clarification path")
 if (!identical(clarification_pins$hypotheses_expected_classes_seeds_and_acceptance_rules_changed, FALSE)) abort("Clarification cannot change scientific expectations")
 if (!identical(sha256(file.path(a1_dir, "fixture-generation-clarifications-v1.1.md")), clarification_pins$clarification_sha256)) abort("Fixture-generation clarification hash mismatch")
@@ -732,7 +732,9 @@ for (i in seq_along(matrix$fixtures)) {
     next
   }
   model_path <- file.path(matrix_dir, paste0(fixture_id, ".csv"))
-  matrix_frame <- data.frame(row_id = rownames(x), x, check.names = FALSE)
+  matrix_values <- lapply(seq_len(ncol(x)), function(column_index) vapply(x[, column_index], format_number, character(1)))
+  names(matrix_values) <- colnames(x)
+  matrix_frame <- data.frame(row_id = rownames(x), as.data.frame(matrix_values, check.names = FALSE, stringsAsFactors = FALSE), check.names = FALSE, stringsAsFactors = FALSE)
   write_csv_full_precision(matrix_frame, model_path)
   result$matrix_rank <- as.integer(proof$rank)
   result$model_matrix_columns <- proof$columns

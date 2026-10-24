@@ -5,15 +5,15 @@
   "scenario_count": 50,
   "preregistration_matrix": {
     "path": "experiments/cp-stat-02/a1/preregistration-matrix-v1.json",
-    "sha256": "773c61397c0de9118a41cb25496e88a41bd80c4926545579578fbac43b8281e8"
+    "sha256": "8eb2d87dc5997545a08ee85504b0c35df6c9d4b8e10e11f7e3167519c0ed2b1a"
   },
   "fixture_generation_contract": {
     "path": "experiments/cp-stat-02/a1/fixture-generation-contract-v1.md",
-    "sha256": "f2b1197cdec12900552058b8614a4412bd4fcba0cf80f38b8eeb93b1714d44b9"
+    "sha256": "2a9338c8b5682fe1feb58952818828a666607a702890c6df81fa442045e128f7"
   },
   "scientific_protocol": {
     "path": "experiments/cp-stat-02/a1/CP-STAT-02-A1-PROTOCOL-v1.md",
-    "sha256": "b1f05ebbff4d7d5077c4b34f4efd524865dc6f02b0bce17530953dddad4cd1f7"
+    "sha256": "54249dea15456d9a9455419cc4e88c8f8783acd9616be0e2fb7a2956e097a5c0"
   },
   "experimental_environment": {
     "r_version": "4.6.0",
@@ -26,4 +26,3 @@
   },
   "generation_rule": "No fixture data or candidate-method result may be generated until this pin record is committed; any later change to a hypothesis or expected classification requires a new preregistration version."
 }
-

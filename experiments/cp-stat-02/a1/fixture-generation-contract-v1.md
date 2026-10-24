@@ -1,7 +1,7 @@
 # CP-STAT-02-A1 Fixture Generation Contract v1
 
-**Preregistered at:** 953f0d9  
-**Applies to:** preregistration-matrix-v1.json  
+**Preregistered at:** 953f0d9\
+**Applies to:** preregistration-matrix-v1.json\
 **Matrix SHA-256:** to be filled by the subsequent pinned evidence manifest before fixture generation
 
 This contract resolves how each matrix row becomes a deterministic dataset. It is committed before the generator and before any A1 scenario output is observed. Expected classifications and seeds in the matrix remain authoritative and are not changed by this contract.
@@ -63,4 +63,3 @@ Before calling the candidate LP method, independently verify:
 - invalid profiles: validation failure occurs before LP.
 
 Store each generated CSV and its SHA-256, exact JSON spec and hash, formula, full model matrix and its hash, response and hash, witness/anchor proof, and per-run results in the CI artifact. No generated scenario is copied into or substituted for the frozen CP-WEBR-02 manifest.
-

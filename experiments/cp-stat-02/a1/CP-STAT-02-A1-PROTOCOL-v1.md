@@ -1,8 +1,8 @@
 # CP-STAT-02-A1 — Preregistered Separation Qualification Protocol v1
 
-**Status:** PREREGISTERED EXPERIMENTAL PROTOCOL  
-**Phase:** CP-STAT-02-A1  
-**Baseline:** c3bda2ed841486aadcb5c44f0caa883662a17cf2  
+**Status:** PREREGISTERED EXPERIMENTAL PROTOCOL\
+**Phase:** CP-STAT-02-A1\
+**Baseline:** c3bda2ed841486aadcb5c44f0caa883662a17cf2\
 **Scope:** Isolated native-R experimental qualification only
 
 ## 1. Phase boundary
@@ -103,4 +103,3 @@ A2 must independently decide whether to implement a fail-closed detector, define
 - Kosmidis and Firth (2021): https://doi.org/10.1093/biomet/asaa052
 - R 4.6.0 stats::glm manual: https://stat.ethz.ch/R-manual/R-devel/library/stats/html/glm.html
 - WebR package installation/build constraints: https://docs.r-wasm.org/webr/latest/packages.html and https://r-wasm.github.io/rwasm/
-

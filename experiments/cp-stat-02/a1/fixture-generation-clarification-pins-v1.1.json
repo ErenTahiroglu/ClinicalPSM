@@ -4,10 +4,16 @@
   "based_on_preregistration_parent_commit": "f40dd51af170063a622864fe0b9023d4b3ac3e7c",
   "clarification_first_committed_in": "85f187fb7a3e383d1d4cdf92b9e8bce5900fb447",
   "phase_baseline_sha": "c3bda2ed841486aadcb5c44f0caa883662a17cf2",
-  "matrix_sha256": "773c61397c0de9118a41cb25496e88a41bd80c4926545579578fbac43b8281e8",
-  "base_generation_contract_sha256": "f2b1197cdec12900552058b8614a4412bd4fcba0cf80f38b8eeb93b1714d44b9",
+  "matrix_sha256": "8eb2d87dc5997545a08ee85504b0c35df6c9d4b8e10e11f7e3167519c0ed2b1a",
+  "base_generation_contract_sha256": "2a9338c8b5682fe1feb58952818828a666607a702890c6df81fa442045e128f7",
   "original_preregistration_pins_sha256": "18afb761345f566a216f9461b0b2d9a5a4c8cd66fbfe70e49e43ed9ba6bc8cfb",
   "clarification_path": "experiments/cp-stat-02/a1/fixture-generation-clarifications-v1.1.md",
-  "clarification_sha256": "d114a24fd36c2ae58bf5e017f021330abd407614bb299260e9d44f9bcb4b84c7",
-  "hypotheses_expected_classes_seeds_and_acceptance_rules_changed": false
+  "clarification_sha256": "f9154fd268b554bb7333f45f4d4cdcc27b27b71be51de6224d87bf85c09306ba",
+  "hypotheses_expected_classes_seeds_and_acceptance_rules_changed": false,
+  "normalized_preregistration_pins_sha256": "c5d7e68da39d18fd496b4eed7f8907a8ec7231f6b1975298076b0897bef51a98",
+  "format_normalization": {
+    "scope": "Trailing whitespace and excess final blank lines only",
+    "historical_preregistration_pins_sha256": "18afb761345f566a216f9461b0b2d9a5a4c8cd66fbfe70e49e43ed9ba6bc8cfb",
+    "scientific_expectations_changed": false
+  }
 }

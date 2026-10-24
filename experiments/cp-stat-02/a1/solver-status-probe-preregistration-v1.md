@@ -1,10 +1,10 @@
 # CP-STAT-02-A1 Supplemental Solver-Status Probe v1
 
-**State:** PREREGISTERED BEFORE FIXTURE GENERATION  
-**Applies to:** The 50 IDs and expected classes in preregistration-matrix-v1.json  
+**State:** PREREGISTERED BEFORE FIXTURE GENERATION\
+**Applies to:** The 50 IDs and expected classes in preregistration-matrix-v1.json\
 **Purpose:** Capture native lpSolveAPI return codes and an explicit LP formulation alongside detectseparation.
 
-This probe does not change a fixture hypothesis, expected class, matrix hash, or acceptance rule. It is diagnostic evidence. It uses the same lp_solve engine as the detectseparation ROI/lpsolve route and is not an independent solver replication.
+This probe does not change a fixture hypothesis, expected class, matrix content, or acceptance rule. It is diagnostic evidence. It uses the same lp_solve engine as the detectseparation ROI/lpsolve route and is not an independent solver replication.
 
 ## Formulation
 
@@ -22,4 +22,3 @@ Both problems use the same model matrix rows, response, and formula as the packa
 Record solve() return code, decoded public status label, objective when status permits, exact lp.control settings, and any R warnings/errors for each problem. Codes 0 and 9 indicate optimal/presolve solutions. Codes 1 through 7, 10 through 13 retain the CRAN manual labels; all non-optimal statuses fail closed for the corresponding probe. Do not replace a status with a Boolean PASS.
 
 The package result, direct probe, constructive fixture proof, and ordinary GLM diagnostics remain separate fields. Any disagreement stays visible and is classified as a numerical or formulation discrepancy for review. The method under evaluation remains detectseparation 0.4.0; this probe does not establish production readiness or universal validity.
-

@@ -1,8 +1,8 @@
 # CP-STAT-02-A1 Fixture-Generation Execution Correction v1.2
 
-**State:** Post-first-execution implementation correction; requires independent review.  
-**First execution:** workflow `40093824481`, commit `130e42d4b1101920b3bd2329237506b74d4487ae`, artifact `12559634424`.  
-**GitHub artifact digest:** `sha256:41d4c31f0f5716f2e8c300a00783f5115c46c7581a96707505791e243add99b6`.  
+**State:** Post-first-execution implementation correction; requires independent review.\
+**First execution:** workflow `40093824481`, commit `130e42d4b1101920b3bd2329237506b74d4487ae`, artifact `12559634424`.\
+**GitHub artifact digest:** `sha256:41d4c31f0f5716f2e8c300a00783f5115c46c7581a96707505791e243add99b6`.\
 **Internal evidence archive SHA-256:** `53ffc77b534c6e2813608fd1b8337be81f3d42f3e5a0306f275e71eb0a346bde`.
 
 ## Reason for the correction

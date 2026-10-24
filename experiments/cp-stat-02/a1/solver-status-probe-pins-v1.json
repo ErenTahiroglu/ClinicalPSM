@@ -1,11 +1,10 @@
 {
   "schema": "CP-STAT-02-A1-SOLVER-PROBE-PIN-v1",
   "registered_at_commit": "52172c5",
-  "supplement_sha256": "758e2c0d3c63dd617eaefb27e9ad64712388eb95b24fb8732fc6b53c18fc1558",
+  "supplement_sha256": "878b96b2c0c6a1a1ac624a29d72c354351613d76ad956be33a0be7e3200ec795",
   "path": "experiments/cp-stat-02/a1/solver-status-probe-preregistration-v1.md",
   "method_under_evaluation": "detectseparation 0.4.0 ROI/lpsolve",
   "status_probe": "explicit bounded lpSolveAPI formulation; same underlying lp_solve solver; not independent solver replication",
   "fixture_count": 50,
   "truth_and_expectation_mutations": false
 }
-
