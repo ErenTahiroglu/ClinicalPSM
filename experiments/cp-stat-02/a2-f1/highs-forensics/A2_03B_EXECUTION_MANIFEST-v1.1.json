@@ -1,0 +1,308 @@
+{
+  "contract": "CP-STAT-02-A2-03B-EXECUTION-MANIFEST-v1.1",
+  "status": "FROZEN_BEFORE_SOLVER",
+  "cell_count": 32,
+  "maximum_linprog_calls": 32,
+  "declared_order": [
+    "fixture31",
+    "fixture33",
+    "raw",
+    "column_max_normalized",
+    "highs-ds",
+    "highs-ipm",
+    "complete_margin_A",
+    "weak_margin_B",
+    "repeat_1",
+    "repeat_2"
+  ],
+  "cells": [
+    {
+      "cell_id": "F31-RAW-DS-A-R1",
+      "fixture_id": "cpstat02a1_31_small_scale_complete",
+      "representation": "raw",
+      "method": "highs-ds",
+      "problem": "complete_margin_A",
+      "repeat": 1,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F31-RAW-DS-A-R2",
+      "fixture_id": "cpstat02a1_31_small_scale_complete",
+      "representation": "raw",
+      "method": "highs-ds",
+      "problem": "complete_margin_A",
+      "repeat": 2,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F31-RAW-DS-B-R1",
+      "fixture_id": "cpstat02a1_31_small_scale_complete",
+      "representation": "raw",
+      "method": "highs-ds",
+      "problem": "weak_margin_B",
+      "repeat": 1,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F31-RAW-DS-B-R2",
+      "fixture_id": "cpstat02a1_31_small_scale_complete",
+      "representation": "raw",
+      "method": "highs-ds",
+      "problem": "weak_margin_B",
+      "repeat": 2,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F31-RAW-IPM-A-R1",
+      "fixture_id": "cpstat02a1_31_small_scale_complete",
+      "representation": "raw",
+      "method": "highs-ipm",
+      "problem": "complete_margin_A",
+      "repeat": 1,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F31-RAW-IPM-A-R2",
+      "fixture_id": "cpstat02a1_31_small_scale_complete",
+      "representation": "raw",
+      "method": "highs-ipm",
+      "problem": "complete_margin_A",
+      "repeat": 2,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F31-RAW-IPM-B-R1",
+      "fixture_id": "cpstat02a1_31_small_scale_complete",
+      "representation": "raw",
+      "method": "highs-ipm",
+      "problem": "weak_margin_B",
+      "repeat": 1,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F31-RAW-IPM-B-R2",
+      "fixture_id": "cpstat02a1_31_small_scale_complete",
+      "representation": "raw",
+      "method": "highs-ipm",
+      "problem": "weak_margin_B",
+      "repeat": 2,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F31-CMAX-DS-A-R1",
+      "fixture_id": "cpstat02a1_31_small_scale_complete",
+      "representation": "column_max_normalized",
+      "method": "highs-ds",
+      "problem": "complete_margin_A",
+      "repeat": 1,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F31-CMAX-DS-A-R2",
+      "fixture_id": "cpstat02a1_31_small_scale_complete",
+      "representation": "column_max_normalized",
+      "method": "highs-ds",
+      "problem": "complete_margin_A",
+      "repeat": 2,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F31-CMAX-DS-B-R1",
+      "fixture_id": "cpstat02a1_31_small_scale_complete",
+      "representation": "column_max_normalized",
+      "method": "highs-ds",
+      "problem": "weak_margin_B",
+      "repeat": 1,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F31-CMAX-DS-B-R2",
+      "fixture_id": "cpstat02a1_31_small_scale_complete",
+      "representation": "column_max_normalized",
+      "method": "highs-ds",
+      "problem": "weak_margin_B",
+      "repeat": 2,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F31-CMAX-IPM-A-R1",
+      "fixture_id": "cpstat02a1_31_small_scale_complete",
+      "representation": "column_max_normalized",
+      "method": "highs-ipm",
+      "problem": "complete_margin_A",
+      "repeat": 1,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F31-CMAX-IPM-A-R2",
+      "fixture_id": "cpstat02a1_31_small_scale_complete",
+      "representation": "column_max_normalized",
+      "method": "highs-ipm",
+      "problem": "complete_margin_A",
+      "repeat": 2,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F31-CMAX-IPM-B-R1",
+      "fixture_id": "cpstat02a1_31_small_scale_complete",
+      "representation": "column_max_normalized",
+      "method": "highs-ipm",
+      "problem": "weak_margin_B",
+      "repeat": 1,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F31-CMAX-IPM-B-R2",
+      "fixture_id": "cpstat02a1_31_small_scale_complete",
+      "representation": "column_max_normalized",
+      "method": "highs-ipm",
+      "problem": "weak_margin_B",
+      "repeat": 2,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F33-RAW-DS-A-R1",
+      "fixture_id": "cpstat02a1_33_heterogeneous_scale_overlap",
+      "representation": "raw",
+      "method": "highs-ds",
+      "problem": "complete_margin_A",
+      "repeat": 1,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F33-RAW-DS-A-R2",
+      "fixture_id": "cpstat02a1_33_heterogeneous_scale_overlap",
+      "representation": "raw",
+      "method": "highs-ds",
+      "problem": "complete_margin_A",
+      "repeat": 2,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F33-RAW-DS-B-R1",
+      "fixture_id": "cpstat02a1_33_heterogeneous_scale_overlap",
+      "representation": "raw",
+      "method": "highs-ds",
+      "problem": "weak_margin_B",
+      "repeat": 1,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F33-RAW-DS-B-R2",
+      "fixture_id": "cpstat02a1_33_heterogeneous_scale_overlap",
+      "representation": "raw",
+      "method": "highs-ds",
+      "problem": "weak_margin_B",
+      "repeat": 2,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F33-RAW-IPM-A-R1",
+      "fixture_id": "cpstat02a1_33_heterogeneous_scale_overlap",
+      "representation": "raw",
+      "method": "highs-ipm",
+      "problem": "complete_margin_A",
+      "repeat": 1,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F33-RAW-IPM-A-R2",
+      "fixture_id": "cpstat02a1_33_heterogeneous_scale_overlap",
+      "representation": "raw",
+      "method": "highs-ipm",
+      "problem": "complete_margin_A",
+      "repeat": 2,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F33-RAW-IPM-B-R1",
+      "fixture_id": "cpstat02a1_33_heterogeneous_scale_overlap",
+      "representation": "raw",
+      "method": "highs-ipm",
+      "problem": "weak_margin_B",
+      "repeat": 1,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F33-RAW-IPM-B-R2",
+      "fixture_id": "cpstat02a1_33_heterogeneous_scale_overlap",
+      "representation": "raw",
+      "method": "highs-ipm",
+      "problem": "weak_margin_B",
+      "repeat": 2,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F33-CMAX-DS-A-R1",
+      "fixture_id": "cpstat02a1_33_heterogeneous_scale_overlap",
+      "representation": "column_max_normalized",
+      "method": "highs-ds",
+      "problem": "complete_margin_A",
+      "repeat": 1,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F33-CMAX-DS-A-R2",
+      "fixture_id": "cpstat02a1_33_heterogeneous_scale_overlap",
+      "representation": "column_max_normalized",
+      "method": "highs-ds",
+      "problem": "complete_margin_A",
+      "repeat": 2,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F33-CMAX-DS-B-R1",
+      "fixture_id": "cpstat02a1_33_heterogeneous_scale_overlap",
+      "representation": "column_max_normalized",
+      "method": "highs-ds",
+      "problem": "weak_margin_B",
+      "repeat": 1,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F33-CMAX-DS-B-R2",
+      "fixture_id": "cpstat02a1_33_heterogeneous_scale_overlap",
+      "representation": "column_max_normalized",
+      "method": "highs-ds",
+      "problem": "weak_margin_B",
+      "repeat": 2,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F33-CMAX-IPM-A-R1",
+      "fixture_id": "cpstat02a1_33_heterogeneous_scale_overlap",
+      "representation": "column_max_normalized",
+      "method": "highs-ipm",
+      "problem": "complete_margin_A",
+      "repeat": 1,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F33-CMAX-IPM-A-R2",
+      "fixture_id": "cpstat02a1_33_heterogeneous_scale_overlap",
+      "representation": "column_max_normalized",
+      "method": "highs-ipm",
+      "problem": "complete_margin_A",
+      "repeat": 2,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F33-CMAX-IPM-B-R1",
+      "fixture_id": "cpstat02a1_33_heterogeneous_scale_overlap",
+      "representation": "column_max_normalized",
+      "method": "highs-ipm",
+      "problem": "weak_margin_B",
+      "repeat": 1,
+      "fresh_process": true
+    },
+    {
+      "cell_id": "F33-CMAX-IPM-B-R2",
+      "fixture_id": "cpstat02a1_33_heterogeneous_scale_overlap",
+      "representation": "column_max_normalized",
+      "method": "highs-ipm",
+      "problem": "weak_margin_B",
+      "repeat": 2,
+      "fresh_process": true
+    }
+  ]
+}
