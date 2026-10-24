@@ -37,7 +37,7 @@ import zipfile
 
 BASE = pathlib.Path(__file__).resolve().parent
 REPO = BASE.parents[3]
-FREEZE_PATH = BASE / "A2_03B_FROZEN_INPUTS-v1.1.json"
+FREEZE_PATH = BASE / "A2_03B_FROZEN_INPUTS-v1.2.json"
 MANIFEST_PATH = BASE / "A2_03B_EXECUTION_MANIFEST-v1.1.json"
 CONTRACT_PATH = BASE / "NUMERICAL_ACCEPTANCE_CONTRACT.json"
 ANNEX_JSON_PATH = BASE / "A2_03B_EXECUTION_INTERPRETATION-v1.1.json"
@@ -174,6 +174,8 @@ def verify_frozen_files() -> dict:
     if not FREEZE_PATH.is_file():
         raise PreflightError("frozen input lock is missing")
     frozen = load_json(FREEZE_PATH)
+    if frozen.get("schema") != "CP-STAT-02-A2-03B-FROZEN-INPUTS-v1.2":
+        raise PreflightError("frozen input lock schema is not v1.2")
     if frozen.get("status") != "FROZEN_BEFORE_SOLVER":
         raise PreflightError("frozen input lock status is not FROZEN_BEFORE_SOLVER")
     if frozen.get("immutable_preregistration_commit") != EXPECTED_PREREGISTRATION_COMMIT:
