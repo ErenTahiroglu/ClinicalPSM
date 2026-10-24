@@ -1,0 +1,21 @@
+{
+  "schema": "CP-STAT-02-A1-FIXTURE-GENERATION-CORRECTION-PIN-v1.2",
+  "state": "POST_FIRST_EXECUTION_IMPLEMENTATION_CORRECTION_PENDING_INDEPENDENT_REVIEW",
+  "correction_first_committed_in": "The exact containing commit is recorded in the corrected run's evidence report.",
+  "first_execution": {
+    "workflow_run_id": "40093824481",
+    "commit_sha": "130e42d4b1101920b3bd2329237506b74d4487ae",
+    "artifact_id": "12559634424",
+    "github_artifact_digest": "sha256:41d4c31f0f5716f2e8c300a00783f5115c46c7581a96707505791e243add99b6",
+    "internal_evidence_archive_sha256": "53ffc77b534c6e2813608fd1b8337be81f3d42f3e5a0306f275e71eb0a346bde"
+  },
+  "phase_baseline_sha": "c3bda2ed841486aadcb5c44f0caa883662a17cf2",
+  "preregistration_matrix_sha256": "773c61397c0de9118a41cb25496e88a41bd80c4926545579578fbac43b8281e8",
+  "base_generation_contract_sha256": "f2b1197cdec12900552058b8614a4412bd4fcba0cf80f38b8eeb93b1714d44b9",
+  "pre_run_clarification_v1_1_sha256": "d114a24fd36c2ae58bf5e017f021330abd407614bb299260e9d44f9bcb4b84c7",
+  "correction_path": "experiments/cp-stat-02/a1/fixture-generation-clarifications-v1.2.md",
+  "correction_sha256": "1ae4a3cb3a271948419c9148ab67d4272849e959f5a61ca683a76be619ef7d4f",
+  "hypotheses_expected_classes_seeds_and_acceptance_rules_changed": false,
+  "first_run_results_preserved_without_relabeling": true,
+  "full_50_fixture_rerun_required": true
+}

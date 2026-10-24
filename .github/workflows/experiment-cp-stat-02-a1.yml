@@ -71,6 +71,7 @@ jobs:
           test "$(shasum -a 256 experiments/cp-webr-02a/adapter/r_template.R | awk '{print $1}')" = "7989403c7d093031b93a9c971a6d4f055101bab83c0ec4417fc52e4dceee24a4"
           test "$(shasum -a 256 experiments/cp-webr-02-closure/e3/CP-WEBR-02-NATIVE-PARITY-ERRATUM-v1.md | awk '{print $1}')" = "a030d1214adc7ff38f55638a77625a8c6655d6442f6d12b37faa29a39e4dec40"
           test "$(shasum -a 256 experiments/cp-webr-02-closure/e3/evidence-pins.json | awk '{print $1}')" = "603f1720af3ce6d9a02a73a8f3e4dcff337711bd102a4407528d507c3dc6e8e5"
+          node -e 'const fs=require("node:fs");const c=require("node:crypto");const p=JSON.parse(fs.readFileSync("experiments/cp-stat-02/a1/fixture-generation-correction-pins-v1.2.json"));const b=fs.readFileSync("experiments/cp-stat-02/a1/fixture-generation-clarifications-v1.2.md");if(c.createHash("sha256").update(b).digest("hex")!==p.correction_sha256||p.hypotheses_expected_classes_seeds_and_acceptance_rules_changed!==false||p.first_run_results_preserved_without_relabeling!==true||p.full_50_fixture_rerun_required!==true)throw new Error("generator correction pin mismatch");console.log("Post-run generator correction scope and digest verified")'
           node -e 'const f=require("node:fs");const p=JSON.parse(f.readFileSync("package.json"));const l=JSON.parse(f.readFileSync("package-lock.json"));const d=JSON.parse(f.readFileSync("experiments/cp-webr-00b/dependency-lock.json"));if(p.dependencies.next!=="16.4.1"||p.devDependencies["eslint-config-next"]!=="16.4.1"||l.packages["node_modules/next"].version!=="16.4.1"||l.packages["node_modules/eslint-config-next"].version!=="16.4.1"||d.runtime.webr_npm!=="0.6.0"||d.runtime.r_version!=="4.6.0")throw new Error("dependency pin mismatch");console.log("App, WebR and R dependency pins verified")'
           node --check experiments/cp-stat-02/a1/verify-e2-evidence.mjs
           node --check experiments/cp-stat-02/a1/verify-source-archives.mjs
@@ -153,12 +154,16 @@ jobs:
           exit "$status"
 
       - name: Falsify qualification evidence schema and fixture identity
-        if: success()
+        if: always() && steps.qualify.outcome != 'skipped'
         env:
           A1_EVIDENCE_DIR: ${{ github.workspace }}/.cp-stat-02-a1-evidence
         shell: bash
         run: |
           set -euo pipefail
+          if [ ! -s "$A1_OUT/a1-qualification-results.json" ]; then
+            echo "Qualification step ran but produced no result report; all fixture outcomes remain UNMEASURED." >&2
+            exit 1
+          fi
           node --test experiments/cp-stat-02/a1/qualification-evidence.test.mjs > "$A1_OUT/qualification-evidence-tests.tap" 2>&1
           cat "$A1_OUT/qualification-evidence-tests.tap"
 

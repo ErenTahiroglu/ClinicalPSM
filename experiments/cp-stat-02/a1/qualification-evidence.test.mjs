@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 const a1 = new URL('.', import.meta.url);
 const outdir = resolve(process.env.A1_EVIDENCE_DIR ?? process.argv[2] ?? '');
 const matrix = JSON.parse(await readFile(new URL('preregistration-matrix-v1.json', a1), 'utf8'));
+const correctionPins = JSON.parse(readFileSync(new URL('fixture-generation-correction-pins-v1.2.json', a1), 'utf8'));
 const report = JSON.parse(await readFile(resolve(outdir, 'a1-qualification-results.json'), 'utf8'));
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 const parseCsvRow = (line) => {
@@ -40,6 +41,9 @@ const parseCsvRow = (line) => {
 function validateEvidence(candidate) {
   assert.equal(candidate.schema, 'CP-STAT-02-A1-NATIVE-LP-QUALIFICATION-v1');
   assert.equal(candidate.fixtures.length, 50);
+  assert.equal(candidate.fixture_generation_execution_correction.correction_sha256, correctionPins.correction_sha256, 'execution correction document digest mismatch');
+  assert.equal(candidate.fixture_generation_execution_correction.correction_pins_sha256, sha256(readFileSync(new URL('fixture-generation-correction-pins-v1.2.json', a1))));
+  assert.equal(candidate.fixture_generation_execution_correction.expected_classes_seeds_and_acceptance_rules_changed, false);
   const ids = candidate.fixtures.map((fixture) => fixture.fixture_id);
   assert.equal(new Set(ids).size, 50, 'fixture IDs must be unique');
   assert.deepEqual(ids, matrix.fixtures.map((fixture) => fixture.fixture_id), 'all preregistered IDs must appear once in order');
@@ -72,6 +76,10 @@ function validateEvidence(candidate) {
       assert.equal(fixture.detector_runs.length, 0);
       assert.equal(fixture.status, 'PASS');
       continue;
+    }
+    if (spec.expected_separation === 'OVERLAP_FINITE_MLE') {
+      assert.equal(fixture.ground_truth_proof.anchor_pairs_exact, true, `overlap anchor pairs must remain identical: ${fixture.fixture_id}`);
+      assert.equal(fixture.ground_truth_proof.anchor_matrix_rank, fixture.matrix_rank, `overlap anchors must span the observed design: ${fixture.fixture_id}`);
     }
     assert.equal(fixture.detector_invoked, true);
     assert.equal(fixture.detector_runs.length, 4, `two tolerances times two runs required: ${fixture.fixture_id}`);
@@ -155,6 +163,12 @@ test('a lost direct solver status is rejected', () => {
   const valid = altered.fixtures.find((item) => item.detector_invoked);
   valid.detector_runs[0].direct_solver_probe.complete_margin.return_code = null;
   assert.throws(() => validateEvidence(altered), /solver code missing/);
+});
+
+test('a changed post-run generator-correction hash is rejected', () => {
+  const altered = structuredClone(report);
+  altered.fixture_generation_execution_correction.correction_sha256 = '0'.repeat(64);
+  assert.throws(() => validateEvidence(altered), /execution correction/);
 });
 
 test('missing native results produce a checksummed UNMEASURED prequalification index', () => {

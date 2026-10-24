@@ -46,6 +46,13 @@ if (!identical(clarification_pins$clarification_path, "experiments/cp-stat-02/a1
 if (!identical(clarification_pins$hypotheses_expected_classes_seeds_and_acceptance_rules_changed, FALSE)) abort("Clarification cannot change scientific expectations")
 if (!identical(sha256(file.path(a1_dir, "fixture-generation-clarifications-v1.1.md")), clarification_pins$clarification_sha256)) abort("Fixture-generation clarification hash mismatch")
 if (!identical(sha256(file.path(a1_dir, "CP-STAT-02-A1-PROTOCOL-v1.md")), pins$scientific_protocol$sha256)) abort("Scientific protocol hash mismatch")
+correction_pins <- jsonlite::fromJSON(file.path(a1_dir, "fixture-generation-correction-pins-v1.2.json"), simplifyVector = FALSE)
+if (!identical(correction_pins$state, "POST_FIRST_EXECUTION_IMPLEMENTATION_CORRECTION_PENDING_INDEPENDENT_REVIEW")) abort("Unexpected fixture-generation correction state")
+if (!identical(correction_pins$phase_baseline_sha, pins$phase_baseline_sha) || !identical(correction_pins$preregistration_matrix_sha256, pins$preregistration_matrix$sha256) || !identical(correction_pins$base_generation_contract_sha256, pins$fixture_generation_contract$sha256)) abort("Fixture-generation correction provenance mismatch")
+if (!identical(correction_pins$pre_run_clarification_v1_1_sha256, clarificationPins$clarification_sha256)) abort("Fixture-generation correction is not based on the pinned v1.1 clarification")
+if (!identical(correction_pins$correction_path, "experiments/cp-stat-02/a1/fixture-generation-clarifications-v1.2.md") || !identical(sha256(file.path(a1_dir, "fixture-generation-clarifications-v1.2.md")), correction_pins$correction_sha256)) abort("Fixture-generation correction hash mismatch")
+if (!identical(correction_pins$hypotheses_expected_classes_seeds_and_acceptance_rules_changed, FALSE) || !identical(correction_pins$first_run_results_preserved_without_relabeling, TRUE) || !identical(correction_pins$full_50_fixture_rerun_required, TRUE)) abort("Fixture-generation correction altered expectations or failed to preserve the first run")
+if (!identical(correction_pins$first_execution$workflow_run_id, "40093824481") || !identical(correction_pins$first_execution$commit_sha, "130e42d4b1101920b3bd2329237506b74d4487ae") || !identical(correction_pins$first_execution$artifact_id, "12559634424") || !identical(correction_pins$first_execution$github_artifact_digest, "sha256:41d4c31f0f5716f2e8c300a00783f5115c46c7581a96707505791e243add99b6") || !identical(correction_pins$first_execution$internal_evidence_archive_sha256, "53ffc77b534c6e2813608fd1b8337be81f3d42f3e5a0306f275e71eb0a346bde")) abort("First execution artifact identity mismatch")
 if (!identical(sha256(file.path(a1_dir, "renv.lock")), pins$experimental_environment$renv_lock_sha256)) abort("Experimental renv lock hash mismatch")
 if (!identical(sha256(file.path(a1_dir, "source-package-integrity.json")), pins$experimental_environment$source_archive_manifest_sha256)) abort("Package-source manifest hash mismatch")
 solver_probe_pins <- jsonlite::fromJSON(file.path(a1_dir, "solver-status-probe-pins-v1.json"), simplifyVector = FALSE)
@@ -197,6 +204,25 @@ make_data <- function(spec) {
     if (length(boundary_pair)) cat_values[boundary_pair] <- factor_levels[[1L]]
   }
   z <- rnorm(n)
+  if (truth == "OVERLAP_FINITE_MLE" && anchor_count > 0L) {
+    point_z <- if (grepl("near_rank_deficient_overlap", spec$fixture_id, fixed = TRUE)) {
+      c(0, 0, 0, 1)
+    } else if (grepl("correlated|near_exact_correlation|near_collinear|near_alias|weak_information", profile, ignore.case = TRUE)) {
+      c(0, 1, 0, 0)
+    } else {
+      NULL
+    }
+    if (!is.null(point_z)) {
+      point_z <- rep_len(point_z, nrow(points))
+      for (level_index in seq_len(level_count)) {
+        for (point_id in seq_len(nrow(points))) {
+          first <- (level_index - 1L) * nrow(points) * 2L + (point_id - 1L) * 2L + 1L
+          z[first:(first + 1L)] <- point_z[[point_id]]
+        }
+      }
+    }
+  }
+  if (length(boundary_pair) == 2L) z[boundary_pair] <- 0
   if (grepl("exact_alias|complete_alias|quasi_alias", profile, ignore.case = TRUE)) {
     base_x2 <- x1
   } else if (grepl("near_rank_deficient_overlap", spec$fixture_id, fixed = TRUE)) {
@@ -268,6 +294,8 @@ make_data <- function(spec) {
     data$x_cat <- cat_values
   }
   if (truth == "NOT_CLASSIFIABLE_INVALID_MODEL" && grepl("factor", profile, ignore.case = TRUE)) data$x_cat[[1L]] <- "UNDECLARED"
+  anchor_pair_ids <- if (anchor_count > 0L) lapply(seq.int(1L, anchor_count, by = 2L), function(index) as.list(data$row_id[index:(index + 1L)])) else list()
+  boundary_pair_ids <- if (length(boundary_pair) == 2L) as.list(data$row_id[boundary_pair]) else list()
   if (grepl("row_permutation|reordered", profile, ignore.case = TRUE)) data <- data[rev(seq_len(nrow(data))), , drop = FALSE]
   rownames(data) <- data$row_id
   attr(data, "formula_text") <- formula_text
@@ -275,6 +303,8 @@ make_data <- function(spec) {
   attr(data, "factor_reference_expected") <- factor_ref
   attr(data, "boundary_pair") <- boundary_pair
   attr(data, "anchor_count") <- anchor_count
+  attr(data, "anchor_pair_ids") <- anchor_pair_ids
+  attr(data, "boundary_pair_ids") <- boundary_pair_ids
   attr(data, "invalid_profile") <- if (truth == "NOT_CLASSIFIABLE_INVALID_MODEL" && grepl("missing", profile, ignore.case = TRUE)) "MISSING_COVARIATE" else if (truth == "NOT_CLASSIFIABLE_INVALID_MODEL") "INVALID_FACTOR_LEVEL" else NULL
   data
 }
@@ -518,14 +548,24 @@ proof_record <- function(data, formula, truth) {
   common_keys <- intersect(unique(keys[y == 0L]), unique(keys[y == 1L]))
   common_index <- which(keys %in% common_keys)
   common_rank <- if (length(common_index)) matrix_rank(x[common_index, , drop = FALSE]) else 0L
+  anchor_pairs <- attr(data, "anchor_pair_ids")
+  anchor_pair_exact <- if (length(anchor_pairs)) vapply(anchor_pairs, function(pair) {
+    indices <- match(unlist(pair, use.names = FALSE), rownames(x))
+    !anyNA(indices) && length(unique(y[indices])) == 2L && identical(unname(as.numeric(x[indices[[1L]], ])), unname(as.numeric(x[indices[[2L]], ])))
+  }, logical(1)) else logical()
+  anchor_row_indices <- if (length(anchor_pairs)) vapply(anchor_pairs, function(pair) match(unlist(pair, use.names = FALSE)[[1L]], rownames(x)), integer(1)) else integer()
+  anchor_rank <- if (length(anchor_row_indices) && all(!is.na(anchor_row_indices))) matrix_rank(x[anchor_row_indices, , drop = FALSE]) else 0L
+  boundary_pair <- attr(data, "boundary_pair_ids")
+  boundary_indices <- if (length(boundary_pair)) match(unlist(boundary_pair, use.names = FALSE), rownames(x)) else integer()
+  boundary_pair_exact <- length(boundary_indices) == 2L && !anyNA(boundary_indices) && length(unique(y[boundary_indices])) == 2L && identical(unname(as.numeric(x[boundary_indices[[1L]], ])), unname(as.numeric(x[boundary_indices[[2L]], ])))
   signed <- ifelse(y == 1L, 1, -1)
   separator_margins <- signed * x[, "x1"]
   proof_ok <- if (truth == "COMPLETE_SEPARATION") {
     all(separator_margins > 0)
   } else if (truth == "QUASI_COMPLETE_SEPARATION") {
-    all(separator_margins >= 0) && any(separator_margins > 0) && length(common_keys) > 0L
+    all(separator_margins >= 0) && any(separator_margins > 0) && boundary_pair_exact
   } else {
-    common_rank == rank_x
+    length(anchor_pairs) > 0L && all(anchor_pair_exact) && anchor_rank == rank_x && common_rank == rank_x
   }
   list(
     model_matrix = x,
@@ -540,6 +580,10 @@ proof_record <- function(data, formula, truth) {
     aliases = as.list(if (rank_x < ncol(x)) colnames(x)[qr(x, tol = 1e-12, LAPACK = FALSE)$pivot[(rank_x + 1L):ncol(x)]] else character()),
     common_row_count = length(common_index),
     common_row_rank = common_rank,
+    anchor_pair_count = length(anchor_pairs),
+    anchor_pairs_exact = if (truth == "OVERLAP_FINITE_MLE") all(anchor_pair_exact) else NULL,
+    anchor_matrix_rank = if (truth == "OVERLAP_FINITE_MLE") anchor_rank else NULL,
+    boundary_pair_exact = if (truth == "QUASI_COMPLETE_SEPARATION") boundary_pair_exact else NULL,
     witness_margin_min = min(separator_margins),
     witness_margin_max = max(separator_margins),
     witness_margins = as.list(vapply(separator_margins, format_number, character(1))),
@@ -671,6 +715,11 @@ for (i in seq_along(matrix$fixtures)) {
   rank_pass <- if (spec$expected_design_rank == "full_rank") proof$rank == ncol(x) else if (spec$expected_design_rank == "rank_deficient") proof$rank < ncol(x) else TRUE
   if (!isTRUE(proof$proof_ok)) result$failure_codes <- c(result$failure_codes, list("CONSTRUCTIVE_GROUND_TRUTH_FAILED"))
   if (!rank_pass) result$failure_codes <- c(result$failure_codes, list("DESIGN_RANK_EXPECTATION_FAILED"))
+  if (!isTRUE(proof$proof_ok) || !rank_pass || "ANALYTIC_X1_CROSSCHECK_MISMATCH" %in% unlist(result$failure_codes)) {
+    result$status <- "FAIL"
+    fixture_results[[i]] <- result
+    next
+  }
 
   for (tolerance in c(1e-4, 1e-8)) {
     for (replicate in 1:2) {
@@ -776,6 +825,14 @@ report <- list(
   preregistration_sha256 = matrix_hash,
   generation_contract_sha256 = sha256(file.path(a1_dir, "fixture-generation-contract-v1.md")),
   generation_clarification_sha256 = clarification_pins$clarification_sha256,
+  fixture_generation_execution_correction = list(
+    state = correction_pins$state,
+    correction_sha256 = correction_pins$correction_sha256,
+    correction_pins_sha256 = sha256(correction_pins_path),
+    correction_commit_sha = system2("git", c("-C", shQuote(repo_root), "rev-parse", "HEAD"), stdout = TRUE)[[1L]],
+    first_execution = correction_pins$first_execution,
+    expected_classes_seeds_and_acceptance_rules_changed = correction_pins$hypotheses_expected_classes_seeds_and_acceptance_rules_changed
+  ),
   r_version = r_version,
   rng_configuration = as.list(RNGkind()),
   package_versions = package_versions,
@@ -822,6 +879,7 @@ lines <- c(
   paste0("Verdict: **", overall, "**"),
   paste0("Commit: ", report$commit_sha),
   paste0("Workflow: ", report$workflow_url),
+  paste0("Generator execution correction: post-first-run v1.2; SHA-256 ", correction_pins$correction_sha256, "; first-run artifact ", correction_pins$first_execution$artifact_id, " remains preserved"),
   paste0("Preregistered/evaluated scenarios: ", length(fixture_results), "/", length(fixture_results)),
   paste0("Fixture statuses: ", paste(names(status_counts), unlist(status_counts), collapse = "; ")),
   paste0("Class counts: ", paste(names(expected_counts), unlist(expected_counts), collapse = "; ")),

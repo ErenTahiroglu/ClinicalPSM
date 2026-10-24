@@ -14,10 +14,15 @@ const readJson = async (path) => JSON.parse(await readFile(path, 'utf8'));
 const matrix = await readJson(resolve(here, 'preregistration-matrix-v1.json'));
 const pins = await readJson(resolve(here, 'preregistration-pins-v1.json'));
 const clarificationPins = await readJson(resolve(here, 'fixture-generation-clarification-pins-v1.1.json'));
+const correctionPinsPath = resolve(here, 'fixture-generation-correction-pins-v1.2.json');
+const correctionPins = await readJson(correctionPinsPath);
 const resultsPath = resolve(outdir, 'a1-qualification-results.json');
 if (clarificationPins.matrix_sha256 !== pins.preregistration_matrix.sha256 || clarificationPins.base_generation_contract_sha256 !== pins.fixture_generation_contract.sha256) fail('Generation clarification pin does not match the original preregistration');
 if (clarificationPins.original_preregistration_pins_sha256 !== sha256(await readFile(resolve(here, 'preregistration-pins-v1.json'))) || clarificationPins.hypotheses_expected_classes_seeds_and_acceptance_rules_changed !== false) fail('Generation clarification changed or lost the original preregistration pin');
 if (clarificationPins.clarification_sha256 !== sha256(await readFile(resolve(here, clarificationPins.clarification_path.split('/').at(-1))))) fail('Generation clarification SHA-256 mismatch');
+if (correctionPins.preregistration_matrix_sha256 !== pins.preregistration_matrix.sha256 || correctionPins.base_generation_contract_sha256 !== pins.fixture_generation_contract.sha256 || correctionPins.pre_run_clarification_v1_1_sha256 !== clarificationPins.clarification_sha256) fail('Execution correction provenance does not match the original preregistration chain');
+if (correctionPins.correction_sha256 !== sha256(await readFile(resolve(here, correctionPins.correction_path.split('/').at(-1)))) || correctionPins.hypotheses_expected_classes_seeds_and_acceptance_rules_changed !== false || correctionPins.first_run_results_preserved_without_relabeling !== true || correctionPins.full_50_fixture_rerun_required !== true) fail('Execution correction hash or scope is invalid');
+if (correctionPins.first_execution?.workflow_run_id !== '40093824481' || correctionPins.first_execution?.commit_sha !== '130e42d4b1101920b3bd2329237506b74d4487ae' || correctionPins.first_execution?.artifact_id !== '12559634424' || correctionPins.first_execution?.github_artifact_digest !== 'sha256:41d4c31f0f5716f2e8c300a00783f5115c46c7581a96707505791e243add99b6' || correctionPins.first_execution?.internal_evidence_archive_sha256 !== '53ffc77b534c6e2813608fd1b8337be81f3d42f3e5a0306f275e71eb0a346bde') fail('First execution evidence identity does not match the preserved failed run');
 
 async function walk(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -39,8 +44,10 @@ const sourcePaths = [
   'preregistration-matrix-v1.json',
   'preregistration-pins-v1.json',
   'fixture-generation-clarification-pins-v1.1.json',
+  'fixture-generation-correction-pins-v1.2.json',
   'fixture-generation-contract-v1.md',
   'fixture-generation-clarifications-v1.1.md',
+  'fixture-generation-clarifications-v1.2.md',
   'CP-STAT-02-A1-PROTOCOL-v1.md',
   'CP-WEBR-02-INDEPENDENT-CLOSURE-VERIFICATION-v1.md',
   'solver-status-probe-preregistration-v1.md',
@@ -89,6 +96,7 @@ try {
     preregistered_matrix_sha256: pins.preregistration_matrix.sha256,
     generator_contract_sha256: pins.fixture_generation_contract.sha256,
     generator_clarification_sha256: clarificationPins.clarification_sha256,
+    generator_execution_correction_sha256: correctionPins.correction_sha256,
     scientific_protocol_sha256: pins.scientific_protocol.sha256,
     source_digests: sourceDigests,
     files: await Promise.all(indexedFiles.map(async (path) => ({
@@ -104,6 +112,7 @@ try {
 
 const results = await readJson(resultsPath);
 if (results.fixtures?.length !== 50) fail('Expected exactly 50 reported fixtures');
+if (results.fixture_generation_execution_correction?.correction_sha256 !== correctionPins.correction_sha256 || results.fixture_generation_execution_correction?.correction_pins_sha256 !== sha256(await readFile(correctionPinsPath))) fail('Qualification results do not identify the versioned execution correction');
 const expectedIds = matrix.fixtures.map((fixture) => fixture.fixture_id);
 const resultIds = results.fixtures.map((fixture) => fixture.fixture_id);
 if (new Set(expectedIds).size !== 50 || new Set(resultIds).size !== 50) fail('Fixture identity is duplicated');
@@ -157,6 +166,7 @@ const index = {
   preregistered_matrix_sha256: pins.preregistration_matrix.sha256,
   generator_contract_sha256: pins.fixture_generation_contract.sha256,
   generator_clarification_sha256: clarificationPins.clarification_sha256,
+  generator_execution_correction_sha256: correctionPins.correction_sha256,
   scientific_protocol_sha256: pins.scientific_protocol.sha256,
   solver_probe_preregistration_sha256: pins.solver_probe?.sha256 ?? sha256(await readFile(resolve(here, 'solver-status-probe-preregistration-v1.md'))),
   source_digests: sourceDigests,
