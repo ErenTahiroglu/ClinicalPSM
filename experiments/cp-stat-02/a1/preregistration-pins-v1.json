@@ -1,0 +1,29 @@
+{
+  "schema": "CP-STAT-02-A1-PREREGISTRATION-PINS-v1",
+  "registered_at_commit": "4227616",
+  "phase_baseline_sha": "c3bda2ed841486aadcb5c44f0caa883662a17cf2",
+  "scenario_count": 50,
+  "preregistration_matrix": {
+    "path": "experiments/cp-stat-02/a1/preregistration-matrix-v1.json",
+    "sha256": "773c61397c0de9118a41cb25496e88a41bd80c4926545579578fbac43b8281e8"
+  },
+  "fixture_generation_contract": {
+    "path": "experiments/cp-stat-02/a1/fixture-generation-contract-v1.md",
+    "sha256": "f2b1197cdec12900552058b8614a4412bd4fcba0cf80f38b8eeb93b1714d44b9"
+  },
+  "scientific_protocol": {
+    "path": "experiments/cp-stat-02/a1/CP-STAT-02-A1-PROTOCOL-v1.md",
+    "sha256": "b1f05ebbff4d7d5077c4b34f4efd524865dc6f02b0bce17530953dddad4cd1f7"
+  },
+  "experimental_environment": {
+    "r_version": "4.6.0",
+    "detectseparation": "0.4.0",
+    "ROI": "1.0-2",
+    "ROI.plugin.lpsolve": "1.0-2",
+    "lpSolveAPI": "5.5.2.0-17.15",
+    "renv_lock_sha256": "f062f3631c7e124791e9d329d1b1084304925fdf7fafa2776f8c399176c3fc73",
+    "source_archive_manifest_sha256": "81762b9a558dc02416c211094798ca04a79ccb83c05e54a293887951c4d08eda"
+  },
+  "generation_rule": "No fixture data or candidate-method result may be generated until this pin record is committed; any later change to a hypothesis or expected classification requires a new preregistration version."
+}
+
