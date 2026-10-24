@@ -19,14 +19,14 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     steps:
-      - name: Create evidence staging directory
-        shell: bash
-        run: mkdir -p .a2-03b/evidence .a2-03b/download
-
       - name: Check out the exact pushed development commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
+
+      - name: Create evidence staging directory
+        shell: bash
+        run: mkdir -p .a2-03b .a2-03b/evidence .a2-03b/download
 
       - name: Set up the preregistered CPython
         id: python
@@ -92,16 +92,27 @@ jobs:
 
       - name: Record run and artifact receipt
         if: always()
+        env:
+          EXPERIMENT_OUTCOME: ${{ steps.experiment.outcome || 'NOT_RUN' }}
+          EVIDENCE_ARTIFACT_ID: ${{ steps.evidence.outputs.artifact-id || 'NOT_UPLOADED' }}
+          EVIDENCE_ARTIFACT_DIGEST: ${{ steps.evidence.outputs.artifact-digest || 'NOT_REPORTED' }}
         shell: bash
         run: |
           {
-            echo "## CP-STAT-02 A2-03B"
-            echo "- Commit: `$GITHUB_SHA`"
-            echo "- Workflow run: `$GITHUB_RUN_ID` (attempt `$GITHUB_RUN_ATTEMPT`)"
-            echo "- Experiment outcome: `${{ steps.experiment.outcome || 'NOT_RUN' }}`"
-            echo "- Evidence artifact ID: `${{ steps.evidence.outputs.artifact-id || 'NOT_UPLOADED' }}`"
-            echo "- GitHub artifact digest: `${{ steps.evidence.outputs.artifact-digest || 'NOT_REPORTED' }}`"
+            printf -- '## CP-STAT-02 A2-03B\n'
+            printf -- '- Commit: `%s`\n' "$GITHUB_SHA"
+            printf -- '- Workflow run: `%s` (attempt `%s`)\n' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT"
+            printf -- '- Experiment outcome: `%s`\n' "$EXPERIMENT_OUTCOME"
+            printf -- '- Evidence artifact ID: `%s`\n' "$EVIDENCE_ARTIFACT_ID"
+            printf -- '- GitHub artifact digest: `%s`\n' "$EVIDENCE_ARTIFACT_DIGEST"
             if [ -s .a2-03b/evidence/execution-status.json ]; then
-              python3 -c 'import json; p=json.load(open(".a2-03b/evidence/execution-status.json")); print("- Verdict: `" + str(p.get("verdict")) + "`"); print("- LP invocation attempts: `" + str(p.get("linprog_invocation_attempts")) + " / 32`")'
+              IFS=$'\t' read -r FINAL_VERDICT LP_INVOCATIONS < <(
+                python3 -c 'import json; p=json.load(open(".a2-03b/evidence/execution-status.json", encoding="utf-8")); print(p.get("verdict") or "UNMEASURED", p.get("linprog_invocation_attempts", "UNMEASURED"), sep="\t")'
+              )
+              printf -- '- Verdict: `%s`\n' "$FINAL_VERDICT"
+              printf -- '- LP invocation attempts: `%s / 32`\n' "$LP_INVOCATIONS"
+            else
+              printf -- '- Verdict: `UNMEASURED`\n'
+              printf -- '- LP invocation attempts: `UNMEASURED / 32`\n'
             fi
           } >> "$GITHUB_STEP_SUMMARY"
