@@ -1,7 +1,7 @@
 # ClinicalPSM — License scope and third-party materials
 
-**Documentation notice date:** 25 October 2026  
-**Intended first-party license:** [PolyForm Strict License 1.0.0](../../LICENSE.md)  
+**Documentation notice date:** 25 October 2026
+**Intended first-party license:** [PolyForm Strict License 1.0.0](../../LICENSE.md)
 **Official unchanged legal text:** https://polyformproject.org/licenses/strict/1.0.0
 
 ## 1. Scope of the declaration
