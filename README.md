@@ -67,4 +67,10 @@ cd .. && npx playwright test
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+[![PolyForm Strict 1.0.0](https://img.shields.io/badge/PolyForm%20Strict-1.0.0-00a35c)](LICENSE.md)
+
+**TR:** ClinicalPSM'nin lisanslama yetkisine sahip olunan özgün kodu, [PolyForm Strict License 1.0.0](LICENSE.md) kapsamında ticari olmayan araştırma ve kullanım için sunulur. Bu lisans, kodu değiştirme veya yeniden dağıtma izni vermez. Ücretli ürün, ticari klinik analiz hizmeti veya başka bir ürünle entegrasyon için ilgili hak sahiplerinden ayrıca yazılı lisans alınması gerekir.
+
+**EN:** Original ClinicalPSM code for which the licensor has rights is offered under the [PolyForm Strict License 1.0.0](LICENSE.md). Noncommercial use is permitted; modification and redistribution are not licensed. Commercial applications, paid clinical analysis services, and integration into another product require separate written permission from the relevant rights holder.
+
+This is **source-available**, not an OSI-approved open-source license. Third-party components, including WebR, R and R packages, remain subject to their **own licenses**. Historical rights or valid permissions already granted are not revoked merely by changing this README. See [license scope and third-party notes](docs/licensing/SCOPE_AND_THIRD_PARTY.md).
