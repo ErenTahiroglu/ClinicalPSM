@@ -1,0 +1,353 @@
+name: A2-03B R3 pinned-runner no-solver preflight
+
+on:
+  push:
+    branches:
+      - preflight/a2-03b-r3-rt1-6390460408
+    paths:
+      - .github/workflows/a2-03b-r3-preflight-only.yml
+      - .github/workflows/experiment-cp-stat-02-a2-03b.yml
+      - experiments/cp-stat-02/a2-f1/highs-forensics/A2_03B_*
+      - experiments/cp-stat-02/a2-f1/highs-forensics/a2_03b_harness.py
+      - experiments/cp-stat-02/a2-f1/highs-forensics/requirements-a2-03b.lock
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: a2-03b-r3-preflight-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: One-shot no-solver A2-03B preflight
+    outputs:
+      authorization_status: ${{ steps.authorization.outputs.gate_status }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Create minimal evidence staging before checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .a2-03b/evidence .a2-03b/download
+          printf '%s\n' '{"schema":"CP-STAT-02-A2-03B-R3-PREFLIGHT-INITIAL-v1","status":"INITIALIZED_UNMEASURED","linprog_invocation_attempts":0,"completed_manifest_cells":0,"execution_permission_implied":false}' > .a2-03b/evidence/preflight-initial-state.json
+          sha256sum .a2-03b/evidence/preflight-initial-state.json > .a2-03b/evidence/preflight-initial-state.json.sha256
+
+      - name: Enforce exact one-run authorization before checkout
+        id: authorization
+        shell: bash
+        env:
+          ALLOWED_SHA: ${{ vars.A2_03B_R3_PREFLIGHT_ALLOWED_SHA }}
+        run: |
+          set -euo pipefail
+          event_ok=false
+          ref_ok=false
+          sha_format_ok=false
+          allowed_sha_present=false
+          sha_match=false
+          run_number_ok=false
+          attempt_ok=false
+
+          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then event_ok=true; fi
+          if [[ "$GITHUB_REF" == "refs/heads/preflight/a2-03b-r3-rt1-6390460408" ]]; then ref_ok=true; fi
+          if [[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]]; then sha_format_ok=true; fi
+          if [[ -n "$ALLOWED_SHA" ]]; then allowed_sha_present=true; fi
+          if [[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ && "$ALLOWED_SHA" =~ ^[0-9a-f]{40}$ && "$ALLOWED_SHA" == "$GITHUB_SHA" ]]; then sha_match=true; fi
+          if [[ "$GITHUB_RUN_NUMBER" == "1" ]]; then run_number_ok=true; fi
+          if [[ "$GITHUB_RUN_ATTEMPT" == "1" ]]; then attempt_ok=true; fi
+
+          gate_status=BLOCKED
+          if [[ "$event_ok" == true && "$ref_ok" == true && "$sha_format_ok" == true && "$allowed_sha_present" == true && "$sha_match" == true && "$run_number_ok" == true && "$attempt_ok" == true ]]; then
+            gate_status=AUTHORIZED
+          fi
+
+          safe_sha=UNVERIFIED
+          if [[ "$sha_format_ok" == true ]]; then safe_sha="$GITHUB_SHA"; fi
+          printf '{"schema":"CP-STAT-02-A2-03B-R3-AUTHORIZATION-v1","status":"%s","commit_sha":"%s","event_push":%s,"exact_ref":%s,"commit_sha_format":%s,"allowed_sha_nonempty":%s,"allowed_sha_matches_run_sha":%s,"run_number_is_one":%s,"run_attempt_is_one":%s,"workflow_run_records_may_still_be_created":true}\n' \
+            "$gate_status" "$safe_sha" "$event_ok" "$ref_ok" "$sha_format_ok" "$allowed_sha_present" "$sha_match" "$run_number_ok" "$attempt_ok" \
+            > .a2-03b/evidence/authorization-gate.json
+          sha256sum .a2-03b/evidence/authorization-gate.json > .a2-03b/evidence/authorization-gate.json.sha256
+          printf 'gate_status=%s\n' "$gate_status" >> "$GITHUB_OUTPUT"
+
+          if [[ "$gate_status" != AUTHORIZED ]]; then
+            printf '%s\n' 'Exact ref/SHA/event/first-run authorization gate rejected this run; checkout and setup were not reached.' >&2
+            exit 1
+          fi
+
+      - name: Check out the authorized immutable commit without credential persistence
+        id: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+          clean: false
+
+      - name: Snapshot preregistered Python toolcache before setup
+        id: python_toolcache_snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 experiments/cp-stat-02/a2-f1/highs-forensics/a2_03b_harness.py snapshot-python-toolcache \
+            --output .a2-03b/evidence/python-toolcache-pre-setup.json
+
+      - name: Set up the preregistered CPython
+        id: python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13.17"
+          architecture: x64
+          check-latest: false
+          mirror: https://raw.githubusercontent.com/actions/python-versions/9834b4e4911ca2950ff6c3b7547f09eacc006848
+
+      - name: Install only the hash-locked wheels with no pip retries
+        id: wheels
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install \
+            --disable-pip-version-check \
+            --no-cache-dir \
+            --force-reinstall \
+            --only-binary=:all: \
+            --require-hashes \
+            --retries 0 \
+            --report .a2-03b/pip-install-report.json \
+            -r experiments/cp-stat-02/a2-f1/highs-forensics/requirements-a2-03b.lock
+
+      - name: Preserve a secret-safe pip report receipt immediately
+        id: pip_receipt
+        if: always() && steps.checkout.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          import runpy
+          import sys
+
+          source = pathlib.Path("experiments/cp-stat-02/a2-f1/highs-forensics/a2_03b_harness.py")
+          namespace = runpy.run_path(str(source))
+          receipt = namespace["capture_pip_install_report"](
+              pathlib.Path(".a2-03b/pip-install-report.json"),
+              pathlib.Path(".a2-03b/evidence"),
+          )
+          print("pip report receipt status:", receipt.get("status", "UNMEASURED"))
+          if receipt.get("status") != "RAW_RETAINED":
+              sys.exit(1)
+          PY
+
+      - name: Run the fixed no-solver preflight command
+        id: preflight
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SETUP_PYTHON_PATH: ${{ steps.python.outputs.python-path }}
+          SETUP_PYTHON_VERSION: ${{ steps.python.outputs.python-version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python experiments/cp-stat-02/a2-f1/highs-forensics/a2_03b_harness.py preflight-only \
+            --evidence-dir .a2-03b/evidence \
+            --download-dir .a2-03b/download \
+            --pip-report .a2-03b/pip-install-report.json \
+            --toolcache-snapshot .a2-03b/evidence/python-toolcache-pre-setup.json
+
+      - name: Record failure and verify checksummed evidence
+        id: evidence_seal
+        if: always()
+        env:
+          AUTHORIZATION_OUTCOME: ${{ steps.authorization.outcome }}
+          CHECKOUT_OUTCOME: ${{ steps.checkout.outcome }}
+          SNAPSHOT_OUTCOME: ${{ steps.python_toolcache_snapshot.outcome }}
+          PYTHON_SETUP_OUTCOME: ${{ steps.python.outcome }}
+          WHEEL_INSTALL_OUTCOME: ${{ steps.wheels.outcome }}
+          PIP_RECEIPT_OUTCOME: ${{ steps.pip_receipt.outcome }}
+          PREFLIGHT_OUTCOME: ${{ steps.preflight.outcome }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path, PurePosixPath
+          import sys
+
+          evidence = Path(".a2-03b/evidence")
+          evidence.mkdir(parents=True, exist_ok=True)
+          outcome_names = (
+              "AUTHORIZATION_OUTCOME", "CHECKOUT_OUTCOME", "SNAPSHOT_OUTCOME",
+              "PYTHON_SETUP_OUTCOME", "WHEEL_INSTALL_OUTCOME", "PIP_RECEIPT_OUTCOME",
+              "PREFLIGHT_OUTCOME",
+          )
+          allowed_outcomes = {"success", "failure", "cancelled", "skipped", ""}
+          outcomes = {
+              name.removesuffix("_OUTCOME").lower(): (
+                  os.environ.get(name, "") if os.environ.get(name, "") in allowed_outcomes else "UNKNOWN"
+              )
+              for name in outcome_names
+          }
+          required_success = all(value == "success" for value in outcomes.values())
+          status_path = evidence / "execution-status.json"
+          existing = None
+          if status_path.is_file():
+              try:
+                  existing = json.loads(status_path.read_text(encoding="utf-8"))
+              except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+                  existing = None
+          valid_status = isinstance(existing, dict) and existing.get("schema") == "CP-STAT-02-A2-03B-PREFLIGHT-STATUS-v1"
+          preflight_pass = valid_status and existing.get("preflight_status") == "PASS" and existing.get("execution_permission_implied") is False
+          if not valid_status:
+              blocked = {
+                  "schema": "CP-STAT-02-A2-03B-PREFLIGHT-STATUS-v1",
+                  "workflow_run_id": os.environ.get("GITHUB_RUN_ID"),
+                  "commit_sha": os.environ.get("GITHUB_SHA"),
+                  "verdict": "A2_03B_PREFLIGHT_ONLY_BLOCKED",
+                  "preflight_status": "FAIL",
+                  "linprog_invocation_attempts": 0,
+                  "completed_manifest_cells": 0,
+                  "execution_permission_implied": False,
+                  "blocker": "preflight status is missing or malformed; inspect the checksummed workflow and step receipts",
+                  "step_outcomes": outcomes,
+              }
+              status_path.write_text(json.dumps(blocked, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+              (evidence / "A2_03B_BLOCKER.json").write_text(json.dumps(blocked, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+              (evidence / "falsification-report.json").write_text(json.dumps({
+                  "schema": "CP-STAT-02-A2-03B-FALSIFICATION-REPORT-v1",
+                  "registered_controls": 15,
+                  "executed_controls": 0,
+                  "controls": [],
+                  "all_controls_passed": False,
+                  "unmeasured_reason": "workflow failed before a valid no-solver preflight status was available",
+              }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          elif preflight_pass and not required_success:
+              workflow_blocker = {
+                  "schema": "CP-STAT-02-A2-03B-R3-WORKFLOW-BLOCKER-v1",
+                  "status": "BLOCKED",
+                  "reason": "one or more required workflow steps did not succeed despite a preflight PASS receipt",
+                  "step_outcomes": outcomes,
+                  "linprog_invocation_attempts": 0,
+                  "execution_permission_implied": False,
+              }
+              (evidence / "workflow-blocker.json").write_text(json.dumps(workflow_blocker, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+          files = sorted(path for path in evidence.rglob("*") if path.is_file() and path.name != "SHA256SUMS")
+          entries = []
+          for path in files:
+              if path.is_symlink():
+                  raise RuntimeError("symlink is not permitted in the evidence directory")
+              relative = path.relative_to(evidence).as_posix()
+              entries.append(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {relative}")
+          sums = evidence / "SHA256SUMS"
+          sums.write_text("\n".join(entries) + "\n", encoding="utf-8")
+          listed = {}
+          for line in sums.read_text(encoding="utf-8").splitlines():
+              digest, separator, relative = line.partition("  ")
+              rel = PurePosixPath(relative)
+              if not separator or len(digest) != 64 or rel.is_absolute() or ".." in rel.parts or relative in listed:
+                  raise RuntimeError("malformed or unsafe evidence checksum entry")
+              target = evidence.joinpath(*rel.parts)
+              if not target.is_file() or hashlib.sha256(target.read_bytes()).hexdigest() != digest:
+                  raise RuntimeError("evidence checksum mismatch or missing member")
+              listed[relative] = digest
+          actual = {
+              path.relative_to(evidence).as_posix()
+              for path in evidence.rglob("*") if path.is_file() and path.name != "SHA256SUMS"
+          }
+          if set(listed) != actual:
+              raise RuntimeError("checksum manifest does not cover the exact evidence file set")
+          print(f"evidence checksum entries verified: {len(listed)}")
+          if not (preflight_pass and required_success):
+              sys.exit(1)
+          PY
+
+      - name: Upload checksummed preflight evidence, including blockers
+        id: evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cp-stat-02-a2-03b-r3-preflight-${{ github.run_id }}
+          path: .a2-03b/evidence/
+          if-no-files-found: error
+          retention-days: 90
+
+  authorization-rejection-receipt:
+    name: Checksummed receipt when the protected job never reaches its gate
+    needs: preflight
+    if: always() && needs.preflight.outputs.authorization_status == ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: none
+    steps:
+      - name: Record a blocked protected-job authorization receipt
+        id: rejection_receipt
+        shell: bash
+        env:
+          PREFLIGHT_JOB_RESULT: ${{ needs.preflight.result }}
+        run: |
+          set -euo pipefail
+          mkdir -p .a2-03b/evidence
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          evidence = Path(".a2-03b/evidence")
+          result = os.environ.get("PREFLIGHT_JOB_RESULT", "")
+          if result not in {"success", "failure", "cancelled", "skipped"}:
+              result = "UNKNOWN"
+          receipt = {
+              "schema": "CP-STAT-02-A2-03B-R3-PROTECTED-JOB-BLOCKER-v1",
+              "status": "BLOCKED",
+              "reason": "protected preflight job did not expose its first-step authorization result; environment rejection, pre-run failure, or missing output is not distinguishable here",
+              "preflight_job_result": result,
+              "linprog_invocation_attempts": 0,
+              "completed_manifest_cells": 0,
+              "execution_permission_implied": False,
+          }
+          path = evidence / "protected-job-blocker.json"
+          raw = (json.dumps(receipt, indent=2, sort_keys=True) + "\n").encode("utf-8")
+          path.write_bytes(raw)
+          (evidence / "protected-job-blocker.json.sha256").write_text(
+              hashlib.sha256(raw).hexdigest() + "  protected-job-blocker.json\n",
+              encoding="utf-8",
+          )
+          entries = []
+          for item in sorted(evidence.rglob("*")):
+              if item.is_file() and item.name != "SHA256SUMS":
+                  relative = item.relative_to(evidence).as_posix()
+                  entries.append(f"{hashlib.sha256(item.read_bytes()).hexdigest()}  {relative}")
+          sums = evidence / "SHA256SUMS"
+          sums.write_text("\n".join(entries) + "\n", encoding="utf-8")
+          listed = set()
+          for line in sums.read_text(encoding="utf-8").splitlines():
+              digest, separator, relative = line.partition("  ")
+              rel = Path(relative)
+              candidate = evidence / rel
+              if not separator or rel.is_absolute() or ".." in rel.parts or relative in listed or not candidate.is_file() or hashlib.sha256(candidate.read_bytes()).hexdigest() != digest:
+                  raise RuntimeError("protected-job blocker checksum verification failed")
+              listed.add(relative)
+          actual = {
+              item.relative_to(evidence).as_posix()
+              for item in evidence.rglob("*") if item.is_file() and item.name != "SHA256SUMS"
+          }
+          if listed != actual:
+              raise RuntimeError("protected-job blocker manifest does not cover the exact evidence file set")
+          print("protected-job receipt: BLOCKED; checksums verified")
+          PY
+          exit 1
+
+      - name: Upload checksummed protected-job blocker receipt
+        id: rejection_artifact
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cp-stat-02-a2-03b-r3-protected-job-blocked-${{ github.run_id }}
+          path: .a2-03b/evidence/
+          if-no-files-found: error
+          retention-days: 90

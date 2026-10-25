@@ -1,0 +1,60 @@
+{
+  "schema": "CP-STAT-02-A2-03B-FROZEN-INPUTS-v1.3",
+  "status": "FROZEN_BEFORE_SOLVER",
+  "immutable_preregistration_commit": "44b4faaa4b3ed9054a3b05be2741fb1c0d326cbe",
+  "maximum_linprog_calls": 32,
+  "source_archive": {
+    "workflow_id": "40097510667",
+    "artifact_id": "12560933385",
+    "outer_sha256": "ebf2d899a4d1bb8404415183dd35d4d7eb221b5a33b0eec1f8d7e9eb4e5c5c6a",
+    "internal_sha256": "326b94c50d9cbbdf72967c0df0d495761e7b736afb30906e60030c3d1d8ae554",
+    "proof_manifest_sha256": "809aefbb94c320b9368bc740a38fa39c87db279da82a7f96aa8622a98add6ef4",
+    "matrix_sha256": {
+      "cpstat02a1_31_small_scale_complete": "ea55df16749f235ee69b4634ec37408a2bb6361a9fb26b820170cbaf0373370e",
+      "cpstat02a1_33_heterogeneous_scale_overlap": "be5efb7a008f0ca285691c32faff08b48df19054bd1f09bc25e0e1c10609add1"
+    }
+  },
+  "runtime": {
+    "platform": "ubuntu-24.04 x86_64",
+    "cpython": "3.13.17",
+    "python_source_archive_sha256": "6020bd10aff3bf4821be16f088ebb1591beb7b811dcd8fab1da8f7c22a7b27e7",
+    "python_versions_manifest_commit": "9834b4e4911ca2950ff6c3b7547f09eacc006848",
+    "python_release_url": "https://github.com/actions/python-versions/releases/download/3.13.17-39711892467/python-3.13.17-linux-24.04-x64.tar.gz",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "embedded_highs": "1.12.0"
+  },
+  "wheel_sha256": {
+    "pip": "fd7f4dfa8190e014013b9f08f3e973f4e4c26ffd179a204895533a7254813a70",
+    "numpy": "6ffa07666f8da0eef81d149934a626d0d95fbd6838432a33e66245423a9062c0",
+    "scipy": "fdaf5ea890a6183d0565f51a61799d67081bd5b1cf03c5f4b3fd3732108625c9"
+  },
+  "files_sha256": {
+    ".github/workflows/experiment-cp-stat-02-a2-03b.yml": "788c2ea2cfe300a8b0c17a0ae83fe18c1c368eae9b667baf863bf225fd4b0dd3",
+    "experiments/cp-stat-02/a2-f1/highs-forensics/A2_03A_HANDOFF.md": "ba2628a588e1454a32fb0f05eeea3d3826ec21e29963ef8b6b990e61d1994e6a",
+    "experiments/cp-stat-02/a2-f1/highs-forensics/A2_03B_EXECUTION_INTERPRETATION-v1.1.json": "587cdc5714711078f23d1a142fa835cea0fc8ff7187e0a19286ae297b567c79e",
+    "experiments/cp-stat-02/a2-f1/highs-forensics/A2_03B_EXECUTION_INTERPRETATION-v1.1.md": "a0f3a3e464d87854a2cf6d9101902623b03a689ef5fa8664e1c4988b483a7453",
+    "experiments/cp-stat-02/a2-f1/highs-forensics/A2_03B_EXECUTION_MANIFEST-v1.1.json": "1ad923a439d2587e34a5644bf518dc5c3cda74d0a61c98fce6969f1b0a5d9c5c",
+    "experiments/cp-stat-02/a2-f1/highs-forensics/FALSIFICATION_PLAN.md": "1620f46ac2a0b17d2323ec11d9d5647897fa5c2737954be3f7ee94deaaed4cc6",
+    "experiments/cp-stat-02/a2-f1/highs-forensics/HIGHS_PREREGISTRATION-v1.md": "1be958d3768729a13569e2af4cfc950bf6fde562634ce86b7509047a5e99c85c",
+    "experiments/cp-stat-02/a2-f1/highs-forensics/LP_MATHEMATICAL_CONTRACT.md": "8acf2c3adad8c94c1eb6ec1bc66a79836b0cb740242eab13adbc61610a37bdd2",
+    "experiments/cp-stat-02/a2-f1/highs-forensics/NUMERICAL_ACCEPTANCE_CONTRACT.json": "b3a11da7a896437854e7ff3c57e78edc87924a9daa7b9aab3f872166cfdb501e",
+    "experiments/cp-stat-02/a2-f1/highs-forensics/SOLVER_ENVIRONMENT_LOCK.md": "180c9bcebf4bd1785c3fa81ba13ee211f8d5ff0544b25c978df5eaea83982d01",
+    "experiments/cp-stat-02/a2-f1/highs-forensics/a2_03b_harness.py": "7e273275f8b5519e6f08ac8e74d0e5d193761694088c64046d2b7236cc7e4246",
+    "experiments/cp-stat-02/a2-f1/highs-forensics/requirements-a2-03b.lock": "9c9778a1f2c4eba87b05941a4b2ea01fe58b19f50ae6483b351b1a2d9368fb60"
+  },
+  "python_provenance": {
+    "setup_python_action_commit": "6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+    "toolcache_snapshot_schema": "CP-STAT-02-A2-03B-PYTHON-TOOLCACHE-SNAPSHOT-v1",
+    "toolcache_presence_method": "READ_ONLY_PRE_SETUP_VERSION_ARCHITECTURE_COMPLETE_MARKER_AND_EXECUTABLE",
+    "dependency_cache_input": "NOT_CONFIGURED",
+    "dependency_cache_output_semantics": "OPTIONAL_PACKAGE_DEPENDENCY_CACHE_ONLY",
+    "python_source_archive_sha256_semantics": "UPSTREAM_SOURCE_ARCHIVE_NOT_PREBUILT_RUNTIME",
+    "distribution_asset_sha256": "NOT_PUBLISHED_IN_PINNED_MANIFEST_OR_ACTION_OUTPUT",
+    "installed_executable_identity": "VERSION_ABI_REALPATH_SHA256_SIZE_REQUIRED_AFTER_SETUP",
+    "acquisition_classification": [
+      "PREEXISTING_TOOLCACHE_CONFIRMED_BY_PRESTATE_AND_BINARY_IDENTITY",
+      "DOWNLOAD_BRANCH_DERIVED_FROM_PRESTATE_AND_PINNED_ACTION_SOURCE"
+    ]
+  }
+}

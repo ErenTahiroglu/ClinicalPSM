@@ -21,8 +21,8 @@ import json
 import math
 import os
 import pathlib
+import re
 import platform
-import shutil
 import subprocess
 import sys
 import sysconfig
@@ -31,13 +31,14 @@ import tempfile
 import time
 import traceback
 import urllib.error
+import urllib.parse
 import urllib.request
 import warnings
 import zipfile
 
 BASE = pathlib.Path(__file__).resolve().parent
 REPO = BASE.parents[3]
-FREEZE_PATH = BASE / "A2_03B_FROZEN_INPUTS-v1.2.json"
+FREEZE_PATH = BASE / "A2_03B_FROZEN_INPUTS-v1.3.json"
 MANIFEST_PATH = BASE / "A2_03B_EXECUTION_MANIFEST-v1.1.json"
 CONTRACT_PATH = BASE / "NUMERICAL_ACCEPTANCE_CONTRACT.json"
 ANNEX_JSON_PATH = BASE / "A2_03B_EXECUTION_INTERPRETATION-v1.1.json"
@@ -51,6 +52,9 @@ EXPECTED_A1_COMMIT = "579a2532a5fe210917e2b37e7d7f950c8d01d78f"
 EXPECTED_PREREGISTRATION_COMMIT = "44b4faaa4b3ed9054a3b05be2741fb1c0d326cbe"
 PYTHON_VERSIONS_MANIFEST_COMMIT = "9834b4e4911ca2950ff6c3b7547f09eacc006848"
 PYTHON_RELEASE_URL = "https://github.com/actions/python-versions/releases/download/3.13.17-39711892467/python-3.13.17-linux-24.04-x64.tar.gz"
+SETUP_PYTHON_ACTION_COMMIT = "6d4fd22b20465ccc0f7354476588e8df7c9ca0e0"
+TOOLCACHE_SNAPSHOT_SCHEMA = "CP-STAT-02-A2-03B-PYTHON-TOOLCACHE-SNAPSHOT-v1"
+PRE_SETUP_SNAPSHOT_NAME = "python-toolcache-pre-setup.json"
 EXPECTED_RUN_ID = "40097510667"
 EXPECTED_ARTIFACT_ID = "12560933385"
 MATRIX_HASHES = {
@@ -90,6 +94,37 @@ def sha256_file(path: pathlib.Path) -> str:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def redact_sensitive_text(value: str) -> str:
+    """Remove credentials and signed query strings from failure evidence/log text."""
+    text = str(value)
+    token = os.environ.get("GITHUB_TOKEN")
+    if token:
+        text = text.replace(token, "[REDACTED_GITHUB_TOKEN]")
+    url_pattern = re.compile(r"https?://[^\s<>\"']+", re.IGNORECASE)
+
+    def redact_url(match):
+        raw_url = match.group(0).rstrip(".,);]")
+        suffix = match.group(0)[len(raw_url):]
+        try:
+            parsed = urllib.parse.urlsplit(raw_url)
+            host = parsed.hostname or "[REDACTED_HOST]"
+            if parsed.port:
+                host += f":{parsed.port}"
+            # URL paths can also carry credentials on private registries. Failure
+            # text needs the origin for diagnosis, never the path itself.
+            path = "/[REDACTED_PATH]" if parsed.path else ""
+            query = "?[REDACTED_QUERY]" if parsed.query else ""
+            fragment = "#[REDACTED_FRAGMENT]" if parsed.fragment else ""
+            return urllib.parse.urlunsplit((parsed.scheme, host, path, "", "")) + query + fragment + suffix
+        except (TypeError, ValueError):
+            return "[REDACTED_URL]" + suffix
+
+    text = url_pattern.sub(redact_url, text)
+    text = re.sub(r"(?i)(authorization|access[_-]?token|refresh[_-]?token|password|secret)(\s*[:=]\s*)[^\s,;]+", r"\1\2[REDACTED]", text)
+    text = re.sub(r"(?i)bearer\s+[^\s,;]+", "Bearer [REDACTED]", text)
+    return text
 
 
 def write_json(path: pathlib.Path, value) -> None:
@@ -174,8 +209,8 @@ def verify_frozen_files() -> dict:
     if not FREEZE_PATH.is_file():
         raise PreflightError("frozen input lock is missing")
     frozen = load_json(FREEZE_PATH)
-    if frozen.get("schema") != "CP-STAT-02-A2-03B-FROZEN-INPUTS-v1.2":
-        raise PreflightError("frozen input lock schema is not v1.2")
+    if frozen.get("schema") != "CP-STAT-02-A2-03B-FROZEN-INPUTS-v1.3":
+        raise PreflightError("frozen input lock schema is not v1.3")
     if frozen.get("status") != "FROZEN_BEFORE_SOLVER":
         raise PreflightError("frozen input lock status is not FROZEN_BEFORE_SOLVER")
     if frozen.get("immutable_preregistration_commit") != EXPECTED_PREREGISTRATION_COMMIT:
@@ -207,6 +242,22 @@ def verify_frozen_files() -> dict:
     }
     if frozen.get("runtime") != expected_runtime:
         raise PreflightError("frozen lock runtime differs from the accepted solver environment")
+    expected_provenance = {
+        "setup_python_action_commit": SETUP_PYTHON_ACTION_COMMIT,
+        "toolcache_snapshot_schema": TOOLCACHE_SNAPSHOT_SCHEMA,
+        "toolcache_presence_method": "READ_ONLY_PRE_SETUP_VERSION_ARCHITECTURE_COMPLETE_MARKER_AND_EXECUTABLE",
+        "dependency_cache_input": "NOT_CONFIGURED",
+        "dependency_cache_output_semantics": "OPTIONAL_PACKAGE_DEPENDENCY_CACHE_ONLY",
+        "python_source_archive_sha256_semantics": "UPSTREAM_SOURCE_ARCHIVE_NOT_PREBUILT_RUNTIME",
+        "distribution_asset_sha256": "NOT_PUBLISHED_IN_PINNED_MANIFEST_OR_ACTION_OUTPUT",
+        "installed_executable_identity": "VERSION_ABI_REALPATH_SHA256_SIZE_REQUIRED_AFTER_SETUP",
+        "acquisition_classification": [
+            "PREEXISTING_TOOLCACHE_CONFIRMED_BY_PRESTATE_AND_BINARY_IDENTITY",
+            "DOWNLOAD_BRANCH_DERIVED_FROM_PRESTATE_AND_PINNED_ACTION_SOURCE",
+        ],
+    }
+    if frozen.get("python_provenance") != expected_provenance:
+        raise PreflightError("frozen Python provenance contract differs from the R3 interpretation")
     checked = {}
     for relative, expected in frozen.get("files_sha256", {}).items():
         path = REPO / relative
@@ -232,11 +283,35 @@ def verify_frozen_files() -> dict:
     }
     if set(checked) != required:
         raise PreflightError("frozen input lock file set differs from the exact required inputs")
+    verify_setup_python_workflow_contract()
     return {
         "lock_sha256": sha256_file(FREEZE_PATH),
         "checked_files": checked,
         "checked_file_count": len(checked),
     }
+
+
+def verify_setup_python_workflow_contract():
+    workflow_path = REPO / ".github/workflows/experiment-cp-stat-02-a2-03b.yml"
+    lines = workflow_path.read_text(encoding="utf-8").splitlines()
+    setup_lines = [i for i, line in enumerate(lines) if re.search(r"uses:\s*actions/setup-python@", line)]
+    if len(setup_lines) != 1 or not re.search(
+        rf"uses:\s*actions/setup-python@{SETUP_PYTHON_ACTION_COMMIT}(?:\s|$)", lines[setup_lines[0]]
+    ):
+        raise PreflightError("workflow does not use the exact preregistered setup-python action commit")
+    setup_start = setup_lines[0]
+    setup_end = next((i for i in range(setup_start + 1, len(lines)) if re.match(r"\s*- name:", lines[i])), len(lines))
+    setup_block = lines[setup_start:setup_end]
+    if any(re.match(r"\s*cache\s*:", line) for line in setup_block):
+        raise PreflightError("workflow unexpectedly configures setup-python dependency caching")
+    snapshot_lines = [i for i, line in enumerate(lines) if "snapshot-python-toolcache" in line]
+    if len(snapshot_lines) != 1 or snapshot_lines[0] >= setup_start:
+        raise PreflightError("pre-setup Python toolcache snapshot is missing or ordered after setup-python")
+    if "python-toolcache-pre-setup.json" not in lines[snapshot_lines[0]] and not any(
+        "python-toolcache-pre-setup.json" in line for line in lines[snapshot_lines[0]:setup_start]
+    ):
+        raise PreflightError("pre-setup Python toolcache snapshot destination is missing")
+    return {"setup_python_action_commit": SETUP_PYTHON_ACTION_COMMIT, "dependency_cache_configured": False}
 
 
 def expected_manifest_rows():
@@ -910,6 +985,134 @@ def static_checks(data, require_frozen=True):
     }
 
 
+def _pip_report_sensitivity(report):
+    """Return a safe-to-retain decision without returning any sensitive value."""
+    if not isinstance(report, dict) or not isinstance(report.get("install"), list):
+        return False, "unparseable_or_missing_install_list"
+    sensitive_names = ("authorization", "credential", "password", "secret", "token", "api_key")
+
+    def public_pypi_wheel_url(raw_url):
+        """Accept only the public PyPI CDN's non-secret wheel URL structure."""
+        if not isinstance(raw_url, str):
+            return False
+        try:
+            parsed = urllib.parse.urlsplit(raw_url)
+            port = parsed.port
+        except (TypeError, ValueError):
+            return False
+        if (
+            parsed.scheme != "https"
+            or parsed.hostname != "files.pythonhosted.org"
+            or parsed.username
+            or parsed.password
+            or port
+            or parsed.query
+            or (parsed.fragment and not re.fullmatch(r"sha256=[0-9a-fA-F]{64}", parsed.fragment))
+        ):
+            return False
+        parts = parsed.path.lstrip("/").split("/")
+        if len(parts) < 3 or parts[0] != "packages" or not parts[-1].endswith(".whl"):
+            return False
+        if not all(re.fullmatch(r"[0-9a-fA-F]{2,64}", part) for part in parts[1:-1]):
+            return False
+        return True
+
+    def inspect(value):
+        if isinstance(value, dict):
+            for key, child in value.items():
+                normalized = str(key).lower().replace("-", "_")
+                if any(marker in normalized for marker in sensitive_names):
+                    return False
+                if not inspect(child):
+                    return False
+        elif isinstance(value, list):
+            return all(inspect(item) for item in value)
+        elif isinstance(value, str):
+            lowered = value.lower()
+            if "authorization:" in lowered or "bearer " in lowered:
+                return False
+            for match in re.finditer(r"https?://[^\s<>\"']+", value, re.IGNORECASE):
+                if not public_pypi_wheel_url(match.group(0).rstrip(".,);]")):
+                    return False
+        return True
+
+    if not inspect(report):
+        return False, "credential_like_field_or_header_present"
+    for item in report["install"]:
+        download = item.get("download_info", {}) if isinstance(item, dict) else {}
+        raw_url = download.get("url") if isinstance(download, dict) else None
+        if not isinstance(raw_url, str):
+            return False, "download_url_missing_or_invalid"
+        try:
+            parsed = urllib.parse.urlsplit(raw_url)
+            port = parsed.port
+        except (TypeError, ValueError):
+            return False, "download_url_invalid"
+        if not public_pypi_wheel_url(raw_url):
+            return False, "download_url_is_not_a_public_pypi_wheel_url"
+        metadata = item.get("metadata", {}) if isinstance(item, dict) else {}
+        package = str(metadata.get("name", "")).lower().replace("_", "-").replace(".", "-")
+        version = str(metadata.get("version", ""))
+        filename = pathlib.PurePosixPath(parsed.path).name.lower()
+        if not package or not version or not filename.startswith(f"{package}-{version.lower()}-"):
+            return False, "download_url_wheel_filename_does_not_match_package_identity"
+        archive_hash = download.get("archive_info", {}).get("hashes", {}).get("sha256")
+        if parsed.fragment and parsed.fragment.lower() != f"sha256={str(archive_hash).lower()}":
+            return False, "download_url_fragment_hash_mismatch"
+    return True, "no_credentials_or_signed_url_fields_detected"
+
+
+def capture_pip_install_report(source_path: pathlib.Path, evidence_dir: pathlib.Path):
+    """Retain exact pip report bytes only when the report has no secret-bearing URL."""
+    receipt_path = evidence_dir / "pip-install-report-receipt.json"
+    raw_output = evidence_dir / "pip-install-report.json"
+    receipt = {
+        "schema": "CP-STAT-02-A2-03B-PIP-REPORT-RECEIPT-v1",
+        "status": "UNMEASURED",
+        "source_path": str(source_path),
+        "retained_raw": False,
+        "sha256": None,
+        "size_bytes": None,
+        "reason": None,
+    }
+    try:
+        raw = source_path.read_bytes()
+        receipt["sha256"] = sha256_bytes(raw)
+        receipt["size_bytes"] = len(raw)
+    except OSError:
+        receipt["status"] = "MISSING"
+        receipt["reason"] = "pip installation report is not readable"
+        write_json(receipt_path, receipt)
+        return receipt
+    try:
+        report = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        receipt["status"] = "OMITTED_UNPARSEABLE"
+        receipt["reason"] = "report could not be parsed for secret-safe retention"
+        write_json(receipt_path, receipt)
+        return receipt
+    safe, reason = _pip_report_sensitivity(report)
+    if not safe:
+        receipt["status"] = "OMITTED_SENSITIVE_OR_UNVERIFIABLE"
+        receipt["reason"] = reason
+        write_json(receipt_path, receipt)
+        return receipt
+    if raw_output.exists() and sha256_file(raw_output) != receipt["sha256"]:
+        receipt["status"] = "CONFLICTING_EVIDENCE_FILE"
+        receipt["reason"] = "existing raw report differs from the pip report bytes"
+        write_json(receipt_path, receipt)
+        return receipt
+    raw_output.write_bytes(raw)
+    receipt.update({
+        "status": "RAW_RETAINED",
+        "retained_raw": True,
+        "evidence_path": raw_output.name,
+        "reason": reason,
+    })
+    write_json(receipt_path, receipt)
+    return receipt
+
+
 def parse_install_report(path: pathlib.Path):
     report = load_json(path)
     installs = report.get("install")
@@ -931,12 +1134,146 @@ def parse_install_report(path: pathlib.Path):
         actual_hash = item.get("download_info", {}).get("archive_info", {}).get("hashes", {}).get("sha256")
         if actual_version != version or actual_hash != expected_hash:
             raise PreflightError(f"pinned wheel version/hash mismatch for {name}")
+        download_url = item.get("download_info", {}).get("url", "")
+        parsed_url = urllib.parse.urlsplit(download_url)
         records[name] = {
             "version": actual_version,
             "wheel_sha256": actual_hash,
-            "download_url": item.get("download_info", {}).get("url"),
+            "download_url_origin": f"{parsed_url.scheme}://{parsed_url.hostname}",
+            "download_url_status": "ORIGIN_RETAINED_FULL_URL_OMITTED",
         }
     return records
+
+
+def capture_python_toolcache_snapshot(output_path: pathlib.Path):
+    """Read-only snapshot of the exact CPython toolcache slot before setup-python."""
+    agent_tool_directory = os.environ.get("AGENT_TOOLSDIRECTORY")
+    runner_tool_cache = os.environ.get("RUNNER_TOOL_CACHE")
+    root_value = agent_tool_directory.strip() if agent_tool_directory and agent_tool_directory.strip() else runner_tool_cache
+    root = pathlib.Path(root_value).expanduser() if root_value else None
+    candidate = root / "Python" / "3.13.17" / "x64" if root else None
+    complete_marker = pathlib.Path(str(candidate) + ".complete") if candidate else None
+    executable = candidate / "bin" / "python" if candidate else None
+    candidate_exists = bool(candidate and candidate.exists())
+    marker_exists = bool(complete_marker and complete_marker.is_file())
+    executable_exists = bool(executable and executable.is_file() and os.access(executable, os.X_OK))
+    if root is None:
+        candidate_status = "UNVERIFIED_MISSING_TOOLCACHE_ROOT"
+    elif not candidate_exists and not marker_exists:
+        candidate_status = "ABSENT"
+    elif candidate_exists and marker_exists and executable_exists:
+        candidate_status = "COMPLETE_EXECUTABLE"
+    else:
+        candidate_status = "INCOMPLETE_OR_INVALID"
+    os_release = pathlib.Path("/etc/os-release")
+    os_release_text = os_release.read_text(encoding="utf-8", errors="replace") if os_release.is_file() else ""
+    os_fields = {}
+    for line in os_release_text.splitlines():
+        key, separator, value = line.partition("=")
+        if separator and key in ("ID", "VERSION_ID", "PRETTY_NAME"):
+            os_fields[key] = value.strip().strip('"')
+    record = {
+        "schema": TOOLCACHE_SNAPSHOT_SCHEMA,
+        "captured_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "phase": "BEFORE_ACTIONS_SETUP_PYTHON",
+        "runner": {
+            "runner_os": os.environ.get("RUNNER_OS"),
+            "runner_arch": os.environ.get("RUNNER_ARCH"),
+            "image_os": os.environ.get("ImageOS"),
+            "image_version": os.environ.get("ImageVersion"),
+            "os_release": os_fields,
+            "os_release_sha256": sha256_bytes(os_release_text.encode("utf-8")) if os_release_text else None,
+            "kernel_release": platform.release(),
+        },
+        "toolcache": {
+            "runner_tool_cache": runner_tool_cache,
+            "agent_tool_directory": agent_tool_directory,
+            "effective_root": str(root.resolve()) if root else None,
+            "candidate_path": str(candidate.resolve()) if candidate and candidate.exists() else str(candidate) if candidate else None,
+            "complete_marker_path": str(complete_marker) if complete_marker else None,
+            "complete_marker_sha256": sha256_file(complete_marker) if marker_exists else None,
+            "candidate_status": candidate_status,
+            "python_path": str(executable.resolve()) if executable_exists else None,
+            "python_sha256": sha256_file(executable) if executable_exists else None,
+            "python_size_bytes": executable.stat().st_size if executable_exists else None,
+        },
+    }
+    write_json(output_path, record)
+    return 0 if candidate_status in ("ABSENT", "COMPLETE_EXECUTABLE") and record["runner"]["image_version"] else 1
+
+
+def dependency_cache_observation(cache_configured: bool, cache_hit_value):
+    """Interpret setup-python's optional dependency-cache output independently."""
+    raw = "" if cache_hit_value is None else str(cache_hit_value).strip().lower()
+    if not cache_configured:
+        if raw:
+            raise PreflightError("dependency-cache output is present although the frozen workflow has no cache input")
+        return {"configured": False, "cache_hit": "NOT_APPLICABLE", "meaning": "dependency cache only; no interpreter-source inference"}
+    if raw not in ("true", "false"):
+        raise PreflightError("configured dependency cache did not provide a true/false cache-hit output")
+    return {"configured": True, "cache_hit": raw, "meaning": "dependency cache only; no interpreter-source inference"}
+
+
+def validate_runner_identity(
+    os_release: str,
+    image_os: str | None,
+    image_version: str | None,
+    runner_os: str | None,
+    runner_arch: str | None,
+    system: str,
+    machine: str,
+    architecture: str,
+):
+    fields = {}
+    for line in os_release.splitlines():
+        key, separator, value = line.partition("=")
+        if separator and key in ("ID", "VERSION_ID"):
+            fields[key] = value.strip().strip('"')
+    if fields.get("ID") != "ubuntu" or fields.get("VERSION_ID") != "24.04":
+        raise PreflightError("runtime operating system is not Ubuntu 24.04")
+    if system != "Linux" or machine.lower() not in ("x86_64", "amd64") or architecture != "64bit":
+        raise PreflightError("runtime is not 64-bit Linux x86_64")
+    if runner_os != "Linux" or (runner_arch or "").lower() not in ("x64", "amd64", "x86_64"):
+        raise PreflightError("GitHub runner OS/architecture metadata is missing or inconsistent")
+    if image_os != "ubuntu24" or not image_version or not re.fullmatch(r"\d{8}\.\d+(?:\.\d+)?", image_version):
+        raise PreflightError("GitHub runner image metadata is missing, malformed, or not Ubuntu 24.04")
+    return fields
+
+
+def classify_python_acquisition(snapshot: dict, setup_path: str, actual_path: pathlib.Path, actual_sha256: str):
+    if not isinstance(snapshot, dict) or snapshot.get("schema") != TOOLCACHE_SNAPSHOT_SCHEMA:
+        raise PreflightError("pre-setup Python toolcache snapshot is missing or has an unknown schema")
+    toolcache = snapshot.get("toolcache", {})
+    candidate_status = toolcache.get("candidate_status")
+    expected_executable = toolcache.get("python_path")
+    effective_root = toolcache.get("effective_root")
+    if not effective_root or not setup_path:
+        raise PreflightError("toolcache root or setup-python executable identity is missing")
+    candidate_dir = pathlib.Path(effective_root) / "Python" / "3.13.17" / "x64"
+    candidate_executable = candidate_dir / "bin" / "python"
+    candidate_recorded = toolcache.get("candidate_path")
+    marker_recorded = toolcache.get("complete_marker_path")
+    expected_candidate_record = str(candidate_dir.resolve()) if candidate_dir.exists() else str(candidate_dir)
+    expected_marker = str(pathlib.Path(str(candidate_dir) + ".complete"))
+    if candidate_recorded != expected_candidate_record or marker_recorded != expected_marker:
+        raise PreflightError("toolcache snapshot paths do not match the exact CPython version/architecture slot")
+    if pathlib.Path(setup_path).resolve() != candidate_executable.resolve():
+        raise PreflightError("setup-python output path differs from the preregistered toolcache slot")
+    if actual_path.resolve() != candidate_executable.resolve():
+        raise PreflightError("active Python executable differs from the preregistered toolcache slot")
+    if candidate_status == "COMPLETE_EXECUTABLE":
+        if expected_executable != str(candidate_executable.resolve()) or toolcache.get("python_sha256") != actual_sha256:
+            raise PreflightError("pre-existing toolcache executable identity conflicts with the active interpreter")
+        source = "PREEXISTING_TOOLCACHE_CONFIRMED_BY_PRESTATE_AND_BINARY_IDENTITY"
+        proof = "complete marker and executable were present before setup; pinned action selected the same version/architecture path; executable SHA-256 is unchanged"
+    elif candidate_status == "ABSENT":
+        if expected_executable is not None:
+            raise PreflightError("toolcache snapshot marks the slot absent but records an executable")
+        source = "DOWNLOAD_BRANCH_DERIVED_FROM_PRESTATE_AND_PINNED_ACTION_SOURCE"
+        proof = "no complete candidate existed before setup; the pinned action calls tool-cache find then installs the exact manifest release on a miss; post-setup path and binary identity were measured"
+    else:
+        raise PreflightError("pre-setup Python toolcache state is incomplete or unverifiable")
+    return {"status": source, "proof_basis": proof, "pre_setup_candidate_status": candidate_status}
 
 
 def verify_python_build_manifest():
@@ -949,9 +1286,32 @@ def verify_python_build_manifest():
     with urllib.request.urlopen(request, timeout=45) as response:
         raw = response.read()
     manifest = json.loads(raw.decode("utf-8"))
+    selected = select_python_release_manifest_entry(manifest)
+    return {
+        "repository": "actions/python-versions",
+        "commit": PYTHON_VERSIONS_MANIFEST_COMMIT,
+        "manifest_url": url,
+        "manifest_sha256": sha256_bytes(raw),
+        "selected_release_version": "3.13.17",
+        "selected_filename": selected["filename"],
+        "selected_download_url": selected["download_url"],
+        "distribution_asset_sha256": selected.get("sha256"),
+        "distribution_asset_sha256_status": (
+            "PUBLISHED_IN_PINNED_MANIFEST"
+            if isinstance(selected.get("sha256"), str)
+            else "NOT_PUBLISHED_IN_PINNED_MANIFEST_OR_ACTION_OUTPUT"
+        ),
+        "provenance_interpretation": "pinned manifest proves the selected release URL; it does not attest the downloaded archive bytes",
+    }
+
+
+def select_python_release_manifest_entry(manifest):
+    if not isinstance(manifest, list) or any(not isinstance(item, dict) for item in manifest):
+        raise PreflightError("pinned Python build manifest has an invalid top-level schema")
     releases = [item for item in manifest if item.get("version") == "3.13.17"]
     matches = [
-        file for release in releases for file in release.get("files", [])
+        file for release in releases if isinstance(release.get("files"), list)
+        for file in release["files"] if isinstance(file, dict)
         if file.get("platform") == "linux"
         and file.get("platform_version") == "24.04"
         and file.get("arch") == "x64"
@@ -963,44 +1323,85 @@ def verify_python_build_manifest():
         raise PreflightError("pinned Python build manifest filename differs from the frozen runtime")
     if selected.get("download_url") != PYTHON_RELEASE_URL:
         raise PreflightError("pinned Python build manifest release URL differs from the frozen runtime")
-    cache_hit = os.environ.get("SETUP_PYTHON_CACHE_HIT", "").lower()
-    if cache_hit not in ("true", "false"):
-        raise PreflightError("actions/setup-python cache/download provenance output is missing or unknown")
+    return selected
+
+
+def collect_partial_runtime_observation(
+    snapshot_path: pathlib.Path | None = None,
+    role: str = "post_setup_preflight_runtime",
+):
+    """Capture available runner/interpreter observations without importing numerical packages."""
+    actual_path = pathlib.Path(sys.executable)
+    try:
+        resolved = actual_path.resolve()
+        is_file = resolved.is_file()
+        binary_hash = sha256_file(resolved) if is_file else None
+        binary_size = resolved.stat().st_size if is_file else None
+    except OSError:
+        resolved, is_file, binary_hash, binary_size = None, False, None, None
+    snapshot_hash = None
+    if snapshot_path and snapshot_path.is_file():
+        try:
+            snapshot_hash = sha256_file(snapshot_path)
+        except OSError:
+            pass
+    try:
+        os_release_hash = sha256_file(pathlib.Path("/etc/os-release")) if pathlib.Path("/etc/os-release").is_file() else None
+    except OSError:
+        os_release_hash = None
     return {
-        "repository": "actions/python-versions",
-        "commit": PYTHON_VERSIONS_MANIFEST_COMMIT,
-        "manifest_url": url,
-        "manifest_sha256": sha256_bytes(raw),
-        "selected_release_version": "3.13.17",
-        "selected_filename": selected["filename"],
-        "selected_download_url": selected["download_url"],
-        "setup_python_cache_hit": cache_hit,
-        "provenance_interpretation": (
-            "runner image/tool cache, identified by ImageVersion and executable SHA-256"
-            if cache_hit == "true"
-            else "downloaded by the pinned setup-python action from the selected immutable official release URL"
+        "schema": "CP-STAT-02-A2-03B-PARTIAL-RUNTIME-OBSERVATION-v1",
+        "observation_role": role,
+        "status": "PARTIAL_OBSERVATION_ONLY",
+        "captured_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "python": {
+            "implementation": platform.python_implementation(),
+            "version": platform.python_version(),
+            "version_verbose": sys.version,
+            "executable_reported": sys.executable,
+            "executable_realpath": str(resolved) if resolved else None,
+            "executable_is_file": is_file,
+            "executable_sha256": binary_hash,
+            "executable_size_bytes": binary_size,
+            "python_build": platform.python_build(),
+            "python_compiler": platform.python_compiler(),
+            "soabi": sysconfig.get_config_var("SOABI"),
+            "setup_python_version_output": os.environ.get("SETUP_PYTHON_VERSION"),
+            "setup_python_path_output": os.environ.get("SETUP_PYTHON_PATH"),
+            "setup_python_action_commit": SETUP_PYTHON_ACTION_COMMIT,
+        },
+        "dependency_cache": dependency_cache_observation(
+            cache_configured=False,
+            cache_hit_value=os.environ.get("SETUP_PYTHON_CACHE_HIT"),
         ),
+        "runner": {
+            "runner_os": os.environ.get("RUNNER_OS"),
+            "runner_arch": os.environ.get("RUNNER_ARCH"),
+            "image_os": os.environ.get("ImageOS"),
+            "image_version": os.environ.get("ImageVersion"),
+            "runner_tool_cache": os.environ.get("RUNNER_TOOL_CACHE"),
+            "agent_tool_directory": os.environ.get("AGENT_TOOLSDIRECTORY"),
+            "os_release_sha256": os_release_hash,
+            "kernel_release": platform.release(),
+        },
+        "pre_setup_toolcache_snapshot_sha256": snapshot_hash,
     }
 
 
-def collect_environment(pip_report_path: pathlib.Path):
+def collect_environment(pip_report_path: pathlib.Path, toolcache_snapshot_path: pathlib.Path, pip_report_receipt: dict):
     import numpy as np
     import scipy
 
     version = sys.version_info
     if tuple(version[:3]) != (3, 13, 17) or platform.python_implementation() != "CPython":
         raise PreflightError("runtime is not the locked CPython 3.13.17")
-    if platform.system() != "Linux" or platform.machine().lower() not in ("x86_64", "amd64"):
-        raise PreflightError("runtime is not Linux x86_64")
-    if platform.architecture()[0] != "64bit":
-        raise PreflightError("Python runtime is not 64-bit")
     os_release = pathlib.Path("/etc/os-release").read_text(encoding="utf-8")
-    if 'VERSION_ID="24.04"' not in os_release and "VERSION_ID=24.04" not in os_release:
-        raise PreflightError("runtime operating system is not Ubuntu 24.04")
     image_os = os.environ.get("ImageOS")
     image_version = os.environ.get("ImageVersion")
-    if not image_os or not image_version:
-        raise PreflightError("GitHub runner ImageOS/ImageVersion provenance is missing")
+    os_fields = validate_runner_identity(
+        os_release, image_os, image_version, os.environ.get("RUNNER_OS"),
+        os.environ.get("RUNNER_ARCH"), platform.system(), platform.machine(), platform.architecture()[0]
+    )
     setup_path = os.environ.get("SETUP_PYTHON_PATH")
     if not setup_path:
         raise PreflightError("actions/setup-python executable output is missing")
@@ -1010,9 +1411,32 @@ def collect_environment(pip_report_path: pathlib.Path):
         raise PreflightError("active interpreter differs from actions/setup-python output")
     if os.environ.get("SETUP_PYTHON_VERSION") != "3.13.17":
         raise PreflightError("actions/setup-python version output is not 3.13.17")
+    if platform.python_implementation() != "CPython" or sysconfig.get_config_var("Py_GIL_DISABLED") not in (0, None):
+        raise PreflightError("runtime is not the preregistered standard GIL CPython build")
+    if sysconfig.get_config_var("SOABI") != "cpython-313-x86_64-linux-gnu":
+        raise PreflightError("Python ABI differs from the preregistered CPython 3.13 x86_64 ABI")
     if not actual_path.is_file():
         raise PreflightError("resolved Python executable is not a file")
     python_manifest = verify_python_build_manifest()
+    if python_manifest["distribution_asset_sha256_status"] != "NOT_PUBLISHED_IN_PINNED_MANIFEST_OR_ACTION_OUTPUT":
+        raise PreflightError("pinned Python release asset hash availability differs from the accepted R3 interpretation")
+    snapshot = load_json(toolcache_snapshot_path) if toolcache_snapshot_path.is_file() else None
+    acquisition = classify_python_acquisition(
+        snapshot, setup_path, actual_path, sha256_file(actual_path)
+    )
+    dependency_cache = dependency_cache_observation(
+        cache_configured=False,
+        cache_hit_value=os.environ.get("SETUP_PYTHON_CACHE_HIT"),
+    )
+    snapshot_runner = snapshot.get("runner", {})
+    expected_runner_snapshot = {
+        "runner_os": os.environ.get("RUNNER_OS"),
+        "runner_arch": os.environ.get("RUNNER_ARCH"),
+        "image_os": image_os,
+        "image_version": image_version,
+    }
+    if any(snapshot_runner.get(key) != value for key, value in expected_runner_snapshot.items()):
+        raise PreflightError("pre-setup runner image identity differs from the active runner metadata")
     package_records = {
         "python": {
             "implementation": platform.python_implementation(),
@@ -1025,11 +1449,12 @@ def collect_environment(pip_report_path: pathlib.Path):
             "python_build": platform.python_build(),
             "python_compiler": platform.python_compiler(),
             "soabi": sysconfig.get_config_var("SOABI"),
-            "cache_hit": os.environ.get("SETUP_PYTHON_CACHE_HIT"),
-            "setup_action_commit": "6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+            "setup_python_dependency_cache_hit": dependency_cache["cache_hit"],
+            "setup_action_commit": SETUP_PYTHON_ACTION_COMMIT,
             "setup_action_output_path": os.environ.get("SETUP_PYTHON_PATH"),
             "runner_tool_cache": os.environ.get("RUNNER_TOOL_CACHE"),
             "python_location_environment": os.environ.get("pythonLocation"),
+            "acquisition": acquisition,
         },
         "numpy": {"version": np.__version__},
         "scipy": {"version": scipy.__version__},
@@ -1083,6 +1508,7 @@ def collect_environment(pip_report_path: pathlib.Path):
             "image_os": image_os,
             "image_version": image_version,
         },
+        "os_release_fields": os_fields,
         "operating_system": {
             "platform": platform.platform(),
             "system": platform.system(),
@@ -1094,6 +1520,9 @@ def collect_environment(pip_report_path: pathlib.Path):
         "packages": package_records,
         "embedded_highs": embedded,
         "python_build_provenance": python_manifest,
+        "dependency_cache": dependency_cache,
+        "pre_setup_toolcache_snapshot": snapshot,
+        "pip_install_report_receipt": pip_report_receipt,
         "thread_environment_observed": {
             key: os.environ.get(key) for key in ["OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"]
         },
@@ -1764,7 +2193,102 @@ def checksums_for_directory(directory: pathlib.Path):
         relative = path.relative_to(directory).as_posix()
         entries.append(f"{sha256_file(path)}  {relative}")
     (directory / "SHA256SUMS").write_text("\n".join(entries) + "\n", encoding="utf-8")
+    verify_checksums_for_directory(directory)
     return entries
+
+
+def verify_checksums_for_directory(directory: pathlib.Path):
+    manifest = directory / "SHA256SUMS"
+    if not manifest.is_file():
+        raise PreflightError("evidence checksum manifest is missing")
+    listed = {}
+    for line in manifest.read_text(encoding="utf-8").splitlines():
+        digest, separator, relative = line.partition("  ")
+        if not separator or not re.fullmatch(r"[0-9a-f]{64}", digest) or not relative:
+            raise PreflightError("evidence checksum manifest contains a malformed entry")
+        relative_path = pathlib.PurePosixPath(relative)
+        if relative_path.is_absolute() or ".." in relative_path.parts or relative in listed:
+            raise PreflightError("evidence checksum manifest contains an unsafe or duplicate path")
+        path = directory.joinpath(*relative_path.parts)
+        if not path.is_file() or sha256_file(path) != digest:
+            raise PreflightError(f"evidence checksum mismatch or missing member: {relative}")
+        listed[relative] = digest
+    actual = {
+        path.relative_to(directory).as_posix()
+        for path in directory.rglob("*") if path.is_file() and path.name != "SHA256SUMS"
+    }
+    if set(listed) != actual:
+        raise PreflightError("evidence checksum manifest does not cover the exact evidence file set")
+    return {"verified_entries": len(listed), "manifest_sha256": sha256_file(manifest)}
+
+
+def prepare_pre_solver_inputs(args, evidence_dir: pathlib.Path):
+    """Run the full shared no-solver preflight used by experiment and preflight-only paths."""
+    pip_report = pathlib.Path(args.pip_report).resolve()
+    snapshot_path = pathlib.Path(args.toolcache_snapshot).resolve()
+    receipt = capture_pip_install_report(pip_report, evidence_dir)
+    partial = collect_partial_runtime_observation(snapshot_path)
+    write_json(evidence_dir / "runtime-provenance-partial.json", partial)
+    if receipt.get("status") != "RAW_RETAINED":
+        raise PreflightError("pip install report is unavailable or cannot be safely retained")
+    frozen = verify_frozen_files()
+    manifest_check = verify_manifest()
+    environment = collect_environment(evidence_dir / "pip-install-report.json", snapshot_path, receipt)
+    environment["locked_wheels"] = parse_install_report(evidence_dir / "pip-install-report.json")
+    write_json(evidence_dir / "environment-manifest.json", environment)
+    artifact_dir = pathlib.Path(args.download_dir).resolve()
+    archive_path = artifact_dir / "original-a1-artifact.zip"
+    metadata_path = artifact_dir / "original-a1-artifact-metadata.json"
+    metadata, raw_archive = download_original_artifact(
+        os.environ.get("GITHUB_TOKEN", ""),
+        os.environ.get("GITHUB_REPOSITORY", ""),
+        archive_path,
+    )
+    write_json(metadata_path, metadata)
+    data = verify_archive_bytes(raw_archive, metadata)
+    write_json(evidence_dir / "source-and-package-hashes.json", {
+        "schema": "CP-STAT-02-A2-03B-SOURCE-IDENTITIES-v1",
+        "frozen_inputs_lock_sha256": frozen["lock_sha256"],
+        "frozen_files_sha256": frozen["checked_files"],
+        "source_artifact": data["github_source"],
+        "internal_archive_sha256": data["internal_sha256"],
+        "proof_manifest_sha256": EXPECTED_PROOF_MANIFEST,
+        "matrix_sha256": MATRIX_HASHES,
+        "wheel_sha256": environment["locked_wheels"],
+        "experiment_commit_sha": os.environ.get("GITHUB_SHA"),
+    })
+    static = static_checks(data)
+    controls = run_falsification_controls(
+        data, sha256_bytes(raw_archive), sha256_file(PROOF_DIR / "proof-evidence-manifest.json")
+    )
+    write_json(evidence_dir / "preflight.json", {
+        "status": "PASS" if controls["all_controls_passed"] else "FAIL",
+        "frozen_inputs": frozen,
+        "execution_manifest": manifest_check,
+        "archive_verification": {
+            key: value for key, value in data.items()
+            if key not in ("files", "proof_results", "a1_results", "fixtures", "proof_module")
+        },
+        "static_checks": static,
+        "falsification_controls_passed_before_solver": controls["all_controls_passed"],
+        "solver_calls_before_preflight_completion": 0,
+        "execution_permission_implied": False,
+    })
+    write_json(evidence_dir / "falsification-report.json", controls)
+    if not controls["all_controls_passed"]:
+        raise PreflightError("one or more frozen falsification controls failed")
+    conditions = condition_diagnostics(data)
+    write_json(evidence_dir / "condition-diagnostics.json", conditions)
+    return {
+        "frozen": frozen,
+        "manifest_check": manifest_check,
+        "environment": environment,
+        "archive_path": archive_path,
+        "metadata_path": metadata_path,
+        "data": data,
+        "controls": controls,
+        "conditions": conditions,
+    }
 
 
 def run_experiment(args):
@@ -1783,39 +2307,16 @@ def run_experiment(args):
         "verdict": None,
     }
     try:
-        frozen = verify_frozen_files()
-        manifest_check = verify_manifest()
-        pip_report = pathlib.Path(args.pip_report).resolve()
-        environment = collect_environment(pip_report)
-        shutil.copy2(pip_report, evidence_dir / "pip-install-report.json")
-        environment["locked_wheels"] = parse_install_report(pip_report)
-        write_json(evidence_dir / "environment-manifest.json", environment)
-        metadata, raw_archive = download_original_artifact(
-            os.environ.get("GITHUB_TOKEN", ""),
-            os.environ.get("GITHUB_REPOSITORY", ""),
-            archive_path,
-        )
-        write_json(metadata_path, metadata)
-        data = verify_archive_bytes(raw_archive, metadata)
-        # Static checks and all controls are complete before any child can call linprog.
-        static = static_checks(data)
-        source_hash = sha256_bytes(raw_archive)
-        proof_hash = sha256_file(PROOF_DIR / "proof-evidence-manifest.json")
-        controls = run_falsification_controls(data, source_hash, proof_hash)
-        write_json(evidence_dir / "preflight.json", {
-            "status": "PASS",
-            "frozen_inputs": frozen,
-            "execution_manifest": manifest_check,
-            "archive_verification": {k: v for k, v in data.items() if k not in ("files", "proof_results", "a1_results", "fixtures", "proof_module")},
-            "static_checks": static,
-            "falsification_controls_passed_before_first_lp": controls["all_controls_passed"],
-            "solver_calls_before_preflight_completion": 0,
-        })
-        write_json(evidence_dir / "falsification-report.json", controls)
-        if not controls["all_controls_passed"]:
-            raise PreflightError("one or more frozen falsification controls failed")
-        conditions = condition_diagnostics(data)
-        write_json(evidence_dir / "condition-diagnostics.json", conditions)
+        preflight = prepare_pre_solver_inputs(args, evidence_dir)
+        frozen = preflight["frozen"]
+        manifest_check = preflight["manifest_check"]
+        environment = preflight["environment"]
+        archive_path = preflight["archive_path"]
+        metadata_path = preflight["metadata_path"]
+        data = preflight["data"]
+        controls = preflight["controls"]
+        conditions = preflight["conditions"]
+        # Shared static checks and all controls complete before any child can call linprog.
         python_path = pathlib.Path(environment["packages"]["python"]["executable_realpath"])
         records = run_cell_processes(data, archive_path, metadata_path, evidence_dir, python_path)
         for number, record in enumerate(records, start=1):
@@ -1903,7 +2404,11 @@ def run_experiment(args):
             failure_verdict = "A2_03B_EXECUTION_BLOCKED"
         base_status.update({
             "verdict": failure_verdict,
-            "blocker": {"type": type(exc).__name__, "message": str(exc), "traceback": traceback.format_exc()},
+            "blocker": {
+                "type": type(exc).__name__,
+                "message": redact_sensitive_text(str(exc)),
+                "traceback": redact_sensitive_text(traceback.format_exc()),
+            },
         })
         write_json(evidence_dir / "A2_03B_BLOCKER.json", base_status["blocker"])
         write_json(status_path, base_status)
@@ -1930,6 +2435,16 @@ def run_experiment(args):
 def record_external_blocker(args):
     evidence_dir = pathlib.Path(args.evidence_dir).resolve()
     evidence_dir.mkdir(parents=True, exist_ok=True)
+    pip_report_receipt = None
+    if getattr(args, "pip_report", None):
+        pip_report_receipt = capture_pip_install_report(pathlib.Path(args.pip_report).resolve(), evidence_dir)
+    snapshot_status = "UNMEASURED"
+    snapshot_path = evidence_dir / PRE_SETUP_SNAPSHOT_NAME
+    if snapshot_path.is_file():
+        try:
+            snapshot_status = load_json(snapshot_path).get("toolcache", {}).get("candidate_status", "UNKNOWN")
+        except Exception:
+            snapshot_status = "UNREADABLE"
     status = {
         "schema": "CP-STAT-02-A2-03B-EXECUTION-STATUS-v1",
         "workflow_run_id": os.environ.get("GITHUB_RUN_ID"),
@@ -1940,6 +2455,13 @@ def record_external_blocker(args):
         "blocker": args.message,
         "setup_python_outcome": os.environ.get("SETUP_PYTHON_OUTCOME"),
         "locked_wheel_install_outcome": os.environ.get("WHEEL_INSTALL_OUTCOME"),
+        "python_toolcache_snapshot_status": snapshot_status,
+        "pip_install_report_receipt": pip_report_receipt,
+        "pre_setup_toolcache_snapshot_sha256": (
+            sha256_file(evidence_dir / PRE_SETUP_SNAPSHOT_NAME)
+            if (evidence_dir / PRE_SETUP_SNAPSHOT_NAME).is_file() else None
+        ),
+        "blocker_recorder_runtime": collect_partial_runtime_observation(role="external_blocker_recorder_interpreter"),
     }
     write_json(evidence_dir / "execution-status.json", status)
     write_json(evidence_dir / "A2_03B_BLOCKER.json", status)
@@ -1949,7 +2471,7 @@ def record_external_blocker(args):
         "executed_controls": 0,
         "controls": [],
         "all_controls_passed": False,
-        "unmeasured_reason": "pinned runtime or wheel setup failed before preflight",
+        "unmeasured_reason": "toolcache snapshot, pinned runtime setup, or wheel setup failed before preflight",
     })
     checksums_for_directory(evidence_dir)
     return 1
@@ -1978,19 +2500,75 @@ def self_test(archive_path: pathlib.Path, require_frozen: bool):
     return 0
 
 
+def preflight_only(args):
+    evidence_dir = pathlib.Path(args.evidence_dir).resolve()
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+    status_path = evidence_dir / "execution-status.json"
+    status = {
+        "schema": "CP-STAT-02-A2-03B-PREFLIGHT-STATUS-v1",
+        "workflow_run_id": os.environ.get("GITHUB_RUN_ID"),
+        "commit_sha": os.environ.get("GITHUB_SHA"),
+        "mode": "NO_SOLVER_PREFLIGHT_ONLY",
+        "linprog_invocation_attempts": 0,
+        "completed_manifest_cells": 0,
+        "execution_permission_implied": False,
+    }
+    try:
+        result = prepare_pre_solver_inputs(args, evidence_dir)
+        status.update({
+            "verdict": "A2_03B_PREFLIGHT_ONLY_READY_FOR_RED_TEAM",
+            "preflight_status": "PASS",
+            "manifest_cells_validated": len(result["manifest_check"]["cells"]),
+            "falsification_controls_executed": len(result["controls"]["controls"]),
+        })
+        write_json(status_path, status)
+    except Exception as exc:
+        status.update({
+            "verdict": "A2_03B_PREFLIGHT_ONLY_BLOCKED",
+            "preflight_status": "FAIL",
+            "blocker": {
+                "type": type(exc).__name__,
+                "message": redact_sensitive_text(str(exc)),
+                "traceback": redact_sensitive_text(traceback.format_exc()),
+            },
+        })
+        write_json(evidence_dir / "A2_03B_BLOCKER.json", status["blocker"])
+        if not (evidence_dir / "falsification-report.json").exists():
+            write_json(evidence_dir / "falsification-report.json", {
+                "schema": "CP-STAT-02-A2-03B-FALSIFICATION-REPORT-v1",
+                "registered_controls": 15,
+                "executed_controls": 0,
+                "controls": [],
+                "all_controls_passed": False,
+                "unmeasured_reason": "no-solver preflight blocked before controls could run",
+            })
+        write_json(status_path, status)
+    checksums_for_directory(evidence_dir)
+    return 0 if status.get("preflight_status") == "PASS" else 1
+
+
 def main():
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
+    snapshot = sub.add_parser("snapshot-python-toolcache")
+    snapshot.add_argument("--output", required=True)
     test = sub.add_parser("self-test")
     test.add_argument("--archive", required=True)
     test.add_argument("--require-frozen", action="store_true")
+    preflight = sub.add_parser("preflight-only")
+    preflight.add_argument("--evidence-dir", required=True)
+    preflight.add_argument("--download-dir", required=True)
+    preflight.add_argument("--pip-report", required=True)
+    preflight.add_argument("--toolcache-snapshot", required=True)
     run = sub.add_parser("run")
     run.add_argument("--evidence-dir", required=True)
     run.add_argument("--download-dir", required=True)
     run.add_argument("--pip-report", required=True)
+    run.add_argument("--toolcache-snapshot", required=True)
     blocker = sub.add_parser("record-blocker")
     blocker.add_argument("--evidence-dir", required=True)
     blocker.add_argument("--message", required=True)
+    blocker.add_argument("--pip-report")
     worker = sub.add_parser("worker")
     worker.add_argument("--archive", required=True)
     worker.add_argument("--metadata", required=True)
@@ -1998,8 +2576,12 @@ def main():
     worker.add_argument("--output", required=True)
     args = parser.parse_args()
     try:
+        if args.command == "snapshot-python-toolcache":
+            return capture_python_toolcache_snapshot(pathlib.Path(args.output))
         if args.command == "self-test":
             return self_test(pathlib.Path(args.archive), args.require_frozen)
+        if args.command == "preflight-only":
+            return preflight_only(args)
         if args.command == "run":
             return run_experiment(args)
         if args.command == "record-blocker":
@@ -2008,7 +2590,7 @@ def main():
             worker_cell(pathlib.Path(args.archive), pathlib.Path(args.metadata), args.cell_id, pathlib.Path(args.output))
             return 0
     except Exception as exc:
-        print(f"A2-03B {args.command} failed: {type(exc).__name__}: {exc}", file=sys.stderr)
+        print(f"A2-03B {args.command} failed: {type(exc).__name__}: {redact_sensitive_text(str(exc))}", file=sys.stderr)
         return 2
     return 2
 

@@ -28,6 +28,14 @@ jobs:
         shell: bash
         run: mkdir -p .a2-03b .a2-03b/evidence .a2-03b/download
 
+      - name: Snapshot preregistered Python toolcache before setup
+        id: python_toolcache_snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 experiments/cp-stat-02/a2-f1/highs-forensics/a2_03b_harness.py snapshot-python-toolcache \
+            --output .a2-03b/evidence/python-toolcache-pre-setup.json
+
       - name: Set up the preregistered CPython
         id: python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
@@ -57,14 +65,14 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           SETUP_PYTHON_PATH: ${{ steps.python.outputs.python-path }}
           SETUP_PYTHON_VERSION: ${{ steps.python.outputs.python-version }}
-          SETUP_PYTHON_CACHE_HIT: ${{ steps.python.outputs.cache-hit }}
         shell: bash
         run: |
           set -euo pipefail
           python experiments/cp-stat-02/a2-f1/highs-forensics/a2_03b_harness.py run \
             --evidence-dir .a2-03b/evidence \
             --download-dir .a2-03b/download \
-            --pip-report .a2-03b/pip-install-report.json
+            --pip-report .a2-03b/pip-install-report.json \
+            --toolcache-snapshot .a2-03b/evidence/python-toolcache-pre-setup.json
 
       - name: Record a setup blocker if pinned runtime or wheel installation did not complete
         if: always()
@@ -77,7 +85,8 @@ jobs:
           if [ ! -s .a2-03b/evidence/execution-status.json ]; then
             python3 experiments/cp-stat-02/a2-f1/highs-forensics/a2_03b_harness.py record-blocker \
               --evidence-dir .a2-03b/evidence \
-              --message "Pinned CPython setup or locked-wheel installation failed before preflight; zero LP calls."
+              --pip-report .a2-03b/pip-install-report.json \
+              --message "Pre-setup interpreter provenance snapshot, pinned CPython setup, or locked-wheel installation failed before preflight; zero LP calls."
           fi
 
       - name: Upload checksummed evidence, including blocked or inconclusive runs
